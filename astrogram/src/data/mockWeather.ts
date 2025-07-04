@@ -32,7 +32,7 @@ export const conditionColors = {
 
 
 
-  export type TimeBlock = "6" | "12" | "18";
+  export type TimeBlock = '0'|"6" | "12" | "18";
 
   export interface WeatherDay {
     date: string;
@@ -51,9 +51,9 @@ export const conditionColors = {
     {
       date: "2025-07-03",
       conditions: {
-        clouds: { "6": 2, "12": 3, "18": 1 },
-        seeing: { "6": 3, "12": 2, "18": 4 },
-        transparency: { "6": 4, "12": 1, "18": 2 },
+        clouds: { "0": 3, "6": 2, "12": 3, "18": 1 },
+        seeing: { "0": 2, "6": 3, "12": 2, "18": 4 },
+        transparency: { "0": 1, "6": 4, "12": 1, "18": 2 },
       },
       moonPhase: {
         phase: "Waxing Crescent",
@@ -63,9 +63,9 @@ export const conditionColors = {
     {
       date: "2025-07-04",
       conditions: {
-        clouds: { "6": 1, "12": 4, "18": 3 },
-        seeing: { "6": 2, "12": 3, "18": 1 },
-        transparency: { "6": 3, "12": 2, "18": 4 },
+        clouds: { "0": 2, "6": 1, "12": 4, "18": 3 },
+        seeing: { "0": 3, "6": 2, "12": 3, "18": 1 },
+        transparency: { "0": 4, "6": 3, "12": 2, "18": 4 },
       },
       moonPhase: {
         phase: "First Quarter",
@@ -75,9 +75,9 @@ export const conditionColors = {
     {
       date: "2025-07-05",
       conditions: {
-        clouds: { "6": 3, "12": 2, "18": 2 },
-        seeing: { "6": 4, "12": 4, "18": 3 },
-        transparency: { "6": 2, "12": 1, "18": 2 },
+        clouds: { "0": 4, "6": 3, "12": 2, "18": 2 },
+        seeing: { "0": 3, "6": 4, "12": 4, "18": 3 },
+        transparency: { "0": 2, "6": 2, "12": 1, "18": 2 },
       },
       moonPhase: {
         phase: "Waxing Gibbous",
@@ -87,9 +87,9 @@ export const conditionColors = {
     {
       date: "2025-07-06",
       conditions: {
-        clouds: { "6": 1, "12": 1, "18": 2 },
-        seeing: { "6": 2, "12": 3, "18": 4 },
-        transparency: { "6": 4, "12": 4, "18": 3 },
+        clouds: { "0": 1, "6": 1, "12": 1, "18": 2 },
+        seeing: { "0": 4, "6": 2, "12": 3, "18": 4 },
+        transparency: { "0": 3, "6": 4, "12": 4, "18": 3 },
       },
       moonPhase: {
         phase: "Waxing Gibbous",
@@ -99,13 +99,74 @@ export const conditionColors = {
     {
       date: "2025-07-07",
       conditions: {
-        clouds: { "6": 4, "12": 3, "18": 2 },
-        seeing: { "6": 1, "12": 2, "18": 3 },
-        transparency: { "6": 2, "12": 3, "18": 4 },
+        clouds: { "0": 4, "6": 4, "12": 3, "18": 2 },
+        seeing: { "0": 1, "6": 1, "12": 2, "18": 3 },
+        transparency: { "0": 2, "6": 2, "12": 3, "18": 4 },
       },
       moonPhase: {
         phase: "Full Moon",
         illumination: 1.0,
       },
     },
+    {
+      date: "2025-07-08",
+      conditions: {
+        clouds: { "0": 3, "6": 3, "12": 2, "18": 2 },
+        seeing: { "0": 2, "6": 4, "12": 4, "18": 3 },
+        transparency: { "0": 4, "6": 3, "12": 2, "18": 1 },
+      },
+      moonPhase: {
+        phase: "Waning Gibbous",
+        illumination: 0.89,
+      },
+    },
+    {
+      date: "2025-07-09",
+      conditions: {
+        clouds: { "0": 1, "6": 2, "12": 1, "18": 1 },
+        seeing: { "0": 4, "6": 4, "12": 3, "18": 3 },
+        transparency: { "0": 3, "6": 4, "12": 3, "18": 4 },
+      },
+      moonPhase: {
+        phase: "Waning Gibbous",
+        illumination: 0.72,
+      },
+    },
+    {
+      date: "2025-07-10",
+      conditions: {
+        clouds: { "0": 2, "6": 3, "12": 4, "18": 3 },
+        seeing: { "0": 2, "6": 3, "12": 2, "18": 1 },
+        transparency: { "0": 1, "6": 2, "12": 3, "18": 2 },
+      },
+      moonPhase: {
+        phase: "Last Quarter",
+        illumination: 0.51,
+      },
+    },
+    {
+      date: "2025-07-11",
+      conditions: {
+        clouds: { "0": 4, "6": 4, "12": 3, "18": 2 },
+        seeing: { "0": 1, "6": 2, "12": 2, "18": 3 },
+        transparency: { "0": 3, "6": 3, "12": 4, "18": 3 },
+      },
+      moonPhase: {
+        phase: "Waning Crescent",
+        illumination: 0.34,
+      },
+    },
+    {
+      date: "2025-07-12",
+      conditions: {
+        clouds: { "0": 1, "6": 1, "12": 1, "18": 1 },
+        seeing: { "0": 4, "6": 4, "12": 4, "18": 4 },
+        transparency: { "0": 4, "6": 4, "12": 4, "18": 4 },
+      },
+      moonPhase: {
+        phase: "New Moon",
+        illumination: 0.0,
+      },
+    },
   ];
+  
