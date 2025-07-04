@@ -76,6 +76,62 @@ button {
   }
 }
 
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 0px rgba(255, 255, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0px rgba(255, 255, 0, 0.4);
+  }
+}
+@keyframes wave-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes ripple-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.ring-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  animation: ripple-ring 0.6s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.animate-wave {
+  animation: wave-ring 0.8s ease-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
 .animate-slide-down {
   animation: slide-down 0.2s ease-out;
 }
