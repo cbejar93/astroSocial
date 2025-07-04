@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Feed from './pages/Feed';
+import UploadForm from './components/UploadForm/UploadForm';
+import Navbar from './components/Navbar/Navbar';
+import BottomNavbar from './components/BottomNavbar/BottomNavbar';
+import WeatherPage from './pages/WeatherPage';
 
-function App() {
-  const [count, setCount] = useState(0)
 
+const App: React.FC = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Router>
+      <div className="flex flex-col min-h-screen bg-gray-900 text-white">
+        <Navbar />
 
-export default App
+        {/* Main Content */}
+        <main className="flex-grow max-w-screen-lg w-full mx-auto px-4 sm:px-6 md:px-8 pt-6 pb-24">
+          <Routes>
+            <Route path="/" element={<Feed />} />
+            <Route path="/upload" element={<UploadForm />} />
+            <Route path="/weather" element={<WeatherPage />} />
+
+          </Routes>
+        </main>
+
+        {/* Bottom Navbar */}
+        <BottomNavbar />
+      </div>
+    </Router>
+  );
+};
+
+export default App;
