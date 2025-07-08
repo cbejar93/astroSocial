@@ -1,4 +1,4 @@
-import { Menu, Bell, User, ChevronDown } from "lucide-react";
+import { Menu, Bell, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const Navbar = () => {
