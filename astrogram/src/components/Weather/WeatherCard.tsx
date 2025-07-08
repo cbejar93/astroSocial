@@ -13,7 +13,7 @@ const levelColors: Record<number, string> = {
   4: "bg-green-500",
 };
 
-const timeBlocks: TimeBlock[] = ["0", "6", "12", "18"];
+const timeBlocks: TimeBlock[] = ["0", "6", "12", "18","21"];
 const conditions: Array<keyof WeatherDay["conditions"]> = ["clouds", "seeing", "transparency"];
 
 const getClosestTimeBlock = (): TimeBlock => {
@@ -40,12 +40,12 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
       </h3>
 
       {/* Grid */}
-      <div className="grid grid-cols-[100px_repeat(4,1fr)] gap-x-1 gap-y-2 items-center px-4 pb-4">
+      <div className="grid grid-cols-[100px_repeat(5,1fr)] gap-x-1 gap-y-2 items-center px-4 pb-4">
         {/* Time headers */}
         <div></div>
         {timeBlocks.map((time) => (
           <div key={time} className={`text-sm text-center ${time === activeTime && isToday ? "text-cyan-400 font-semibold" : "text-gray-400"}`}>
-            {time}:00
+            {time}H
           </div>
         ))}
 
@@ -62,7 +62,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
                 <div
                   key={`${condition}-${time}`}
                   className={`w-6 h-6 mx-auto rounded ${colorClass} ${isActive ? "ring-2 ring-cyan-400" : ""}`}
-                  title={`${condition} at ${time}:00 = ${value}`}
+                  title={`${condition} at ${time}H = ${value}`}
                 />
               );
             })}
