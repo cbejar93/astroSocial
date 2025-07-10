@@ -4,9 +4,22 @@ import UploadForm from './components/UploadForm/UploadForm';
 import Navbar from './components/Navbar/Navbar';
 import BottomNavbar from './components/BottomNavbar/BottomNavbar';
 import WeatherPage from './pages/WeatherPage';
+import { useWeatherService } from './hooks/useWeatherService';
+import { useEffect } from "react";
 
 
 const App: React.FC = () => {
+
+  const { weather, loading, error } = useWeatherService();
+
+  useEffect(() => {
+    if (weather) {
+      console.log('User location:', weather);
+      // You could now call your NestJS backend with this data
+    }
+  }, [weather]);
+
+
   return (
     <Router>
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
