@@ -14,7 +14,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (weather) {
-      console.log('User location:', weather);
+      // console.log('User location:', weather);
       // You could now call your NestJS backend with this data
     }
   }, [weather]);
@@ -30,7 +30,16 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Feed />} />
             <Route path="/upload" element={<UploadForm />} />
-            <Route path="/weather" element={<WeatherPage />} />
+            <Route
+              path="/weather"
+              element={
+                <WeatherPage
+                  weather={weather}
+                  loading={loading}
+                  error={error}
+                />
+              }
+            />
 
           </Routes>
         </main>

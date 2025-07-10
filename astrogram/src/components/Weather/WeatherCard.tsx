@@ -13,8 +13,14 @@ const levelColors: Record<number, string> = {
   4: "bg-green-500",
 };
 
-const timeBlocks: TimeBlock[] = ["0", "6", "12", "18","21"];
-const conditions: Array<keyof WeatherDay["conditions"]> = ["clouds", "seeing", "transparency"];
+const timeBlocks: TimeBlock[] = ["0", "6", "12", "18", "21"];
+const conditions: Array<keyof WeatherDay["conditions"]> = ["cloudcover", "visibility", "humidity"];
+
+const conditionLabels: Record<string, string> = {
+  cloudcover: "Clouds",
+  visibility: "Seeing",
+  humidity: "Transparency",
+};
 
 const getClosestTimeBlock = (): TimeBlock => {
   const currentHour = new Date().getHours();
@@ -50,19 +56,24 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
         ))}
 
         {/* Condition rows */}
+
         {conditions.map((condition) => (
           <React.Fragment key={condition}>
-            <div className="capitalize text-sm text-gray-300">{condition}</div>
-            {timeBlocks.map((time) => {
-              const value = day.conditions[condition][time];
-              const colorClass = levelColors[value] ?? "bg-gray-700";
+            <div className="capitalize text-sm text-gray-300">
+              {conditionLabels[condition] ?? condition}
+            </div>            {timeBlocks.map((time) => {
+              console.log(day.conditions[condition]?.[time]);
+              const rawValue = day.conditions[condition]?.[time];
+              const level = mapValueToLevel(condition, rawValue ?? 0);
+              const colorClass = levelColors[level] ?? "bg-gray-700";
               const isActive = time === activeTime && isToday;
 
               return (
                 <div
                   key={`${condition}-${time}`}
-                  className={`w-6 h-6 mx-auto rounded ${colorClass} ${isActive ? "ring-2 ring-cyan-400" : ""}`}
-                  title={`${condition} at ${time}H = ${value}`}
+                  className={`w-6 h-6 mx-auto rounded ${colorClass} ${isActive ? "ring-2 ring-cyan-400" : ""
+                    }`}
+                  title={`${condition} at ${time}H = ${rawValue ?? "N/A"}`}
                 />
               );
             })}
@@ -74,3 +85,54 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
 };
 
 export default WeatherCard;
+
+export function mapValueToLevel(condition: string, value: number): number {
+  if (value == null || isNaN(value)) return 1;
+
+  switch (condition) {
+    case "clouds":
+    case "cloudcover":
+      // % of sky covered
+      if (value < 20) return 4; // Clear
+      if (value < 50) return 3; // Partly cloudy
+      if (value < 80) return 2; // Mostly cloudy
+      return 1; // Overcast
+
+    case "seeing":
+    case "windspeed":
+    case "windspeed_10m":
+      // m/s — lower is better
+      if (value <= 5) return 4;
+      if (value <= 8) return 3;
+      if (value <= 12) return 2;
+      return 1;
+
+    case "transparency":
+    case "humidity":
+    case "relative_humidity_2m":
+      // % — lower is better
+      if (value < 40) return 4;
+      if (value < 60) return 3;
+      if (value < 80) return 2;
+      return 1;
+
+    case "visibility":
+      // in meters — higher is better
+      if (value >= 20000) return 4;
+      if (value >= 15000) return 3;
+      if (value >= 8000) return 2;
+      return 1;
+
+    case "precipitation":
+    case "precipitation_probability":
+      // % — lower is better
+      if (value < 10) return 4;
+      if (value < 30) return 3;
+      if (value < 60) return 2;
+      return 1;
+
+    default:
+      return 1;
+  }
+}
+

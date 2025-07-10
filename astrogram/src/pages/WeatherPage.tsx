@@ -1,38 +1,83 @@
+import { useMemo } from "react";
 import WeatherHeader from "../components/Weather/WeatherHeader";
 import CurrentWeatherCard from "../components/Weather/CurrentWeatherCard";
-import { mockCurrentWeather, mockWeatherData } from "../data/mockWeather";
 import WeatherCard from "../components/Weather/WeatherCard";
-import { useMemo } from "react";
 import MoonPhaseCard from "../components/Weather/MoonPhaseCard";
+import WeatherSkeleton from "../components/Weather/WeatherSkeleton";
 
-const WeatherPage: React.FC = () => {
+interface WeatherConditions {
+  temperature?: Record<string, number>;
+  visibility?: Record<string, number>;
+  cloudcover?: Record<string, number>;
+  humidity?: Record<string, number>;
+  precipitation?: Record<string, number>;
+  windspeed?: Record<string, number>;
+}
+
+interface WeatherDay {
+  date: string;
+  conditions: WeatherConditions;
+  moonPhase?: {
+    phase: string;
+    illumination: number;
+  };
+}
+
+interface WeatherData {
+  status: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  data: WeatherDay[];
+}
+
+interface WeatherPageProps {
+  weather: WeatherData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) => {
   const today = new Date();
   const todayDateStr = today.toDateString();
+  const todayStr = today.toISOString().split("T")[0];
 
-  // Get today's weather data
-  const todayData = useMemo(() => {
-    return mockWeatherData.find(
-      (day) => new Date(day.date).toDateString() === todayDateStr
-    );
-  }, [todayDateStr]);
+  if (loading) return <WeatherSkeleton />;
+  if (error) return <div className="text-red-500 text-center py-6">{error}</div>;
+  if (!weather || !weather.data) return <div className="text-center text-gray-400 py-6">No weather data available.</div>;
 
-  // Only include today and future days
-  const futureWeatherData = useMemo(() => {
-    return mockWeatherData.filter(
-      (day) => new Date(day.date).setHours(0, 0, 0, 0) >= today.setHours(0, 0, 0, 0)
-    );
-  }, [today]);
+  const todayData = useMemo(
+    () => weather.data.find((day) => day.date === todayStr),
+    [weather.data, todayStr]
+  );
+
+  const futureWeatherData = useMemo(
+    () =>
+      
+
+      weather.data.filter(
+        (day) => new Date(day.date).setHours(0, 0, 0, 0) >= today.setHours(0, 0, 0, 0)
+      ),
+      
+    [weather.data, today]
+  );
+
+  const currentTemp = todayData?.conditions.temperature?.["12"] ?? 0;
+  const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
+  console.log(futureWeatherData);
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
       <WeatherHeader
-        location={mockCurrentWeather.location}
-        date={mockCurrentWeather.date}
+        location={"Oakland, CA"}
+        date={today.toLocaleDateString()}
       />
+
       <CurrentWeatherCard
-        temperature={mockCurrentWeather.temperature}
-        condition={mockCurrentWeather.condition}
-        icon={mockCurrentWeather.icon}
+        temperature={currentTemp}
+        condition={currentCondition}
+        icon="☀️" // You can update this dynamically later
       />
 
       {/* Forecast Cards */}
@@ -44,7 +89,7 @@ const WeatherPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Moon Phase for today */}
+      {/* Moon Phase */}
       {todayData?.moonPhase && (
         <div className="mt-4 flex gap-2">
           <div className="w-1/2">
@@ -55,7 +100,7 @@ const WeatherPage: React.FC = () => {
           </div>
           <div className="w-1/2">
             <MoonPhaseCard
-              phase="Waxing Gibbous" // mock fallback
+              phase="Waxing Gibbous"
               illumination={0.73}
             />
           </div>
@@ -64,5 +109,13 @@ const WeatherPage: React.FC = () => {
     </div>
   );
 };
+
+function getConditionFromClouds(cloudCover?: number): string {
+  if (cloudCover === undefined) return "Unknown";
+  if (cloudCover < 20) return "Clear";
+  if (cloudCover < 50) return "Partly Cloudy";
+  if (cloudCover < 80) return "Cloudy";
+  return "Overcast";
+}
 
 export default WeatherPage;

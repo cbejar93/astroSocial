@@ -37,11 +37,17 @@ export const conditionColors = {
   export interface WeatherDay {
     date: string;
     conditions: {
-      clouds: Record<TimeBlock, number>;
-      seeing: Record<TimeBlock, number>;
-      transparency: Record<TimeBlock, number>;
+      clouds?: Partial<Record<TimeBlock, number>>;        // add this if you're calculating this
+      seeing?: Partial<Record<TimeBlock, number>>;        // custom astronomy score
+      transparency?: Partial<Record<TimeBlock, number>>;  // custom transparency score
+      temperature?: Partial<Record<TimeBlock, number>>;
+      visibility?: Partial<Record<TimeBlock, number>>;
+      cloudcover?: Partial<Record<TimeBlock, number>>;
+      humidity?: Partial<Record<TimeBlock, number>>;
+      precipitation?: Partial<Record<TimeBlock, number>>;
+      windspeed?: Partial<Record<TimeBlock, number>>;
     };
-    moonPhase: {
+    moonPhase?: {
       phase: string;
       illumination: number;
     };

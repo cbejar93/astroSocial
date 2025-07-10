@@ -146,7 +146,7 @@ const Feed: React.FC = () => {
       console.log(dummyPosts);
       setPosts(dummyPosts);
       setLoading(false);
-    }, 2000);
+    }, 500);
 
     return () => clearTimeout(timeout);
   }, []);
