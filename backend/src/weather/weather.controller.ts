@@ -14,7 +14,7 @@ export class WeatherController {
     // Fetch visibility data from Open-Meteo
     const visibilityData = await this.weatherService.fetchVisibility(latitude, longitude);
 
-    console.log(visibilityData);
+    // console.log(visibilityData);
 
     return {
       status: 'ok',
