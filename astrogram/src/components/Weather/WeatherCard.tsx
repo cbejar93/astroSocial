@@ -7,10 +7,11 @@ type WeatherCardProps = {
 };
 
 const levelColors: Record<number, string> = {
-  1: "bg-gray-500",
-  2: "bg-yellow-500",
-  3: "bg-lime-500",
-  4: "bg-green-500",
+  1: "bg-red-600",     // Worst
+  2: "bg-orange-500",  // Poor
+  3: "bg-yellow-400",  // Moderate
+  4: "bg-lime-400",    // Good
+  5: "bg-green-500",   // Best
 };
 
 const timeBlocks: TimeBlock[] = ["0", "6", "12", "18", "21"];
@@ -92,44 +93,49 @@ export function mapValueToLevel(condition: string, value: number): number {
   switch (condition) {
     case "clouds":
     case "cloudcover":
-      // % of sky covered
-      if (value < 20) return 4; // Clear
-      if (value < 50) return 3; // Partly cloudy
-      if (value < 80) return 2; // Mostly cloudy
-      return 1; // Overcast
+      // % of sky covered — lower is better
+      if (value < 10) return 5;        // Crystal clear
+      if (value < 30) return 4;        // Mostly clear
+      if (value < 50) return 3;        // Partly cloudy
+      if (value < 80) return 2;        // Mostly cloudy
+      return 1;                        // Overcast
 
     case "seeing":
     case "windspeed":
     case "windspeed_10m":
       // m/s — lower is better
-      if (value <= 5) return 4;
-      if (value <= 8) return 3;
-      if (value <= 12) return 2;
-      return 1;
+      if (value <= 2) return 5;        // Perfectly still
+      if (value <= 5) return 4;        // Great seeing
+      if (value <= 8) return 3;        // Usable
+      if (value <= 12) return 2;       // Turbulent
+      return 1;                        // Very poor seeing
 
     case "transparency":
     case "humidity":
     case "relative_humidity_2m":
       // % — lower is better
-      if (value < 40) return 4;
-      if (value < 60) return 3;
-      if (value < 80) return 2;
-      return 1;
+      if (value < 30) return 5;        // Dry and transparent
+      if (value < 45) return 4;        // Good
+      if (value < 60) return 3;        // Fair
+      if (value < 80) return 2;        // Humid
+      return 1;                        // Very humid / poor transparency
 
     case "visibility":
-      // in meters — higher is better
-      if (value >= 20000) return 4;
-      if (value >= 15000) return 3;
-      if (value >= 8000) return 2;
-      return 1;
+      // meters — higher is better
+      if (value >= 25000) return 5;    // Crystal clear
+      if (value >= 20000) return 4;    // Excellent
+      if (value >= 15000) return 3;    // Good
+      if (value >= 8000) return 2;     // Fair
+      return 1;                        // Poor
 
     case "precipitation":
     case "precipitation_probability":
       // % — lower is better
-      if (value < 10) return 4;
-      if (value < 30) return 3;
-      if (value < 60) return 2;
-      return 1;
+      if (value < 5) return 5;         // Dry
+      if (value < 15) return 4;        // Slight chance
+      if (value < 30) return 3;        // Moderate risk
+      if (value < 60) return 2;        // High chance
+      return 1;                        // Very likely
 
     default:
       return 1;

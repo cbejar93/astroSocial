@@ -2,6 +2,10 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: "class",
+  colors: {
+    // my other colours
+    transparent: 'transparent',
+  },
   theme: {
     extend: {
       animation: {

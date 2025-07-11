@@ -42,3 +42,8 @@
 .unstyled-button {
   @apply bg-transparent border-none outline-none text-inherit p-0 m-0 hover:opacity-80;
 }
+
+.unstyled-button {
+  @apply bg-transparent border-none outline-none text-inherit p-0 m-0 hover:opacity-80;
+}
+

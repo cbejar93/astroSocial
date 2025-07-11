@@ -64,6 +64,21 @@ button {
   box-shadow: none !important;
 }
 
+.btn-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;         /* equals .gap-1 */
+  white-space: nowrap !important;  /* equals .whitespace-nowrap */
+}
+
+/* make sure focus rings are gone too */
+.btn-action:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+
+
 /* Dropdown animation */
 @keyframes slide-down {
   from {

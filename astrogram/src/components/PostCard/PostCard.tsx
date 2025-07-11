@@ -41,7 +41,7 @@ const PostCard: React.FC<PostCardProps> = ({
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <img
-              src="/default-avatar.png"
+              src="/defaultPfp.png"
               alt={`${username}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
@@ -71,46 +71,60 @@ const PostCard: React.FC<PostCardProps> = ({
         <div className="px-4 sm:px-6 py-4 text-sm">{caption}</div>
 
         {/* Action Buttons */}
-        <div className="px-4 sm:px-6 py-3 flex gap-6 justify-start items-center border-t border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-300 text-sm">
+        <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-evenly items-center text-gray-400 dark:text-gray-300 text-sm">
 
-          <button
-            onClick={handleLike}
-            className="btn-unstyled flex items-center gap-1 hover:text-yellow-400"
-          >
-            <Star className="w-6 h-6" fill={liked ? "currentColor" : "none"} />
-            <span>{starCount}</span>
-          </button>
+            {/* Like */}
+            <button
+              type="button"
+              onClick={handleLike}
+              className="btn-unstyled btn-action hover:text-yellow-400"
+            >
+              <Star className="w-5 h-5" fill={liked ? "currentColor" : "none"} />
+              <span>{starCount}</span>
+            </button>
 
-          <button
-            onClick={() => setCommentCount((c) => c + 1)}
-            className="btn-unstyled flex items-center gap-1 hover:text-violet-400"
-          >
-            <MessageCircle className="w-6 h-6" />
-            <span>{commentCount}</span>
-          </button>
+            {/* Repost */}
+            <button
+              type="button"
+              onClick={() => setReposted(r => !r)}
+              className="btn-unstyled btn-action hover:text-green-400"
+            >
+              <Repeat2 className="w-5 h-5" />
+              <span>{reposted ? 1 : 0}</span>
+            </button>
 
-          <button
-            onClick={() => setShareCount((s) => s + 1)}
-            className="btn-unstyled flex items-center gap-1 hover:text-violet-400"
-          >
-            <Share2 className="w-6 h-6" />
-            <span>{shareCount}</span>
-          </button>
+            {/* Comment */}
+            <button
+              type="button"
+              onClick={() => setCommentCount(c => c + 1)}
+              className="btn-unstyled btn-action hover:text-violet-400"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>{commentCount}</span>
+            </button>
 
-          <button
-            onClick={() => setReposted(!reposted)}
-            className="btn-unstyled flex items-center gap-1 hover:text-green-400"
-          >
-            <Repeat2 className="w-6 h-6" />
-          </button>
+            {/* Save */}
+            <button
+              type="button"
+              onClick={() => setSaved(s => !s)}
+              className="btn-unstyled btn-action hover:text-blue-400"
+            >
+              <Bookmark className="w-5 h-5" fill={saved ? "currentColor" : "none"} />
+              <span>{saved ? 1 : 0}</span>
+            </button>
 
-          <button
-            onClick={() => setSaved(!saved)}
-            className="btn-unstyled flex items-center gap-1 hover:text-blue-400"
-          >
-            <Bookmark className="w-6 h-6" fill={saved ? "currentColor" : "none"} />
-          </button>
+            {/* Share */}
+            <button
+              type="button"
+              onClick={() => setShareCount(s => s + 1)}
+              className="btn-unstyled btn-action hover:text-violet-400"
+            >
+              <Share2 className="w-5 h-5" />
+              <span>{shareCount}</span>
+            </button>
 
+          </div>
         </div>
       </div>
     </div>
