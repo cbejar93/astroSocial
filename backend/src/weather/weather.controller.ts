@@ -36,7 +36,7 @@ export class WeatherController {
       };
     });
 
-    console.log(daily);
+    // console.log(daily);
 
     return { status:'ok', coordinates:{ latitude, longitude }, data:daily };
   }
