@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 
 
 
@@ -7,7 +8,11 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class WeatherService {
-  constructor(private http: HttpService) {}
+  constructor( private config: ConfigService, private http: HttpService) {}
+
+  private get apiKey() {
+    return this.config.get<string>('VC_API_KEY');
+  }
 
   async fetchVisibility(lat: number, lon: number) {
     const response = await firstValueFrom(
@@ -62,8 +67,28 @@ export class WeatherService {
       resultMap[dateKey].conditions.windspeed[hour] = hourly.windspeed_10m[i];
     }
 
-    console.log(resultMap);
-    console.log('=======')
     return Object.values(resultMap);
   }
+
+  async fetchAstronomy(lat: number, lon: number) {
+    const key = this.apiKey;
+
+    const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${lat},${lon}`;
+
+    const response = await firstValueFrom(
+      this.http.get(url, {
+        params: {
+          unitGroup: 'us',
+          include: 'days',
+          elements: 'datetime,sunrise,sunset,moonphase,moonrise,moonset',
+          key: key,
+          contentType: 'json',
+        },
+      }),
+    );
+
+    // returns an array of { datetime, sunrise, sunset, moonphase, moonrise, moonset }
+    return response.data.days;
+  }
+
 }
