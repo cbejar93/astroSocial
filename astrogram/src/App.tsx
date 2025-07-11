@@ -12,6 +12,9 @@ const App: React.FC = () => {
 
   const { weather, loading, error } = useWeatherService();
 
+  console.log('🔍 VITE_API_BASE_URL =', import.meta.env.VITE_API_BASE_URL);
+
+
   useEffect(() => {
     if (weather) {
       console.log('User location:', weather);
