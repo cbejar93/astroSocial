@@ -16,9 +16,9 @@ interface WeatherConditions {
 
 export interface AstroData {
   sunrise: string;    // “06:12:34”
-  sunset:  string;    // “20:03:21”
+  sunset: string;    // “20:03:21”
   moonrise: string;
-  moonset:  string;
+  moonset: string;
   moonPhase: {
     phase: string;        // e.g. “Full Moon”
     illumination: number; // percent 0–100
@@ -26,9 +26,9 @@ export interface AstroData {
 }
 
 export interface WeatherDay {
-  date:       string;         // “2025-07-11”
+  date: string;         // “2025-07-11”
   conditions: WeatherConditions;
-  astro?:     AstroData;
+  astro?: AstroData;
 }
 
 
@@ -64,18 +64,18 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
 
   const futureWeatherData = useMemo(
     () =>
-      
+
       weather.data.filter(
         (day) => new Date(day.date).setHours(0, 0, 0, 0) >= today.setHours(0, 0, 0, 0)
       ),
-      
+
     [weather.data, today]
   );
 
   const currentTemp = todayData?.conditions.temperature?.["12"] ?? 0;
   const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
   const sunrise = todayData?.astro?.sunrise;
-  const sunset  = todayData?.astro?.sunset;
+  const sunset = todayData?.astro?.sunset;
   console.log(futureWeatherData);
 
   return (
@@ -103,22 +103,19 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
       </div>
 
       {/* Moon Phase */}
-      {/* {todayData?.moonPhase && (
+      {todayData?.astro && (
         <div className="mt-4 flex gap-2">
           <div className="w-1/2">
             <MoonPhaseCard
-              phase={todayData.moonPhase.phase}
-              illumination={todayData.moonPhase.illumination}
+              phase={todayData.astro.moonPhase.phase}
+              illumination={todayData.astro.moonPhase.illumination}
+              moonrise={todayData.astro.moonrise}
+              moonset={todayData.astro.moonset}
             />
           </div>
-          <div className="w-1/2">
-            <MoonPhaseCard
-              phase="Waxing Gibbous"
-              illumination={0.73}
-            />
-          </div>
+
         </div>
-      )} */}
+      )}
     </div>
   );
 };
