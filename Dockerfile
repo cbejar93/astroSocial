@@ -10,6 +10,10 @@
     # Copy the rest of the frontend app
     COPY astrogram ./
     
+    # allow passing the Vite API base URL at build time
+    ARG VITE_API_BASE_URL
+    ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    
     # Build the React app
     RUN npm run build
     
@@ -49,7 +53,6 @@
     # Expose the port
     EXPOSE 3000
     ENV NODE_ENV=production
-
     
     # Start the NestJS app
     CMD ["node", "dist/main"]
