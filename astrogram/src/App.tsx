@@ -14,7 +14,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (weather) {
-      // console.log('User location:', weather);
+      console.log('User location:', weather);
       // You could now call your NestJS backend with this data
     }
   }, [weather]);

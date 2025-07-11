@@ -1,17 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { Cache } from 'cache-manager';
 
 
 
 import { firstValueFrom } from 'rxjs';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class WeatherService {
-  constructor( private config: ConfigService, private http: HttpService) {}
+  constructor(@Inject(CACHE_MANAGER) private cache: Cache, private config: ConfigService, private http: HttpService) {}
 
   private get apiKey() {
     return this.config.get<string>('VC_API_KEY');
+  }
+
+  private getAstroKey(lat: number, lon: number) {
+    return `astronomy:${lat}:${lon}`;
   }
 
   async fetchVisibility(lat: number, lon: number) {
@@ -71,24 +77,32 @@ export class WeatherService {
   }
 
   async fetchAstronomy(lat: number, lon: number) {
-    const key = this.apiKey;
+    const apiKey = this.apiKey;
+    const key = this.getAstroKey(lat, lon);
+
+    const cached = await this.cache.get(key);
+    if (cached) {
+      return cached;
+    }
 
     const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${lat},${lon}`;
 
-    const response = await firstValueFrom(
+    const resp = await firstValueFrom(
       this.http.get(url, {
         params: {
           unitGroup: 'us',
           include: 'days',
           elements: 'datetime,sunrise,sunset,moonphase,moonrise,moonset',
-          key: key,
+          key: apiKey,
           contentType: 'json',
         },
       }),
     );
 
     // returns an array of { datetime, sunrise, sunset, moonphase, moonrise, moonset }
-    return response.data.days;
+    const days = resp.data.days;
+    await this.cache.set(key, days, 3600); // cache astro for 1h
+    return days;
   }
 
 }

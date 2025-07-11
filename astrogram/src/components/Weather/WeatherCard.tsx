@@ -63,7 +63,6 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
             <div className="capitalize text-sm text-gray-300">
               {conditionLabels[condition] ?? condition}
             </div>            {timeBlocks.map((time) => {
-              console.log(day.conditions[condition]?.[time]);
               const rawValue = day.conditions[condition]?.[time];
               const level = mapValueToLevel(condition, rawValue ?? 0);
               const colorClass = levelColors[level] ?? "bg-gray-700";

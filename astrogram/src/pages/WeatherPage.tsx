@@ -14,14 +14,24 @@ interface WeatherConditions {
   windspeed?: Record<string, number>;
 }
 
-interface WeatherDay {
-  date: string;
-  conditions: WeatherConditions;
-  moonPhase?: {
-    phase: string;
-    illumination: number;
+export interface AstroData {
+  sunrise: string;    // “06:12:34”
+  sunset:  string;    // “20:03:21”
+  moonrise: string;
+  moonset:  string;
+  moonPhase: {
+    phase: string;        // e.g. “Full Moon”
+    illumination: number; // percent 0–100
   };
 }
+
+export interface WeatherDay {
+  date:       string;         // “2025-07-11”
+  conditions: WeatherConditions;
+  astro?:     AstroData;
+}
+
+
 
 interface WeatherData {
   status: string;
@@ -55,7 +65,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
   const futureWeatherData = useMemo(
     () =>
       
-
       weather.data.filter(
         (day) => new Date(day.date).setHours(0, 0, 0, 0) >= today.setHours(0, 0, 0, 0)
       ),
@@ -65,6 +74,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
 
   const currentTemp = todayData?.conditions.temperature?.["12"] ?? 0;
   const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
+  const sunrise = todayData?.astro?.sunrise;
+  const sunset  = todayData?.astro?.sunset;
   console.log(futureWeatherData);
 
   return (
@@ -78,6 +89,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
         temperature={currentTemp}
         condition={currentCondition}
         icon="☀️" // You can update this dynamically later
+        sunrise={sunrise}
+        sunset={sunset}
       />
 
       {/* Forecast Cards */}
@@ -90,7 +103,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
       </div>
 
       {/* Moon Phase */}
-      {todayData?.moonPhase && (
+      {/* {todayData?.moonPhase && (
         <div className="mt-4 flex gap-2">
           <div className="w-1/2">
             <MoonPhaseCard
@@ -105,7 +118,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

@@ -8,11 +8,13 @@ import { ConfigModule } from '@nestjs/config';
 
 
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     HttpModule,
-    WeatherModule
+    WeatherModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],
