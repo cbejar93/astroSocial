@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || '/api';
 
 export async function fetchWeather(latitude: number, longitude: number) {
   const res = await fetch(`${API_BASE_URL}/weather`, {
