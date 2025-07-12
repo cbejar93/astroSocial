@@ -32,7 +32,7 @@ export const conditionColors = {
 
 
 
-  export type TimeBlock = '0'|"6" | "12" | "18" | '21';
+  export type TimeBlock = '0'|'3' |"6" | "12" | "18" | '21';
 
   export interface WeatherDay {
     date: string;

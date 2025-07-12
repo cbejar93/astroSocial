@@ -51,7 +51,7 @@ export class WeatherService {
       this.logger.log(`🌤️  Open-Meteo returned ${response.data.hourly.time.length} entries`);
 
       const hourly    = response.data.hourly;
-      const timeBlocks = new Set([0, 6, 12, 18, 21]);
+      const timeBlocks = new Set([0,3, 6, 12, 18, 21]);
       const resultMap: Record<string, any> = {};
 
       for (let i = 0; i < hourly.time.length; i++) {

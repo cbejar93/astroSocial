@@ -14,7 +14,7 @@ const levelColors: Record<number, string> = {
   5: "bg-green-500",   // Best
 };
 
-const timeBlocks: TimeBlock[] = ["0", "6", "12", "18", "21"];
+const timeBlocks: TimeBlock[] = ["0",'3' ,"6", "12", "18", "21"];
 const conditions: Array<keyof WeatherDay["conditions"]> = ["cloudcover", "visibility", "humidity"];
 
 const conditionLabels: Record<string, string> = {
@@ -47,7 +47,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
       </h3>
 
       {/* Grid */}
-      <div className="grid grid-cols-[100px_repeat(5,1fr)] gap-x-1 gap-y-2 items-center px-4 pb-4">
+      <div className="grid grid-cols-[100px_repeat(6,1fr)] gap-x-1 gap-y-2 items-center px-4 pb-4">
         {/* Time headers */}
         <div></div>
         {timeBlocks.map((time) => (
