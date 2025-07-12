@@ -78,6 +78,12 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
   const sunset = todayData?.astro?.sunset;
   console.log(futureWeatherData);
 
+  const isDaytime = todayData?.astro
+  ? checkDaytime(todayData.astro.sunrise, todayData.astro.sunset)
+  : true;
+
+  const icon = getWeatherIcon(currentCondition, isDaytime);
+
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
       <WeatherHeader
@@ -88,7 +94,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
       <CurrentWeatherCard
         temperature={currentTemp}
         condition={currentCondition}
-        icon="☀️" // You can update this dynamically later
+        icon={icon} // You can update this dynamically later
         sunrise={sunrise}
         sunset={sunset}
       />
@@ -126,6 +132,31 @@ function getConditionFromClouds(cloudCover?: number): string {
   if (cloudCover < 50) return "Partly Cloudy";
   if (cloudCover < 80) return "Cloudy";
   return "Overcast";
+}
+
+function getWeatherIcon(condition: string, isDay: boolean): string {
+  switch (condition) {
+    case 'Clear':
+      return isDay ? '☀️' : '🌕';
+    case 'Partly Cloudy':
+      return isDay ? '⛅️' : '🌥️';
+    case 'Cloudy':
+      return '☁️';
+    case 'Overcast':
+      return '🌫️';
+    default:
+      return '❓';
+  }
+}
+
+function checkDaytime(sunrise: string, sunset: string): boolean {
+  const now = new Date();
+  // parse “HH:MM:SS” to a Date for today
+  const [srH, srM] = sunrise.split(':').map(Number);
+  const [ssH, ssM] = sunset .split(':').map(Number);
+  const sr = new Date(now); sr.setHours(srH, srM, 0, 0);
+  const ss = new Date(now); ss.setHours(ssH, ssM, 0, 0);
+  return now >= sr && now < ss;
 }
 
 export default WeatherPage;
