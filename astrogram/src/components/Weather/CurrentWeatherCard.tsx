@@ -1,4 +1,4 @@
-import { Sunrise, Sunset } from 'lucide-react';
+import { WiSunrise, WiSunset } from 'react-icons/wi';
 
 
 type Props = {
@@ -26,11 +26,11 @@ const CurrentWeatherCard: React.FC<Props> = ({ temperature, condition, icon, sun
       {(sunrise && sunset) && (
         <div className="mt-4 flex justify-center space-x-8 text-xs text-gray-400">
           <div className="flex items-center">
-            <Sunrise className="w-4 h-4 mr-1" />
+            <WiSunrise className="w-7 h-7 mr-1" />
             <span>{fmt(sunrise)}</span>
           </div>
           <div className="flex items-center">
-            <Sunset className="w-4 h-4 mr-1" />
+            <WiSunset className="w-7 h-7 mr-1" />
             <span>{fmt(sunset)}</span>
           </div>
         </div>

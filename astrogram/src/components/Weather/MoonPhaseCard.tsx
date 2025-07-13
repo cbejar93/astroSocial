@@ -1,4 +1,5 @@
-import { Moon, MoonStar } from 'lucide-react';
+import { WiMoonrise, WiMoonset } from 'react-icons/wi';
+
 
 
 interface MoonPhaseCardProps {
@@ -39,13 +40,16 @@ const MoonPhaseCard: React.FC<MoonPhaseCardProps> = ({ phase, illumination,  moo
             {/* Moonrise & Moonset */}
             <div className="flex justify-center space-x-8 text-gray-500">
               <div className="flex items-center gap-1">
-                <Moon className="w-5 h-5" />
+              <WiMoonrise size={50} className="w-7 h-7" />
+
                 <span className="text-sm">{fmt(moonrise)}</span>
               </div>
               <div className="flex items-center gap-1">
-                <MoonStar className="w-5 h-5" />
+              <WiMoonset className="w-7 h-7" />
+
                 <span className="text-sm">{fmt(moonset)}</span>
               </div>
+       
             </div>
           </div>
         </div>
