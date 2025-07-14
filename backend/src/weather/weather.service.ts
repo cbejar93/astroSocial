@@ -158,13 +158,20 @@ export class WeatherService {
         }),
       );
 
+      console.log('=======')
+      console.log(resp.data);
+      console.log('=======')
+
+
       const addr = resp.data.address || {};
-      const city = addr.city
+      let city = addr.city
         || addr.town
         || addr.village
         || addr.county
         || addr.state
         || 'Unknown location';
+
+      city+= ', ' + addr.state;
 
       await this.cache.set(cacheKey, city, 86400);
       this.logger.log(`💾 Cached location ${cacheKey}: ${city} (24h TTL)`);

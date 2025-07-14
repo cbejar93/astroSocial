@@ -35,10 +35,7 @@ export interface WeatherDay {
 
 interface WeatherData {
   status: string;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
+  coordinates: string;
   data: WeatherDay[];
 }
 
@@ -76,7 +73,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
   const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
   const sunrise = todayData?.astro?.sunrise;
   const sunset = todayData?.astro?.sunset;
-  console.log(futureWeatherData);
+  console.log(weather);
 
   const isDaytime = todayData?.astro
   ? checkDaytime(todayData.astro.sunrise, todayData.astro.sunset)
@@ -87,7 +84,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
       <WeatherHeader
-        location={"Oakland, CA"}
+        location={weather.coordinates}
         date={today.toLocaleDateString()}
       />
 

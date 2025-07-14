@@ -1,24 +1,49 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Logger } from '@nestjs/common';
 import { WeatherService } from './weather.service'; // adjust the path if needed
 import { WeatherDay } from './dto/weather.types';
 
 @Controller('api/weather')
 export class WeatherController {
+
+  private readonly logger = new Logger(WeatherController.name);
+
   constructor(private weatherService: WeatherService) {}
 
   @Post()
   async getWeather(@Body() body: { latitude: number; longitude: number }) {
     const { latitude, longitude } = body;
 
-    console.log(`Received location: ${latitude}, ${longitude}`);
+    this.logger.log(`Received request for weather at [${latitude}, ${longitude}]`);
+
+
+    const start = Date.now();
+
+    this.logger.log('Starting parallel fetch of visibility, astronomy & location');
 
     // Fetch visibility data from Open-Meteo
-    const visibilityData = await this.weatherService.fetchVisibility(latitude, longitude);
-    const astronomy  = await this.weatherService.fetchAstronomy(latitude, longitude);
+       // fire all three requests at once
+       const [ visibilityData, astronomy, location ] = await Promise.all([
+        this.weatherService.fetchVisibility(latitude, longitude),
+        this.weatherService.fetchAstronomy(latitude, longitude),
+        this.weatherService.fetchLocationName(latitude, longitude),
+      ]);
 
+      const duration = Date.now() - start;
+
+
+      this.logger.log(
+        `Fetched data in ${duration}ms → ` +
+        `visibility days: ${visibilityData.length}, ` +
+        `astronomy days: ${astronomy.length}, ` +
+        `location: ${location}`
+      );
+
+   
     const daily: WeatherDay[] = visibilityData.map(visDay => {
       // find the matching astro object by date
       const astroRaw = astronomy.find(a => a.datetime === visDay.date);
+
+
 
       return {
         date:       visDay.date,
@@ -36,9 +61,9 @@ export class WeatherController {
       };
     });
 
-    // console.log(daily);
+    this.logger.log(`Returning payload with ${daily.length} days of data`);
 
-    return { status:'ok', coordinates:{ latitude, longitude }, data:daily };
+    return { status:'ok', coordinates:location, data:daily };
   }
 }
 
