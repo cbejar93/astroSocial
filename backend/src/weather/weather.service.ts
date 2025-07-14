@@ -44,6 +44,7 @@ export class WeatherService {
               'relative_humidity_2m',
               'precipitation_probability',
               'windspeed_10m',
+              'wind_direction_10m'
             ].join(','),
           },
         }),
@@ -70,6 +71,7 @@ export class WeatherService {
               humidity: {},
               precipitation: {},
               windspeed: {},
+              winddirection: {}
             },
           };
         }
@@ -80,6 +82,7 @@ export class WeatherService {
         resultMap[dateKey].conditions.humidity[hr]       = hourly.relative_humidity_2m[i];
         resultMap[dateKey].conditions.precipitation[hr]  = hourly.precipitation_probability[i];
         resultMap[dateKey].conditions.windspeed[hr]      = hourly.windspeed_10m[i];
+        resultMap[dateKey].conditions.winddirection[hr]      = hourly.wind_direction_10m[i];
       }
 
       const result = Object.values(resultMap);
