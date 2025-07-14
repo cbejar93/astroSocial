@@ -1,22 +1,23 @@
 // src/components/BottomNavbar.tsx
 import React, { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation }       from "react-router-dom";
 import { Home, Search, PlusCircle, CloudSun } from "lucide-react";
-import lavaLampUrl from "/lava.png";
+import LavaLampIcon from "../Icons/LavaLampIcons";
+
+type IconComponent = React.ComponentType<{ className?: string }>;
 
 interface Tab {
   name: string;
   path: string;
-  icon: React.ComponentType<{ className?: string }> | string;
-  isImage?: boolean;
+  icon: IconComponent;
 }
 
 const tabs: Tab[] = [
-  { name: "Home",    path: "/",         icon: Home          },
-  { name: "Weather", path: "/weather",  icon: CloudSun      },
-  { name: "Post",    path: "/upload",   icon: PlusCircle    },
-  { name: "Lounges", path: "/lounge",   icon: lavaLampUrl,  isImage: true },
-  { name: "Search",  path: "/search",   icon: Search        },
+  { name: "Home",    path: "/",         icon: Home         },
+  { name: "Weather", path: "/weather",  icon: CloudSun     },
+  { name: "Post",    path: "/upload",   icon: PlusCircle   },
+  { name: "Lounges", path: "/lounge",   icon: LavaLampIcon },
+  { name: "Search",  path: "/search",   icon: Search       },
 ];
 
 const BottomNavbar: React.FC = () => {
@@ -41,6 +42,7 @@ const BottomNavbar: React.FC = () => {
 
         {tabs.map((tab, index) => {
           const isActive = index === activeIndex;
+          const Icon     = tab.icon as IconComponent;
 
           return (
             <NavLink
@@ -49,21 +51,11 @@ const BottomNavbar: React.FC = () => {
               className="relative z-10 flex flex-1 flex-col items-center justify-center h-full"
               aria-label={tab.name}
             >
-              {tab.isImage ? (
-                <img
-                  src={tab.icon as string}
-                  alt={tab.name}
-                  className={`w-6 h-6 transition-opacity duration-200 ${
-                    isActive ? "opacity-100" : "opacity-50"
-                  }`}
-                />
-              ) : (
-                React.createElement(tab.icon as React.ComponentType<any>, {
-                  className: `w-6 h-6 transition-colors duration-200 ${
-                    isActive ? "text-black" : "text-sky-400"
-                  }`,
-                })
-              )}
+              <Icon
+                className={`w-6 h-6 transition-colors duration-200 ${
+                  isActive ? "text-black" : "text-sky-400"
+                }`}
+              />
               <span
                 className={`text-xs transition-colors duration-200 mt-1 ${
                   isActive ? "text-black" : "text-sky-400"

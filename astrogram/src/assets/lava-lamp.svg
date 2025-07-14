@@ -1,0 +1,19 @@
+<!-- src/icons/lava-lamp.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" fill="none">
+  <!-- Top cap -->
+  <path d="M16 0 L48 0 L56 16 L8 16 Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"></path>
+  <!-- Container body -->
+  <path d="M8 16 L8 80 L24 112 L40 112 L56 80 L56 16 Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"></path>
+  <!-- Interior divider line -->
+  <path d="M8 16 H56" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path>
+  <!-- Wax blob: top droplet -->
+  <circle cx="32" cy="32" r="6" fill="currentColor"></circle>
+  <!-- Wax blob: bottom fluid shape -->
+  <path d="M28 56
+       C36 72, 38 88, 32 96
+       C26 104, 24 80, 28 56 Z" fill="currentColor"></path>
+  <!-- Base bar -->
+  <path d="M24 112 H40" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path>
+  <!-- Foot -->
+  <path d="M20 112 L44 112 L52 128 L12 128 Z" fill="currentColor"></path>
+</svg>
