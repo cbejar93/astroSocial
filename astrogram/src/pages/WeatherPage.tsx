@@ -4,6 +4,7 @@ import CurrentWeatherCard from "../components/Weather/CurrentWeatherCard";
 import WeatherCard from "../components/Weather/WeatherCard";
 import MoonPhaseCard from "../components/Weather/MoonPhaseCard";
 import WeatherSkeleton from "../components/Weather/WeatherSkeleton";
+import WindCard from "../components/Weather/WindCard";
 
 interface WeatherConditions {
   temperature?: Record<string, number>;
@@ -12,6 +13,7 @@ interface WeatherConditions {
   humidity?: Record<string, number>;
   precipitation?: Record<string, number>;
   windspeed?: Record<string, number>;
+  winddirection?: Record<string, number>;
 }
 
 export interface AstroData {
@@ -76,10 +78,29 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
   console.log(weather);
 
   const isDaytime = todayData?.astro
-  ? checkDaytime(todayData.astro.sunrise, todayData.astro.sunset)
-  : true;
+    ? checkDaytime(todayData.astro.sunrise, todayData.astro.sunset)
+    : true;
 
   const icon = getWeatherIcon(currentCondition, isDaytime);
+
+  const speedMap = todayData?.conditions.windspeed ?? {};
+  const directionMap = todayData?.conditions.winddirection ?? {};
+
+  // 2) turn the keys into numbers and find which hour is closest to now
+  const nowHour = new Date().getHours();
+  const available = Object.keys(speedMap).map(h => parseInt(h, 10));
+  // fallback if no data
+  let chosenHour = available.length ? available[0] : 0;
+
+  if (available.length) {
+    chosenHour = available.reduce((prev, curr) => {
+      return Math.abs(curr - nowHour) < Math.abs(prev - nowHour) ? curr : prev;
+    }, available[0]);
+  }
+
+  // 3) pull out the values for that hour
+  const currentWindSpeed = speedMap[chosenHour];
+  const currentWindDirection = directionMap[chosenHour];
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
@@ -107,9 +128,11 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
 
       {/* Moon Phase */}
       {todayData?.astro && (
-        <div className="mt-4 flex gap-2">
+        <div className="mt-6 flex gap-4">
+          {/* Moon card at half-width */}
           <div className="w-1/2">
             <MoonPhaseCard
+             className="h-full"
               phase={todayData.astro.moonPhase.phase}
               illumination={todayData.astro.moonPhase.illumination}
               moonrise={todayData.astro.moonrise}
@@ -117,6 +140,15 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
             />
           </div>
 
+          {/* Wind card at half-width */}
+          <div className="w-1/2">
+            <WindCard
+              className="h-full"
+              speed={currentWindSpeed}
+              direction={currentWindDirection}
+              unit="km/h"
+            />
+          </div>
         </div>
       )}
     </div>
@@ -150,7 +182,7 @@ function checkDaytime(sunrise: string, sunset: string): boolean {
   const now = new Date();
   // parse “HH:MM:SS” to a Date for today
   const [srH, srM] = sunrise.split(':').map(Number);
-  const [ssH, ssM] = sunset .split(':').map(Number);
+  const [ssH, ssM] = sunset.split(':').map(Number);
   const sr = new Date(now); sr.setHours(srH, srM, 0, 0);
   const ss = new Date(now); ss.setHours(ssH, ssM, 0, 0);
   return now >= sr && now < ss;

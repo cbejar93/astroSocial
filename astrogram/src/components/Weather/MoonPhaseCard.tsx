@@ -7,6 +7,7 @@ interface MoonPhaseCardProps {
   illumination: number; // e.g. 0.62 = 62%
   moonrise: string;         // "HH:MM:SS"
   moonset: string;         // "HH:MM:SS"
+  className:string;
 }
 
 const phaseIcons: Record<string, string> = {
@@ -21,12 +22,17 @@ const phaseIcons: Record<string, string> = {
 };
 
 const MoonPhaseCard: React.FC<MoonPhaseCardProps> = ({ phase, illumination, moonrise,
-  moonset, }) => {
+  moonset, className }) => {
   const emoji = phaseIcons[phase] ?? "🌙";
   const fmt = (t: string) => t.slice(0, 5); // drop seconds
 
   return (
-    <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md px-6 py-4 border border-gray-300 dark:border-gray-700 w-full">
+    <div className={`
+      ${className ?? ''} 
+      bg-white dark:bg-gray-800 text-black dark:text-white 
+      rounded-2xl shadow-md p-4 border border-gray-300 dark:border-gray-700 
+      text-center flex flex-col justify-between
+    `}>
       <div className="flex flex-col items-center text-center">
         {/* Phase Icon */}
         <div className="text-5xl mb-2">{emoji}</div>
