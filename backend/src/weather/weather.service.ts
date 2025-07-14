@@ -158,11 +158,6 @@ export class WeatherService {
         }),
       );
 
-      console.log('=======')
-      console.log(resp.data);
-      console.log('=======')
-
-
       const addr = resp.data.address || {};
       let city = addr.city
         || addr.town
