@@ -25,6 +25,8 @@ const MoonPhaseCard: React.FC<MoonPhaseCardProps> = ({ phase, illumination, moon
   moonset, className }) => {
   const emoji = phaseIcons[phase] ?? "🌙";
   const fmt = (t: string) => t.slice(0, 5); // drop seconds
+  const illum =  phaseToIlluminationPercent(illumination);
+  console.log(illumination);
 
   return (
     <div className={`
@@ -40,7 +42,7 @@ const MoonPhaseCard: React.FC<MoonPhaseCardProps> = ({ phase, illumination, moon
         <p className="text-sm font-semibold mb-1">{phase}</p>
         {/* Illumination */}
         <p className="text-sm text-gray-400 mb-4">
-          Illumination: {Math.round(illumination)}%
+          Illumination: {illum}%
         </p>
 
         {/* Moonrise & Moonset */}
@@ -64,3 +66,13 @@ const MoonPhaseCard: React.FC<MoonPhaseCardProps> = ({ phase, illumination, moon
 };
 
 export default MoonPhaseCard;
+
+function phaseToIlluminationPercent(rawPercent: number): number {
+  // clamp to [0,100]
+  const p = Math.max(0, Math.min(100, rawPercent));
+
+  // triangle wave: rises from 0→100 as p goes 0→50, then falls 100→0 as p goes 50→100
+  return p <= 50
+    ? p * 2           //  e.g. at p=25 → 50% illum
+    : (100 - p) * 2;  //  e.g. at p=75 → 50% illum
+}
