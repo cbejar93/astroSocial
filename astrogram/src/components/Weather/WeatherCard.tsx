@@ -15,12 +15,12 @@ const levelColors: Record<number, string> = {
 };
 
 const timeBlocks: TimeBlock[] = ["0",'3' ,"6", "12", "18", "21"];
-const conditions: Array<keyof WeatherDay["conditions"]> = ["cloudcover", "visibility", "humidity"];
+const conditions: Array<keyof WeatherDay["conditions"]> = ["cloudcover", "visibility", "seeing"];
 
 const conditionLabels: Record<string, string> = {
   cloudcover: "Clouds",
-  visibility: "Seeing",
-  humidity: "Transparency",
+  visibility: "Transparancy",
+  seeing : "Seeing",
 };
 
 const getClosestTimeBlock = (): TimeBlock => {
@@ -99,15 +99,13 @@ export function mapValueToLevel(condition: string, value: number): number {
       if (value < 80) return 2;        // Mostly cloudy
       return 1;                        // Overcast
 
-    case "seeing":
-    case "windspeed":
-    case "windspeed_10m":
-      // m/s — lower is better
-      if (value <= 2) return 5;        // Perfectly still
-      if (value <= 5) return 4;        // Great seeing
-      if (value <= 8) return 3;        // Usable
-      if (value <= 12) return 2;       // Turbulent
-      return 1;                        // Very poor seeing
+      case "seeing":
+        // boundary layer height in metres — lower is better for astronomical viewing
+        if (value <= 100)  return 5;  // Excellent (very stable)
+        if (value <= 300)  return 4;  // Great (low mixing)
+        if (value <= 600)  return 3;  // Good (moderate mixing)
+        if (value <= 1000) return 2;  // Fair (high mixing)
+        return 1; 
 
     case "transparency":
     case "humidity":

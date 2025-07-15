@@ -14,6 +14,7 @@ interface WeatherConditions {
   precipitation?: Record<string, number>;
   windspeed?: Record<string, number>;
   winddirection?: Record<string, number>;
+  seeing?:Record<string, number>
 }
 
 export interface AstroData {
