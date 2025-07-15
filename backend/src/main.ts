@@ -46,8 +46,8 @@ async function bootstrap() {
   logger.log('✅ Nest application initialized');
 
   // Catch-all to serve index.html
-  '/{*any}'
-  server.get(/.*/, (req: Request, res: Response) => {
+  
+  server.get(/(.*)/, (req: Request, res: Response) => {
     // Optional: skip API routes
     if (req.path.startsWith('/api')) {
        res.status(404).send('Not Found');
