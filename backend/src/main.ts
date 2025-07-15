@@ -47,7 +47,7 @@ async function bootstrap() {
 
   // Catch-all to serve index.html
   
-  server.get(/(.*)/, (req: Request, res: Response) => {
+  server.get('/{*all}', (req: Request, res: Response) => {
     // Optional: skip API routes
     if (req.path.startsWith('/api')) {
        res.status(404).send('Not Found');
