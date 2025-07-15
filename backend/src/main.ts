@@ -12,6 +12,8 @@ const logger = new Logger('Main');
 async function bootstrap() {
   logger.log('📦 Bootstrap starting');
 
+
+
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   const isProduction = process.env.NODE_ENV === 'production';
@@ -44,7 +46,14 @@ async function bootstrap() {
   logger.log('✅ Nest application initialized');
 
   // Catch-all to serve index.html
-  server.get('/{*any}', (req: Request, res: Response) => {
+  '/{*any}'
+  server.get(/.*/, (req: Request, res: Response) => {
+    // Optional: skip API routes
+    if (req.path.startsWith('/api')) {
+       res.status(404).send('Not Found');
+       return
+    }
+  
     const indexPath = path.join(clientDistPath, 'index.html');
     logger.log(`🗂️  GET ${req.originalUrl} → serving index.html`);
     res.sendFile(indexPath, err => {
