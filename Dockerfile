@@ -26,11 +26,11 @@
     COPY backend/package*.json ./
     RUN npm install
 
-    # Generate the Prisma client
-    RUN npx prisma generate
-    
     # Copy backend source
     COPY backend ./
+
+    # Generate the Prisma client
+    RUN npx prisma generate
     
     # ⬇️ Copy frontend build into backend public folder
     COPY --from=frontend-builder /app/astrogram/dist ./public
