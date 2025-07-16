@@ -1,7 +1,16 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Redirect, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard }                      from '@nestjs/passport';
+import type { Request as ExpressRequest } from 'express';
 
-@Controller('auth')
+
+interface AuthRequest extends ExpressRequest {
+    user: {
+      jwt: string;
+      // add other fields you put on req.user if you need them
+    };
+  }
+
+@Controller('api/auth')
 export class AuthController {
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -11,13 +20,19 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req) {
-    const jwt = req.user.jwt as string;
-    // redirect back to your front‐end with the token
-    return `<!doctype html>
-    <script>
-      // you might replace this with a proper redirect in production
-      window.location.href = "${process.env.FRONTEND_URL}/auth/success?token=${jwt}";
-    </script>`;
+  @Redirect() // default 302
+  googleAuthRedirect(@Req() req: AuthRequest) {
+    if(process.env.NODE_ENV){
+        const token = req.user.jwt;
+        const url   = `${process.env.FRONTEND_URL}/auth/success?token=${token}`;
+        return { url };
+
+    }
+    
+    const token = req.user.jwt;
+    const url   = `${process.env.FRONTEND_URL_DEV}/auth/success?token=${token}`;
+    console.log(token);
+    console.log(url);
+    return { url };
   }
 }

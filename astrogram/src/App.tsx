@@ -6,6 +6,9 @@ import BottomNavbar from './components/BottomNavbar/BottomNavbar';
 import WeatherPage from './pages/WeatherPage';
 import { useWeatherService } from './hooks/useWeatherService';
 import { useEffect } from "react";
+import SignupPage from './pages/SignupPage';
+import AuthSuccessPage from './pages/AuthSuccessPage';
+
 
 
 const App: React.FC = () => {
@@ -33,6 +36,8 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Feed />} />
             <Route path="/upload" element={<UploadForm />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/auth/success" element={<AuthSuccessPage />} />
             <Route
               path="/weather"
               element={

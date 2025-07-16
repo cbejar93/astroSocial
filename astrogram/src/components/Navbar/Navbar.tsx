@@ -1,5 +1,7 @@
 import { Menu, Bell, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Link } from 'react-router-dom';
+
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -63,9 +65,9 @@ const Navbar = () => {
           <button className="btn-unstyled" aria-label="Notifications">
             <Bell className="w-6 h-6" />
           </button>
-          <button className="btn-unstyled" aria-label="Account">
+          <Link to="/signup" className="btn-unstyled" aria-label="Account">
             <User className="w-6 h-6" />
-          </button>
+          </Link>
         </div>
       </div>
     </nav>
