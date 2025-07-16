@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -26,6 +25,7 @@ model User {
   // ← add these two relation fields:
   posts       Post[]    @relation("UserPosts")
   comments    Comment[] @relation("UserComments")
+  @@unique([provider, providerId], name: "provider_providerId")
 }
 
 model Post {
