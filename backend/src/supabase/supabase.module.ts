@@ -22,7 +22,7 @@ export class SupabaseModule {
             'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment',
           );
           throw new Error(
-            'SupabaseModule: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set',
+            'SupabaseModule: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set try new',
           );
         }
 
