@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {  Routes, Route } from 'react-router-dom';
 import Feed from './pages/Feed';
 import UploadForm from './components/UploadForm/UploadForm';
 import Navbar from './components/Navbar/Navbar';
@@ -27,7 +27,7 @@ const App: React.FC = () => {
 
 
   return (
-    <Router>
+    
       <div className="flex flex-col min-h-screen bg-gray-900 text-white">
         <Navbar />
 
@@ -55,8 +55,7 @@ const App: React.FC = () => {
         {/* Bottom Navbar */}
         <BottomNavbar />
       </div>
-    </Router>
-  );
+      );
 };
 
 export default App;

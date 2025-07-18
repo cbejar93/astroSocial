@@ -132,8 +132,6 @@ export class WeatherService {
       );
 
       const days = resp.data.days;
-      console.log(days);
-      console.log('=+==+===')
       this.logger.log(`✅ Visual Crossing returned ${days.length} days`);
       await this.cache.set(cacheKey, days, 3600);
       this.logger.log(`💾 Cached astronomy data for ${cacheKey} (1h TTL)`);

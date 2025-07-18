@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WeatherModule } from './weather/weather.module';
@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import { SupabaseModule } from './supabase/supabase.module';
 import { PrismaModule }   from './prisma/prisma.module';
 import { AuthModule }    from './auth/auth.module';
+import { RequestLoggingMiddleware }  from './middleware/logging.middleware';
+
 
 
 @Module({
@@ -22,4 +24,10 @@ import { AuthModule }    from './auth/auth.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequestLoggingMiddleware)
+      .forRoutes('*');  // or limit to certain controllers
+  }
+}
