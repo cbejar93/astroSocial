@@ -2,17 +2,19 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy }   from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { AuthService }        from './auth.service';
+const gPath = process.env.NODE_ENV ? process.env.FRONTEND_URL : process.env.BACKEND_URL;
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private readonly logger = new Logger(GoogleStrategy.name);
 
+
   constructor(private authService: AuthService) {
     super({
-      clientID:      process.env.GOOGLE_CLIENT_ID,
-      clientSecret:  process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL:   `${process.env.BACKEND_URL}/api/auth/google/redirect`,
-      scope:         ['email','profile'],
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: `${gPath}/api/auth/google/redirect`,
+      scope: ['email', 'profile'],
     });
   }
 

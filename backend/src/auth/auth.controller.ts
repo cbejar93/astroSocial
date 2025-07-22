@@ -22,6 +22,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   @Redirect() // default 302
   googleAuthRedirect(@Req() req: AuthRequest) {
+    console.log('checking url')
     if(process.env.NODE_ENV){
       console.log('in prod env');
       console.log(process.env.FRONTEND_URL)
