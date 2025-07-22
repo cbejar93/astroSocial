@@ -28,6 +28,7 @@ import React, {
   interface AuthContextType {
     token: string | null;
     user: User | null;
+    loading: boolean;
     login: (token: string) => Promise<any | null>;
     logout: () => void;
   }
@@ -37,7 +38,10 @@ import React, {
   export function AuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [user,  setUser]  = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+
     const API_BASE          = import.meta.env.VITE_API_BASE_URL;
+
   
     // helper to GET /auth/me
     async function fetchMe(jwt: string): Promise<User> {
@@ -58,15 +62,18 @@ import React, {
           .catch(() => {
             localStorage.removeItem('AUTH_TOKEN');
             setToken(null);
-          });
+          })
+          .finally(()=>{setLoading(false)});
       }
     }, []);
   
     const login = async (rawToken: string) => {
       localStorage.setItem('AUTH_TOKEN', rawToken);
       setToken(rawToken);
+      setLoading(true);
       const me = await fetchMe(rawToken);
       setUser(me);
+      setLoading(false);
       return me;
     };
   
@@ -77,7 +84,7 @@ import React, {
     };
   
     return (
-      <AuthContext.Provider value={{ token, user, login, logout }}>
+      <AuthContext.Provider value={{ token, loading  ,user, login, logout }}>
         {children}
       </AuthContext.Provider>
     );

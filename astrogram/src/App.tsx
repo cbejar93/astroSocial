@@ -40,11 +40,12 @@ const App: React.FC = () => {
 
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/auth/success" element={<AuthSuccessPage />} />
-          <Route path="/completeProfile" element={<CompleteProfilePage />} />
 
           <Route element={<RequireProfileCompletion />}>
             <Route path="/upload" element={<UploadForm />} />
             <Route path="/" element={<Feed />} />
+            <Route path="/completeProfile" element={<CompleteProfilePage />} />
+
 
             <Route
               path="/weather"
