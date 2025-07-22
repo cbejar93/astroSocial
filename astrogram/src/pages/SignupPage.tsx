@@ -3,7 +3,7 @@ import { FcGoogle } from 'react-icons/fc';
 
 const SignupPage: React.FC = () => {
   const handleGoogleSignIn = () => {
-    const base = import.meta.env.VITE_API_BASE_URL || '';
+    const base = import.meta.env.VITE_API_BASE_URL || '/api';
     // Redirect to NestJS Google OAuth start
     console.log(`${base}/auth/google`)
     window.location.href = `${base}/auth/google`;
