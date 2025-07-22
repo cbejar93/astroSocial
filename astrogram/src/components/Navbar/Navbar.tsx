@@ -1,11 +1,15 @@
 import { Menu, Bell, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
+import { useAuth } from "../../contexts/AuthContext";
+
 
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,7 +70,15 @@ const Navbar = () => {
             <Bell className="w-6 h-6" />
           </button>
           <Link to="/signup" className="btn-unstyled" aria-label="Account">
-            <User className="w-6 h-6" />
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt="Your avatar"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <User className="w-6 h-6 m-auto text-gray-400" />
+          )}
           </Link>
         </div>
       </div>

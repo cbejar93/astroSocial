@@ -14,17 +14,20 @@ datasource db {
 }
 
 model User {
-  id          String    @id @default(uuid())
-  email       String    @unique
-  name        String?
-  provider    String
-  providerId  String
-  createdAt   DateTime  @default(now())
-   avatarUrl   String? 
-  
-  // ← add these two relation fields:
-  posts       Post[]    @relation("UserPosts")
-  comments    Comment[] @relation("UserComments")
+  id               String    @id @default(uuid())
+  email            String    @unique
+  username         String?   @unique
+  name             String?
+  provider         String
+  providerId       String
+  createdAt        DateTime  @default(now())
+  avatarUrl        String?
+  profileComplete  Boolean   @default(false)   // ← new field
+
+  // your existing relations
+  posts            Post[]    @relation("UserPosts")
+  comments         Comment[] @relation("UserComments")
+
   @@unique([provider, providerId], name: "provider_providerId")
 }
 

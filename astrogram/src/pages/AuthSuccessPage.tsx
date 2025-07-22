@@ -9,16 +9,36 @@ const AuthSuccessPage: React.FC = () => {
 
   useEffect(() => {
     const token = qs.get('token');
-    if (token) {
-      login(token)
-        .then(() => navigate('/', { replace: true }))
-        .catch(() => navigate('/signup', { replace: true }));
-    } else {
+    if (!token) {
       navigate('/signup', { replace: true });
+      return;
     }
+  
+    // define an async function inside the effect
+    const doLogin = async () => {
+      try {
+        const user = await login(token);
+        if (!user) {
+          navigate('/', { replace: true });
+        } else if (!user.profileComplete) {
+          navigate('/completeProfile', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      } catch {
+        navigate('/signup', { replace: true });
+      }
+    };
+  
+    // call it (but don’t return it)
+    doLogin();
   }, [qs, login, navigate]);
 
-  return <div className="flex items-center justify-center h-screen">Signing you in…</div>;
+  return (
+    <div className="flex items-center justify-center h-screen">
+      Signing you in…
+    </div>
+  );
 };
 
 export default AuthSuccessPage;

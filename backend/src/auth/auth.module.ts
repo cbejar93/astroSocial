@@ -5,6 +5,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GoogleStrategy }     from './google.strategy';
 import { AuthService }        from './auth.service';
 import { AuthController }     from './auth.controller';
+import { JwtStrategy } from './jwt.strategy';
+import { UsersModule }    from '../users/users.module';
+
 
 @Module({
   imports: [
@@ -17,8 +20,10 @@ import { AuthController }     from './auth.controller';
         signOptions: { expiresIn: cfg.get<string>('JWT_EXPIRATION') },
       }),
     }),
+    UsersModule
   ],
-  providers: [AuthService, GoogleStrategy],
+  providers: [AuthService, GoogleStrategy, JwtStrategy],
   controllers: [AuthController],
+  exports:   [JwtModule, PassportModule],
 })
 export class AuthModule {}

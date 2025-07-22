@@ -19,14 +19,16 @@ import React, {
 
   
   interface User {
+    profileComplete: any;
     id: string;
     email: string;
+    avatarUrl: string
   }
   
   interface AuthContextType {
     token: string | null;
     user: User | null;
-    login: (token: string) => Promise<void>;
+    login: (token: string) => Promise<any | null>;
     logout: () => void;
   }
   
@@ -39,7 +41,7 @@ import React, {
   
     // helper to GET /auth/me
     async function fetchMe(jwt: string): Promise<User> {
-      const res = await fetch(`${API_BASE}/auth/me`, {
+      const res = await fetch(`${API_BASE}/users/me`, {
         headers: { Authorization: `Bearer ${jwt}` },
       });
       if (!res.ok) throw new Error('Failed to fetch /auth/me');
@@ -65,6 +67,7 @@ import React, {
       setToken(rawToken);
       const me = await fetchMe(rawToken);
       setUser(me);
+      return me;
     };
   
     const logout = () => {

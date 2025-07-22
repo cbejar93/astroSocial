@@ -15,7 +15,7 @@ export class SupabaseModule {
       provide: SUPABASE_TOKEN,
       useFactory: (cfg: ConfigService) => {
         const url = cfg.get<string>('SUPA_URL');
-        const key = cfg.get<string>('SUPA_KEY');
+        const key = cfg.get<string>('SUPA_SERVICE_KEY');
 
         if (!url || !key) {
           this.logger.error(
