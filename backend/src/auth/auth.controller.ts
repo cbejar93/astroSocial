@@ -23,6 +23,8 @@ export class AuthController {
   @Redirect() // default 302
   googleAuthRedirect(@Req() req: AuthRequest) {
     if(process.env.NODE_ENV){
+      console.log('in prod env');
+      console.log(process.env.FRONTEND_URL)
         const token = req.user.jwt;
         const url   = `${process.env.FRONTEND_URL}/auth/success?token=${token}`;
         return { url };
