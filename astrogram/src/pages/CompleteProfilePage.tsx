@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth }     from '../contexts/AuthContext';
 import { UploadCloud }             from "lucide-react";
+import { apiFetch } from '../lib/api';
+
 
 
 const CompleteProfilePage: React.FC = () => {
-  const { token }       = useAuth();
   const navigate        = useNavigate();
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -48,13 +48,9 @@ const CompleteProfilePage: React.FC = () => {
       if (imageFile) form.append('avatar', imageFile);
 
       console.log('before the call');
-      console.log(token);
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/me`, {
+      const res = await apiFetch('/users/me', {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: form,
       });
 

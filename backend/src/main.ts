@@ -44,13 +44,7 @@ async function bootstrap() {
   });
   logger.log('🌐 CORS enabled for http://localhost:5173');
 
-
-
-  // Initialize Nest
-  await app.init();
-  logger.log('✅ Nest application initialized');
-
-  // Catch-all to serve index.html
+    // Catch-all to serve index.html
   
   // everything *not* under /api should be served your React app
   server.use((req, res, next) => {
@@ -68,6 +62,14 @@ async function bootstrap() {
       }
     })
   })
+
+
+
+  // Initialize Nest
+  await app.init();
+  logger.log('✅ Nest application initialized try 42');
+
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   logger.log(`🚀 App started and listening on port ${port}`);

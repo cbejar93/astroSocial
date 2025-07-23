@@ -1,98 +1,91 @@
 // src/contexts/AuthContext.tsx
 import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useState,
-  } from 'react';
-  import type { ReactNode } from 'react';
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  
+} from "react";
+import type { ReactNode } from 'react';
+import { apiFetch, setAccessToken } from "../lib/api";
 
-  declare global {
-    interface ImportMetaEnv {
-      readonly VITE_API_BASE_URL: string
-      // add other VITE_️_ vars if you use them here…
-    }
-    interface ImportMeta {
-      readonly env: ImportMetaEnv
-    }
-  }
+export interface User {
+  id: string;
+  email: string;
+  username?: string;
+  avatarUrl?: string;
+  profileComplete: boolean;
+}
 
-  
-  interface User {
-    profileComplete: any;
-    id: string;
-    email: string;
-    avatarUrl: string
-  }
-  
-  interface AuthContextType {
-    token: string | null;
-    user: User | null;
-    loading: boolean;
-    login: (token: string) => Promise<any | null>;
-    logout: () => void;
-  }
-  
-  const AuthContext = createContext<AuthContextType | undefined>(undefined);
-  
-  export function AuthProvider({ children }: { children: ReactNode }) {
-    const [token, setToken] = useState<string | null>(null);
-    const [user,  setUser]  = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (accessToken: string) => Promise<User>;
+  logout: () => void;
+}
 
-    const API_BASE          = import.meta.env.VITE_API_BASE_URL;
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-  
-    // helper to GET /auth/me
-    async function fetchMe(jwt: string): Promise<User> {
-      const res = await fetch(`${API_BASE}/users/me`, {
-        headers: { Authorization: `Bearer ${jwt}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch /auth/me');
-      return res.json();
-    }
-  
-    // on app load, rehydrate token
-    useEffect(() => {
-      const saved = localStorage.getItem('AUTH_TOKEN');
-      if (saved) {
-        setToken(saved);
-        fetchMe(saved)
-          .then(setUser)
-          .catch(() => {
-            localStorage.removeItem('AUTH_TOKEN');
-            setToken(null);
-          })
-          .finally(()=>{setLoading(false)});
-      }
-    }, []);
-  
-    const login = async (rawToken: string) => {
-      localStorage.setItem('AUTH_TOKEN', rawToken);
-      setToken(rawToken);
-      setLoading(true);
-      const me = await fetchMe(rawToken);
-      setUser(me);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser]       = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // on mount, rehydrate access token + fetch current user
+  useEffect(() => {
+    const saved = localStorage.getItem("ACCESS_TOKEN");
+    if (saved) {
+      setAccessToken(saved);
+      apiFetch("/users/me")
+        .then((res) => {
+          if (!res.ok) throw new Error("Not authenticated");
+          return res.json();
+        })
+        .then(setUser)
+        .catch(() => {
+          setUser(null);
+          setAccessToken("");
+          localStorage.removeItem("ACCESS_TOKEN");
+        })
+        .finally(() => setLoading(false));
+    } else {
       setLoading(false);
-      return me;
-    };
-  
-    const logout = () => {
-      localStorage.removeItem('AUTH_TOKEN');
-      setToken(null);
-      setUser(null);
-    };
-  
-    return (
-      <AuthContext.Provider value={{ token, loading  ,user, login, logout }}>
-        {children}
-      </AuthContext.Provider>
-    );
-  }
-  
-  export function useAuth() {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth must be inside AuthProvider');
-    return ctx;
-  }
-  
+    }
+  }, []);
+
+  const login = async (accessToken: string) => {
+    // 1) store new access token
+    setAccessToken(accessToken);
+    localStorage.setItem("ACCESS_TOKEN", accessToken);
+
+    // 2) fetch the user profile
+    setLoading(true);
+    const res = await apiFetch("/users/me");
+    if (!res.ok) {
+      throw new Error("Login failed");
+    }
+    const me: User = await res.json();
+    setUser(me);
+    setLoading(false);
+    return me;
+  };
+
+  const logout = () => {
+    // drop everything
+    setUser(null);
+    setAccessToken("");
+    localStorage.removeItem("ACCESS_TOKEN");
+    // optionally call your backend /logout endpoint to clear the refresh cookie
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
+  return ctx;
+}
