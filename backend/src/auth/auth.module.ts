@@ -20,6 +20,14 @@ import { UsersModule }    from '../users/users.module';
         signOptions: { expiresIn: cfg.get<string>('JWT_EXPIRATION') },
       }),
     }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject:  [ConfigService],
+      useFactory: (cfg: ConfigService) => ({
+        secret:       cfg.get<string>('JWT_REFRESH_SECRET'),
+        signOptions:  { expiresIn: cfg.get<string>('JWT_REFRESH_EXPIRATION') },
+      }),
+    }),
     UsersModule
   ],
   providers: [AuthService, GoogleStrategy, JwtStrategy],

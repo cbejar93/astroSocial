@@ -35,7 +35,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       secretOrKey:     secret,
     });
 
-    // now it's safe to assign to this.logger
     this.logger = logger;
   }
 

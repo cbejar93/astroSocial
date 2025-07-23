@@ -1,8 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy }   from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { AuthService }        from './auth.service';
 const gPath = process.env.NODE_ENV ? process.env.FRONTEND_URL : process.env.BACKEND_URL;
+
+export interface GoogleUserPayload {
+  sub:   string;
+  email: string;
+  name?: string;
+}
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -22,19 +28,23 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: VerifyCallback,
-  ): Promise<any> {
+    done: (err: any, user?: GoogleUserPayload) => void,
+  ) {
     this.logger.log(`Google profile received: ${profile.id}`);
-    try {
-      // upsert the user & get a JWT
-      const jwt = await this.authService.validateOAuthLogin(
-        profile.id,
-        profile.emails[0].value,
-        profile.displayName,
-      );
-      done(null, { jwt });
-    } catch (err) {
-      done(err, false);
+
+    const emails = profile.emails as { value: string }[] | undefined;
+    const email  = emails?.[0]?.value;
+    if (!email) {
+      this.logger.error('No email found in Google profile');
+      return done(new UnauthorizedException('No email in Google profile'));
     }
+
+    const user: GoogleUserPayload = {
+      sub:   profile.id,
+      email: email,
+      name:  profile.displayName,  // might be undefined, that’s okay
+    };
+
+    return done(null, user);
   }
 }
