@@ -19,23 +19,21 @@ export class AuthService {
     providerId: string,
     email:      string,
     name:       string,
+    provider: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
+  
     const cleanEmail      = this.clean(email);
     const cleanName       = this.clean(name);
     const cleanProviderId = this.clean(providerId);
 
-    console.log(email);
-    console.log(name)
-    console.log(providerId);
+    
 
     // upsert user in your DB
     const user = await this.prisma.user.upsert({
-      where:  { provider_providerId: { provider: 'google', providerId: cleanProviderId } },
-      create: { email: cleanEmail, name: cleanName, provider: 'google', providerId: cleanProviderId },
+      where:  { provider_providerId: { provider, providerId: cleanProviderId } },
+      create: { email: cleanEmail, name: cleanName, provider, providerId: cleanProviderId },
       update: { name: cleanName },
     });
-
-    console.log('after call/')
 
     const payload = { sub: user.id, email: user.email };
 
@@ -50,15 +48,6 @@ export class AuthService {
       secret: process.env.JWT_REFRESH_SECRET,   // a second secret for refresh
       expiresIn: '7d',
     });
-
-    console.log('=====')
-    console.log(accessToken);
-    console.log('=====')
-
-    console.log(refreshToken);
-    console.log('=====')
-
-    console.log(user);
 
     return { accessToken, refreshToken };
   }
