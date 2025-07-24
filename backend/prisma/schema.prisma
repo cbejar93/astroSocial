@@ -7,31 +7,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum InteractionType {
+  LIKE
+  SHARE
+  REPOST
+}
+
 model User {
-  id              String    @id @default(uuid())
-  email           String    @unique
+  id              String            @id @default(uuid())
+  email           String            @unique
   name            String?
   provider        String
   providerId      String
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime          @default(now())
   avatarUrl       String?
-  profileComplete Boolean   @default(false)
-  username        String?   @unique
-  role            String    @default("USER")
-  comments        Comment[] @relation("UserComments")
-  posts           Post[]    @relation("UserPosts")
+  profileComplete Boolean           @default(false)
+  username        String?           @unique
+  role            String            @default("USER")
+  comments        Comment[]         @relation("UserComments")
+  posts           Post[]            @relation("UserPosts")
+  interactions    PostInteraction[]
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
 
 model Post {
-  id        String    @id @default(uuid())
-  authorId  String
-  title     String
-  body      String
-  createdAt DateTime  @default(now())
-  comments  Comment[] @relation("PostComments")
-  author    User      @relation("UserPosts", fields: [authorId], references: [id])
+  id           String            @id @default(uuid())
+  authorId     String
+  title        String
+  body         String
+  imageUrl     String?
+  likes        Int               @default(0)
+  shares       Int               @default(0)
+  reposts      Int               @default(0)
+  createdAt    DateTime          @default(now())
+  comments     Comment[]         @relation("PostComments")
+  author       User              @relation("UserPosts", fields: [authorId], references: [id])
+  interactions PostInteraction[]
 }
 
 model Comment {
@@ -42,4 +54,16 @@ model Comment {
   createdAt DateTime @default(now())
   author    User     @relation("UserComments", fields: [authorId], references: [id])
   post      Post     @relation("PostComments", fields: [postId], references: [id])
+}
+
+model PostInteraction {
+  id        String          @id @default(uuid())
+  post      Post            @relation(fields: [postId], references: [id])
+  postId    String
+  user      User            @relation(fields: [userId], references: [id])
+  userId    String
+  type      InteractionType
+  createdAt DateTime        @default(now())
+
+  @@unique([postId, userId, type], name: "one_interaction_per_user_per_post")
 }

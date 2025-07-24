@@ -3,6 +3,7 @@ import { UsersController } from './users.controller';
 import { UsersService }    from './users.service';
 import { PrismaModule }    from '../prisma/prisma.module';
 import { SupabaseModule }  from '../supabase/supabase.module';
+import { StorageService } from 'src/storage/storage.service';
 
 
 @Module({
@@ -12,7 +13,7 @@ import { SupabaseModule }  from '../supabase/supabase.module';
 
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, StorageService],
   exports: [UsersService],
 })
 export class UsersModule {}
