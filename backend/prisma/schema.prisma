@@ -13,6 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
 model User {
   id               String    @id @default(uuid())
   email            String    @unique
@@ -23,6 +29,7 @@ model User {
   createdAt        DateTime  @default(now())
   avatarUrl        String?
   profileComplete  Boolean   @default(false)   // ← new field
+  role             UserRole   @default(USER)
 
   // your existing relations
   posts            Post[]    @relation("UserPosts")

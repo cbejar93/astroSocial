@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy }                         from '@nestjs/passport';
 import { Strategy, Profile, VerifyCallback }         from 'passport-facebook';
-const fPath = process.env.NODE_ENV ? process.env.BACKEND_URL_DEV : process.env.BACKEND_URL;
+const fPath = process.env.NODE_ENV ? process.env.FRONTEND_URL : process.env.BACKEND_URL ;
 
 
 export interface FacebookUserPayload {

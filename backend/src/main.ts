@@ -67,7 +67,7 @@ async function bootstrap() {
 
   // Initialize Nest
   await app.init();
-  logger.log('✅ Nest application initialized try 42');
+  logger.log('✅ Nest application initialized');
 
 
   const port = process.env.PORT ?? 3000;
