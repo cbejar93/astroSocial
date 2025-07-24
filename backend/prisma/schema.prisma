@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,27 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  USER
-  MODERATOR
-  ADMIN
-}
-
 model User {
-  id               String    @id @default(uuid())
-  email            String    @unique
-  username         String?   @unique
-  name             String?
-  provider         String
-  providerId       String
-  createdAt        DateTime  @default(now())
-  avatarUrl        String?
-  profileComplete  Boolean   @default(false)   // ← new field
-  role             UserRole   @default(USER)
-
-  // your existing relations
-  posts            Post[]    @relation("UserPosts")
-  comments         Comment[] @relation("UserComments")
+  id              String    @id @default(uuid())
+  email           String    @unique
+  name            String?
+  provider        String
+  providerId      String
+  createdAt       DateTime  @default(now())
+  avatarUrl       String?
+  profileComplete Boolean   @default(false)
+  username        String?   @unique
+  role            String    @default("USER")
+  comments        Comment[] @relation("UserComments")
+  posts           Post[]    @relation("UserPosts")
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -41,20 +27,19 @@ model User {
 model Post {
   id        String    @id @default(uuid())
   authorId  String
-  author    User      @relation("UserPosts", fields: [authorId], references: [id])
   title     String
   body      String
   createdAt DateTime  @default(now())
-
   comments  Comment[] @relation("PostComments")
+  author    User      @relation("UserPosts", fields: [authorId], references: [id])
 }
 
 model Comment {
-  id        String    @id @default(uuid())
+  id        String   @id @default(uuid())
   postId    String
-  post      Post      @relation("PostComments", fields: [postId], references: [id])
   authorId  String
-  author    User      @relation("UserComments", fields: [authorId], references: [id])
   text      String
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
+  author    User     @relation("UserComments", fields: [authorId], references: [id])
+  post      Post     @relation("PostComments", fields: [postId], references: [id])
 }
