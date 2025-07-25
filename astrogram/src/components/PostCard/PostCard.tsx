@@ -1,36 +1,92 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark } from "lucide-react";
+import { likePost, sharePost, repostPost } from '../../lib/api';
 
-interface PostCardProps {
+export interface PostCardProps {
+  id: string
   username: string;
   imageUrl: string;
   caption: string;
-  timestamp?: string;
+  timestamp: string;
   stars?: number;
   comments?: number;
   shares?: number;
+  avatarUrl: string;
+  likedByMe?: boolean;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
+  id,
   username,
   imageUrl,
+  avatarUrl,
   caption,
   timestamp,
   stars = 0,
   comments = 0,
   shares = 0,
+  likedByMe
 }) => {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(likedByMe);
   const [starCount, setStarCount] = useState(stars);
   const [commentCount, setCommentCount] = useState(comments);
   const [shareCount, setShareCount] = useState(shares);
   const [reposted, setReposted] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setStarCount((prev) => prev + (liked ? -1 : 1));
+  const handleLike = async () => {
+    if (liked) return; // only allow once
+    try {
+      const { count } = await likePost(id);
+      setStarCount(count);
+      setLiked(true);
+    } catch (err) {
+      console.error("Failed to like:", err);
+    }
+  };
+
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/posts/${id}`;
+
+    try {
+      const { count } = await sharePost(id);
+      setShareCount(count);
+    } catch (err) {
+      console.error("Failed to share:", err);
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${username}'s post`,
+          text: caption,
+          url:  postUrl,
+        });
+      } catch (err) {
+        console.warn("User cancelled share or error:", err);
+      }
+    } else {
+      // fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(postUrl);
+        alert("Link copied to clipboard!");
+      } catch {
+        prompt("Copy this link to share:", postUrl);
+      }
+    }
+  };
+
+  const handleRepost = async () => {
+    if (reposted) return;
+    try {
+      const { count } = await repostPost(id);
+      setShareCount(prev => prev); // leave shareCount alone
+      setReposted(true);
+      // if you want to show repost count separately, add another state
+    } catch (err) {
+      console.error("Failed to repost:", err);
+    }
   };
 
   return (
@@ -41,7 +97,7 @@ const PostCard: React.FC<PostCardProps> = ({
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <img
-              src="/defaultPfp.png"
+              src={avatarUrl}
               alt={`${username}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
@@ -87,7 +143,7 @@ const PostCard: React.FC<PostCardProps> = ({
             {/* Repost */}
             <button
               type="button"
-              onClick={() => setReposted(r => !r)}
+              onClick={handleRepost}
               className="btn-unstyled btn-action hover:text-green-400"
             >
               <Repeat2 className="w-5 h-5" />
@@ -117,7 +173,7 @@ const PostCard: React.FC<PostCardProps> = ({
             {/* Share */}
             <button
               type="button"
-              onClick={() => setShareCount(s => s + 1)}
+              onClick={handleShare}
               className="btn-unstyled btn-action hover:text-violet-400"
             >
               <Share2 className="w-5 h-5" />

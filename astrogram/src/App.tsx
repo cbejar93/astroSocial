@@ -10,6 +10,8 @@ import SignupPage from './pages/SignupPage';
 import AuthSuccessPage from './pages/AuthSuccessPage';
 import CompleteProfilePage from './pages/CompleteProfilePage'
 import { RequireProfileCompletion } from "./components/auth/RequireProfileCompletion";
+import PostPage from './pages/PostPage'
+
 
 
 
@@ -18,12 +20,10 @@ const App: React.FC = () => {
 
   const { weather, loading, error } = useWeatherService();
 
-  console.log('🔍 2VITE_API_BASE_URL =', import.meta.env.VITE_API_BASE_URL);
 
 
   useEffect(() => {
     if (weather) {
-      console.log('User location:', weather);
       // You could now call your NestJS backend with this data
     }
   }, [weather]);
@@ -40,6 +40,9 @@ const App: React.FC = () => {
 
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/auth/success" element={<AuthSuccessPage />} />
+
+          {/* single-post detail view */}
+        <Route path="/posts/:id" element={<PostPage />} />
 
           <Route element={<RequireProfileCompletion />}>
             <Route path="/upload" element={<UploadForm />} />

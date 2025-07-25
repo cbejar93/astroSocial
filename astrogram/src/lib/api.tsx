@@ -28,33 +28,138 @@ async function refreshToken(): Promise<string> {
   return newToken;
 }
 
-// the wrapper you use everywhere instead of bare fetch:
-export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
-  // 1) attach Authorization header
-  init.headers = {
-    ...(init.headers || {}),
-    Authorization: `Bearer ${accessToken}`,
-  };
-  init.credentials = 'include';
-
-  let res = await fetch(API_BASE + input, init);
-
-  // 2) if access token expired → try a refresh + retry
-  if (res.status === 401) {
-    try {
-      const newToken = await refreshToken();
-      // retry original request with new token
-      init.headers = {
-        ...(init.headers as Record<string,string>),
-        Authorization: `Bearer ${newToken}`,
-      };
-      res = await fetch(API_BASE + input, init);
-    } catch {
-      // refresh failed → redirect to login
-      window.location.href = '/signup';
-      throw new Error('Not authenticated');
+export async function apiFetch(
+    input: RequestInfo,
+    init: RequestInit = {}
+  ): Promise<Response> {
+    // 1) attach Authorization header + credentials
+    init.headers = {
+      ...(init.headers || {}),
+      Authorization: `Bearer ${accessToken}`,
+    };
+    init.credentials = 'include';
+  
+    const url = `${API_BASE}${input}`;
+    let res = await fetch(url, init);
+  
+    // 2) on 401, try to refresh once
+    if (res.status === 401) {
+      try {
+        const newToken = await refreshToken();
+        init.headers = {
+          ...(init.headers as Record<string, string>),
+          Authorization: `Bearer ${newToken}`,
+        };
+        res = await fetch(url, init);
+      } catch {
+        // give up → redirect to login
+        window.location.href = '/signup';
+        throw new Error('Not authenticated');
+      }
     }
+  
+    // 3) throw on any other non‑2xx
+    if (!res.ok) {
+      let text: string;
+      try {
+        text = await res.text();
+      } catch {
+        text = res.statusText;
+      }
+      throw new Error(`API error ${res.status} ${res.statusText}: ${text}`);
+    }
+  
+    return res;
   }
 
-  return res;
+// // the wrapper you use everywhere instead of bare fetch:
+// export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
+//   // 1) attach Authorization header
+//   init.headers = {
+//     ...(init.headers || {}),
+//     Authorization: `Bearer ${accessToken}`,
+//   };
+//   init.credentials = 'include';
+
+//   let res = await fetch(API_BASE + input, init);
+
+//   // 2) if access token expired → try a refresh + retry
+//   if (res.status === 401) {
+//     try {
+//       const newToken = await refreshToken();
+//       // retry original request with new token
+//       init.headers = {
+//         ...(init.headers as Record<string,string>),
+//         Authorization: `Bearer ${newToken}`,
+//       };
+//       res = await fetch(API_BASE + input, init);
+//     } catch {
+//       // refresh failed → redirect to login
+//       window.location.href = '/signup';
+//       throw new Error('Not authenticated');
+//     }
+//   }
+
+//   return res;
+// }
+
+// ----------------------------------------------------------------------------------
+// NEW: helper to fetch our weighted, paginated feed.
+// This won’t break any existing usage of apiFetch or handleLogin.
+export interface FeedResponse<T> {
+    posts: T[];
+    total: number;
+    page: number;
+    limit: number;
+  }
+  
+  /**
+   * Fetch the paginated, weighted feed.
+   * @param page  1‑based page number (default: 1)
+   * @param limit items per page (default: 20)
+   */
+  export async function fetchFeed<Item = any>(
+    page: number = 1,
+    limit: number = 20
+  ): Promise<FeedResponse<Item>> {
+    const res = await apiFetch(`/posts/feed?page=${page}&limit=${limit}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch feed (status ${res.status})`);
+    }
+    return res.json();
+  }
+
+
+export type InteractionType = 'like' | 'share' | 'repost';
+
+export interface InteractionResult {
+  type: InteractionType;
+  count: number;
 }
+
+/**
+ * Generic helper to POST an interaction to /posts/:id/:action
+ */
+export async function interactWithPost(
+    postId: string,
+    action: InteractionType
+  ): Promise<InteractionResult> {
+    // POST returns { type, count }
+    const res = await apiFetch(`/posts/${postId}/${action}`, {
+      method: 'POST',
+    });
+    return res.json();
+  }
+  
+  /** Convenience wrappers: */
+  export function likePost(postId: string) {
+    return interactWithPost(postId, 'like');
+  }
+  
+  export function sharePost(postId: string) {
+    return interactWithPost(postId, 'share');
+  }
+  
+  export function repostPost(postId: string) {
+    return interactWithPost(postId, 'repost');
+  }
