@@ -2,10 +2,11 @@ import { Injectable, BadRequestException, NotFoundException, Inject, InternalSer
 import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class UsersService {
-  constructor( @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,private readonly prisma: PrismaService) {}
+  constructor( @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,private readonly storage: StorageService,private readonly prisma: PrismaService) {}
   private readonly logger = new Logger(UsersService.name);
   /**
    * Fetch a user by their ID.
@@ -60,30 +61,36 @@ export class UsersService {
   }
 
   async uploadAvatar(userId: string, file: Express.Multer.File) {
-    const filePath = `${userId}/${file.originalname}`;
+    // const filePath = `${userId}/${file.originalname}`;
   
-    // 1) Upload
-    const { data: uploadData, error: uploadError } = await this.supabase
-      .storage
-      .from('avatars')
-      .upload(filePath, file.buffer, {
-        cacheControl: '3600',
-        upsert: true,
-        contentType: file.mimetype,
-      });
+    // // 1) Upload
+    // const { data: uploadData, error: uploadError } = await this.supabase
+    //   .storage
+    //   .from('avatars')
+    //   .upload(filePath, file.buffer, {
+    //     cacheControl: '3600',
+    //     upsert: true,
+    //     contentType: file.mimetype,
+    //   });
+
+      const publicUrl = await this.storage.uploadFile(
+        'avatars',
+        `${userId}/${file.originalname}`,
+        file,
+      )
   
-    if (uploadError || !uploadData) {
-      this.logger.error(`Supabase upload error: ${uploadError?.message}`);
-      throw new InternalServerErrorException('Failed to upload avatar');
-    }
+    // if (uploadError || !uploadData) {
+    //   this.logger.error(`Supabase upload error: ${uploadError?.message}`);
+    //   throw new InternalServerErrorException('Failed to upload avatar');
+    // }
   
     // 2) Get the public URL (no error to check here)
-    const { data: urlData } = this.supabase
-      .storage
-      .from('avatars')
-      .getPublicUrl(uploadData.path);
+    // const { data: urlData } = this.supabase
+    //   .storage
+    //   .from('avatars')
+    //   .getPublicUrl(uploadData.path);
   
-    const publicUrl = urlData.publicUrl;
+    // const publicUrl = urlData.publicUrl;
   
     // 3) Save to your database
     await this.prisma.user.update({

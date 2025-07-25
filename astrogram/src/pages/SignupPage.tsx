@@ -1,12 +1,18 @@
 import React from 'react';
-import { FcGoogle } from 'react-icons/fc';
+// import { FcGoogle } from 'react-icons/fc';
+import { FaFacebook, FaGoogle } from "react-icons/fa";
+
 
 const SignupPage: React.FC = () => {
+  const base = import.meta.env.VITE_API_BASE_URL || '/api';
+
   const handleGoogleSignIn = () => {
-    const base = import.meta.env.VITE_API_BASE_URL || '/api';
     // Redirect to NestJS Google OAuth start
-    console.log(`${base}/auth/google`)
     window.location.href = `${base}/auth/google`;
+  };
+
+  const handleFacebookSignIn = () => {
+    window.location.href = `${base}/auth/facebook`;
   };
 
   return (
@@ -15,13 +21,23 @@ const SignupPage: React.FC = () => {
         <h1 className="text-2xl font-semibold text-center text-gray-800 dark:text-gray-100">
           Sign Up
         </h1>
+        {/* Google */}
         <button
           onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
         >
-          <FcGoogle className="w-6 h-6" />
+          <FaGoogle className="w-6 h-6" />
           <span className="text-gray-800 dark:text-gray-100 font-medium">
-            Sign in with Google
+            Continue with Google
+          </span>
+        </button>
+        <button
+          onClick={handleFacebookSignIn}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+        >
+          <FaFacebook className="w-6 h-6" />
+          <span className="text-gray-800 dark:text-gray-100 font-medium">
+            Continue with Facebook
           </span>
         </button>
       </div>

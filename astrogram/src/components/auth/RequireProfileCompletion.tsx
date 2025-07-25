@@ -9,7 +9,6 @@ export const RequireProfileCompletion: React.FC = () => {
 
   // while we’re checking auth, don’t render anything
 //   if (loading) return null;
-    console.log(user);
   // only protect the completeProfile page
   if (pathname === "/completeProfile") {
     // 1) not logged in → send to signup

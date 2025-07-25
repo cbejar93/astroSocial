@@ -8,6 +8,8 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { PrismaModule }   from './prisma/prisma.module';
 import { AuthModule }    from './auth/auth.module';
 import { RequestLoggingMiddleware }  from './middleware/logging.middleware';
+import { PostsModule } from './posts/post.module';
+
 
 
 
@@ -18,7 +20,8 @@ import { RequestLoggingMiddleware }  from './middleware/logging.middleware';
     WeatherModule,
     SupabaseModule.forRoot(),
     PrismaModule,
-    AuthModule
+    AuthModule,
+    PostsModule
     
   ],
   controllers: [AppController],
