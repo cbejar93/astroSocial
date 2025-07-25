@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, MessageCircle, Share2, Repeat2, Bookmark } from "lucide-react";
+import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
 import { likePost, sharePost, repostPost, apiFetch } from '../../lib/api';
+import { useAuth } from "../../contexts/AuthContext";
+
 
 export interface PostCardProps {
   id: string
+  authorId: string
   username: string;
   imageUrl: string;
   caption: string;
@@ -26,14 +29,21 @@ const PostCard: React.FC<PostCardProps> = ({
   stars = 0,
   comments = 0,
   shares = 0,
-  likedByMe
+  likedByMe,
+  authorId
 }) => {
+
+  const { user } = useAuth();
+  const isOwn = user?.id === authorId;
+
   const [liked, setLiked] = useState(likedByMe);
   const [starCount, setStarCount] = useState(stars);
   const [commentCount, setCommentCount] = useState(comments);
   const [shareCount, setShareCount] = useState(shares);
   const [reposted, setReposted] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLike = async () => {
     try {
@@ -62,7 +72,7 @@ const PostCard: React.FC<PostCardProps> = ({
         await navigator.share({
           title: `${username}'s post`,
           text: caption,
-          url:  postUrl,
+          url: postUrl,
         });
       } catch (err) {
         console.warn("User cancelled share or error:", err);
@@ -90,7 +100,39 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
+  // close menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  const handleDelete = async () => {
+    setMenuOpen(false);
+
+    try {
+      const res = await apiFetch(`/posts/delete/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || 'Failed to delete post');
+      }
+
+      // inform parent so it can remove this post from the UI
+      // onDeleted?.(postId);
+    } catch (err: any) {
+      console.error('Delete post error:', err);
+      // you could show a toast here
+    }
+  };
 
   return (
     <div className="w-full py-0 sm:py-4 sm:px-4">
@@ -106,11 +148,34 @@ const PostCard: React.FC<PostCardProps> = ({
             />
             <span className="font-semibold text-teal-400 text-sm">@{username}</span>
           </div>
-          {timestamp && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {timestamp && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
+              </span>
+            )}
+            {isOwn && (
+              <div ref={menuRef} className="relative">
+                <button
+                  onClick={() => setMenuOpen((o) => !o)}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
+                    <button
+                      onClick={handleDelete}
+                      className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                    >
+                      Delete Post
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
 
         {/* Image */}

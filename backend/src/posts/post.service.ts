@@ -4,7 +4,8 @@ import {
     ConflictException,
     InternalServerErrorException,
     Logger,
-    NotFoundException
+    NotFoundException,
+    ForbiddenException
 } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { InteractionType, Post } from '@prisma/client'
@@ -195,6 +196,7 @@ export class PostsService {
             const start = (page - 1) * limit;
             const pageItems = scored.slice(start, start + limit).map(p => ({
                 id:        p.id,
+                authorId:    p.author.id,
                 username:  p.author.username!,          // unwrap since it’s required for feed
                 imageUrl:  p.imageUrl ?? '',            // fallback if you didn’t upload an image
                 avatarUrl: p.author.avatarUrl || '',
@@ -225,6 +227,7 @@ async getPostById(
   ): Promise<{
     id:          string;
     username:    string;
+    authorId: string;
     avatarUrl:   string;
     imageUrl:    string;
     caption:     string;
@@ -268,6 +271,8 @@ async getPostById(
     return {
       id:        post.id,
       username:  post.author.username!,
+      authorId:    post.authorId,
+
       avatarUrl: post.author.avatarUrl ?? '',
       imageUrl:  post.imageUrl  ?? '',
       caption:   post.body,
@@ -326,5 +331,14 @@ async getPostById(
       select: { likes: true },
     });
     return { liked: true, count: updated.likes };
+  }
+
+  async deletePost(userId: string, postId: string) {
+    const { count } = await this.prisma.post.deleteMany({
+      where: { id: postId, authorId: userId }
+    });
+    if (count === 0) {
+      throw new ForbiddenException(`Cannot delete post ${postId}`);
+    }
   }
 }

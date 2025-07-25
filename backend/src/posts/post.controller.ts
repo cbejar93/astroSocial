@@ -12,6 +12,7 @@ import {
     Get,
     Query,
     InternalServerErrorException,
+    Delete,
 } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { PostsService } from './post.service'
@@ -159,5 +160,15 @@ export class PostsController {
             this.logger.error(`FETCH POST failed for ${postId}: ${err.message}`);
             throw err;
         }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('delete/:id')
+    async deletePost(
+        @Req() req: { user: { sub: string } },
+        @Param('id') postId: string
+    ) {
+        await this.posts.deletePost(req.user.sub, postId);
+        return { success: true };
     }
 }
