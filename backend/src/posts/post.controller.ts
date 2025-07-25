@@ -79,31 +79,6 @@ export class PostsController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Post(':id/like')
-    async likePost(@Req() req: any, @Param('id') postId: string) {
-        const userId = req.user.sub as string
-        this.logger.log(`User ${userId} → LIKE → post ${postId}`)
-
-        try {
-            const result = await this.posts.interact(
-                userId,
-                postId,
-                InteractionType.LIKE,
-            )
-            this.logger.log(
-                `LIKE successful for post ${postId}, new likes = ${result.count}`,
-            )
-            return result
-        } catch (err: any) {
-            this.logger.error(
-                `LIKE failed for post ${postId}: ${err.message}`,
-                err.stack,
-            )
-            throw err
-        }
-    }
-
-    @UseGuards(JwtAuthGuard)
     @Post(':id/share')
     async sharePost(@Req() req: any, @Param('id') postId: string) {
         const userId = req.user.sub as string

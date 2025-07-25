@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark } from "lucide-react";
-import { likePost, sharePost, repostPost } from '../../lib/api';
+import { likePost, sharePost, repostPost, apiFetch } from '../../lib/api';
 
 export interface PostCardProps {
   id: string
@@ -36,13 +36,14 @@ const PostCard: React.FC<PostCardProps> = ({
   const [saved, setSaved] = useState(false);
 
   const handleLike = async () => {
-    if (liked) return; // only allow once
     try {
-      const { count } = await likePost(id);
+      const res = await apiFetch(`/posts/${id}/like`, { method: 'POST' });
+      if (!res.ok) throw new Error('Like toggle failed');
+      const { liked, count } = await res.json();
+      setLiked(liked);
       setStarCount(count);
-      setLiked(true);
     } catch (err) {
-      console.error("Failed to like:", err);
+      console.error(err);
     }
   };
 
@@ -89,6 +90,8 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
   return (
     <div className="w-full py-0 sm:py-4 sm:px-4">
       <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden border border-gray-300 dark:border-gray-700 w-full sm:max-w-2xl sm:mx-auto">
@@ -127,7 +130,7 @@ const PostCard: React.FC<PostCardProps> = ({
         <div className="px-4 sm:px-6 py-4 text-sm">{caption}</div>
 
         {/* Action Buttons */}
-        <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+        <div onClick={stop} className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
           <div className="flex justify-evenly items-center text-gray-400 dark:text-gray-300 text-sm">
 
             {/* Like */}
