@@ -23,7 +23,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
     constructor(private readonly posts: PostsService) {}
 
     @UseGuards(JwtAuthGuard)
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('image'))
     @Post()
     async createPost(
       @Req()  req: any,

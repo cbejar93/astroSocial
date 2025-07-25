@@ -45,7 +45,7 @@ import { StorageService } from 'src/storage/storage.service'
           const post = await this.prisma.post.create({
             data: {
               authorId: userId,
-              title:     dto.title,
+              title:     '',
               body:      dto.body,
               ...(imageUrl ? { imageUrl } : {}),
             },

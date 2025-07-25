@@ -1,6 +1,6 @@
 export class CreatePostDto {
     /** Short headline for the post */
-    title: string
+    title?: string
   
     /** Body / caption text */
     body: string
