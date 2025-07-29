@@ -27,6 +27,7 @@ model User {
   comments        Comment[]         @relation("UserComments")
   posts           Post[]            @relation("UserPosts")
   interactions    PostInteraction[]
+  commentLikes    CommentLike[]
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -51,9 +52,22 @@ model Comment {
   postId    String
   authorId  String
   text      String
+  likes     Int      @default(0)
   createdAt DateTime @default(now())
   author    User     @relation("UserComments", fields: [authorId], references: [id])
   post      Post     @relation("PostComments", fields: [postId], references: [id])
+  likedBy   CommentLike[]
+}
+
+model CommentLike {
+  id        String   @id @default(uuid())
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  commentId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId], name: "one_like_per_user_per_comment")
 }
 
 model PostInteraction {

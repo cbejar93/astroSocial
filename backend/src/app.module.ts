@@ -9,6 +9,7 @@ import { PrismaModule }   from './prisma/prisma.module';
 import { AuthModule }    from './auth/auth.module';
 import { RequestLoggingMiddleware }  from './middleware/logging.middleware';
 import { PostsModule } from './posts/post.module';
+import { CommentsModule } from './comments/comments.module';
 
 
 
@@ -21,8 +22,9 @@ import { PostsModule } from './posts/post.module';
     SupabaseModule.forRoot(),
     PrismaModule,
     AuthModule,
-    PostsModule
-    
+    PostsModule,
+    CommentsModule
+
   ],
   controllers: [AppController],
   providers: [AppService],
