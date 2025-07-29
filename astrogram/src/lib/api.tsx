@@ -163,3 +163,26 @@ export async function interactWithPost(
   export function repostPost(postId: string) {
     return interactWithPost(postId, 'repost');
   }
+
+// --------------------------------------------------
+// Comments API helpers
+
+export async function fetchComments<T = any>(postId: string): Promise<T[]> {
+  const res = await apiFetch(`/posts/${postId}/comments`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch comments (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function createComment<T = any>(postId: string, text: string): Promise<T> {
+  const res = await apiFetch(`/posts/${postId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to create comment (${res.status})`);
+  }
+  return res.json();
+}
