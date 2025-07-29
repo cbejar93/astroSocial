@@ -23,13 +23,23 @@ const conditionLabels: Record<string, string> = {
   seeing : "Seeing",
 };
 
-const getClosestTimeBlock = (): TimeBlock => {
-  const currentHour = new Date().getHours();
-  if (currentHour < 3) return "0";
-  if (currentHour < 9) return "6";
-  if (currentHour < 15) return "12";
-  return "18";
-};
+export function getClosestTimeBlock(): TimeBlock {
+  const now = new Date().getHours();
+  // convert to numbers & sort just in case
+  const blocks = timeBlocks
+    .map((tb) => parseInt(tb, 10))
+    .sort((a, b) => a - b);
+
+  // find first block >= now
+  for (const block of blocks) {
+    if (now <= block) {
+      return block.toString() as TimeBlock;
+    }
+  }
+
+  // if we're past the last block, wrap to the first block tomorrow
+  return blocks[0].toString() as TimeBlock;
+}
 
 const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
   const activeTime = isToday ? getClosestTimeBlock() : null;

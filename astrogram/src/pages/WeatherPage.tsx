@@ -72,8 +72,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
     [weather.data, today]
   );
 
-  const currentTemp = todayData?.conditions.temperature?.["12"] ?? 0;
-  const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
+  // const currentTemp = todayData?.conditions.temperature?.["12"] ?? 0;
+  // const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
   const sunrise = todayData?.astro?.sunrise;
   const sunset = todayData?.astro?.sunset;
   console.log(weather);
@@ -82,10 +82,11 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
     ? checkDaytime(todayData.astro.sunrise, todayData.astro.sunset)
     : true;
 
-  const icon = getWeatherIcon(currentCondition, isDaytime);
 
   const speedMap = todayData?.conditions.windspeed ?? {};
   const directionMap = todayData?.conditions.winddirection ?? {};
+  const tempMap = todayData?.conditions.temperature ?? {};
+  const conditionMap = todayData?.conditions.cloudcover ?? {};
 
   // 2) turn the keys into numbers and find which hour is closest to now
   const nowHour = new Date().getHours();
@@ -102,6 +103,10 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
   // 3) pull out the values for that hour
   const currentWindSpeed = speedMap[chosenHour];
   const currentWindDirection = directionMap[chosenHour];
+  const currentTemp = tempMap[chosenHour];
+  const currentCondition = getConditionFromClouds(conditionMap[chosenHour]);
+
+  const icon = getWeatherIcon(currentCondition, isDaytime);
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
