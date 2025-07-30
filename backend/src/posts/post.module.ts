@@ -5,12 +5,14 @@ import { PostsService }   from './post.service'
 import { PostsController }from './post.controller'
 import { StorageService } from 'src/storage/storage.service';
 import { SupabaseModule }  from '../supabase/supabase.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 
 
 @Module({
   imports: [PrismaModule,
     SupabaseModule.forRoot(),
+    NotificationsModule,
 
   ],
   providers: [PostsService, StorageService],

@@ -2,6 +2,7 @@ import { Menu, Bell, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../contexts/AuthContext";
+import { useNotifications } from "../../contexts/NotificationContext";
 
 
 
@@ -9,6 +10,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { count } = useNotifications();
 
 
   useEffect(() => {
@@ -66,9 +68,14 @@ const Navbar = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-5">
-          <button className="btn-unstyled" aria-label="Notifications">
+          <Link to="/notifications" className="relative btn-unstyled" aria-label="Notifications">
             <Bell className="w-6 h-6" />
-          </button>
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {count}
+              </span>
+            )}
+          </Link>
           <Link to="/signup" className="btn-unstyled" aria-label="Account">
           {user?.avatarUrl ? (
             <img

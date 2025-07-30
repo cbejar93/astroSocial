@@ -2,20 +2,31 @@ import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '@prisma/client';
 
 @Injectable()
 export class CommentsService {
 
   private readonly logger = new Logger(CommentsService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async createComment(userId: string, postId: string, dto: CreateCommentDto) {
     this.logger.log(`User ${userId} creating comment on post ${postId}`);
 
-
-    return this.prisma.comment.create({
+    const comment = await this.prisma.comment.create({
       data: { text: dto.text, authorId: userId, postId },
     });
+
+    const post = await this.prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
+    if (post) {
+      await this.notifications.create(post.authorId, userId, NotificationType.COMMENT, postId, comment.id);
+    }
+
+    return comment;
   }
 
   async getCommentsForPost(postId: string) {
@@ -48,8 +59,15 @@ export class CommentsService {
       const updated = await this.prisma.comment.update({
         where: { id: commentId },
         data: { likes: { increment: 1 } },
-        select: { likes: true },
+        select: { likes: true, authorId: true, postId: true },
       });
+      await this.notifications.create(
+        updated.authorId,
+        userId,
+        NotificationType.COMMENT_LIKE,
+        updated.postId,
+        commentId,
+      );
       return { liked: true, count: updated.likes };
     } catch (e: any) {
       if (e.code === 'P2002') {

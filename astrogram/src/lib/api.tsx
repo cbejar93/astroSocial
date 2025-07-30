@@ -195,3 +195,36 @@ export async function deleteComment(commentId: string): Promise<void> {
     throw new Error(`Failed to delete comment (${res.status})`);
   }
 }
+
+export async function toggleCommentLike(
+  commentId: string,
+): Promise<{ liked: boolean; count: number }> {
+  const res = await apiFetch(`/comments/${commentId}/like`, { method: 'POST' });
+  if (!res.ok) {
+    throw new Error(`Failed to like comment (${res.status})`);
+  }
+  return res.json();
+}
+
+// --------------------------------------------------
+// Notifications API helpers
+
+export interface NotificationItem {
+  id: string;
+  type: 'POST_LIKE' | 'COMMENT' | 'COMMENT_LIKE';
+  timestamp: string;
+  actor: { username: string; avatarUrl: string };
+  postId?: string;
+  commentId?: string;
+}
+
+export async function fetchNotifications(): Promise<NotificationItem[]> {
+  const res = await apiFetch('/notifications');
+  return res.json();
+}
+
+export async function fetchUnreadCount(): Promise<number> {
+  const res = await apiFetch('/notifications/unread-count');
+  const data = await res.json();
+  return data.count as number;
+}

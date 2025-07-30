@@ -10,6 +10,7 @@ import { AuthModule }    from './auth/auth.module';
 import { RequestLoggingMiddleware }  from './middleware/logging.middleware';
 import { PostsModule } from './posts/post.module';
 import { CommentsModule } from './comments/comments.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 
 
@@ -23,7 +24,8 @@ import { CommentsModule } from './comments/comments.module';
     PrismaModule,
     AuthModule,
     PostsModule,
-    CommentsModule
+    CommentsModule,
+    NotificationsModule
 
   ],
   controllers: [AppController],
