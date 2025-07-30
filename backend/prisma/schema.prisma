@@ -34,6 +34,9 @@ model User {
   posts           Post[]            @relation("UserPosts")
   interactions    PostInteraction[]
   commentLikes    CommentLike[]
+  sentNotifications    Notification[] @relation("Actor") // created by this user
+  notifications        Notification[]              // received by this user
+
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -51,6 +54,8 @@ model Post {
   comments     Comment[]         @relation("PostComments")
   author       User              @relation("UserPosts", fields: [authorId], references: [id])
   interactions PostInteraction[]
+  notifications        Notification[]
+
 }
 
 model Comment {
@@ -63,6 +68,8 @@ model Comment {
   author    User     @relation("UserComments", fields: [authorId], references: [id])
   post      Post     @relation("PostComments", fields: [postId], references: [id])
   likedBy   CommentLike[]
+  notifications        Notification[]
+
 }
 
 model CommentLike {

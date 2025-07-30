@@ -1,4 +1,4 @@
-import React, { useEffect, useState, FormEvent } from 'react';
+import React, { useEffect, useState,type FormEvent } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchComments, createComment, deleteComment } from '../../lib/api';
