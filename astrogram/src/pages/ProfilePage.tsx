@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Star } from 'lucide-react';
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import {
   fetchMyPosts,
   fetchMyComments,
@@ -26,7 +26,9 @@ interface CommentItem {
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [active, setActive] = useState<'posts' | 'comments' | 'profile'>('posts');
+  const { tab } = useParams<{ tab?: string }>();
+  const active: 'posts' | 'comments' | 'profile' =
+    tab === 'comments' ? 'comments' : tab === 'me' ? 'profile' : 'posts';
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -90,44 +92,38 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="p-4 max-w-2xl mx-auto text-gray-200">
       {/* Tabs */}
-      <div className="border-b border-gray-700 mb-4">
+      <div className="border-b border-gray-700 mb-4 pt-4">
         <nav className="-mb-px flex justify-center space-x-8" aria-label="Profile tabs">
-          <button
-            onClick={() => setActive('posts')}
-            type="button"
+          <Link
+            to="/profile/posts"
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
-
               active === 'posts'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
             }`}
           >
             Posts
-          </button>
-          <button
-            onClick={() => setActive('comments')}
-            type="button"
+          </Link>
+          <Link
+            to="/profile/comments"
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
-
               active === 'comments'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
             }`}
           >
             Comments
-          </button>
-          <button
-            onClick={() => setActive('profile')}
-            type="button"
+          </Link>
+          <Link
+            to="/profile/me"
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
-
               active === 'profile'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
             }`}
           >
             Profile
-          </button>
+          </Link>
         </nav>
       </div>
 

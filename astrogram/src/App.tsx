@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Feed from './pages/Feed';
 import UploadForm from './components/UploadForm/UploadForm';
 import Navbar from './components/Navbar/Navbar';
@@ -52,7 +52,8 @@ const App: React.FC = () => {
           <Route element={<RequireProfileCompletion />}>
           <Route path="/upload" element={<UploadForm />} />
           <Route path="/completeProfile" element={<CompleteProfilePage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
+          <Route path="/profile/:tab" element={<ProfilePage />} />
 
 
             <Route
