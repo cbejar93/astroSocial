@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import PostCard, { type PostCardProps }      from '../components/PostCard/PostCard'
+import Comments                           from '../components/Comments/Comments'
 import { apiFetch }                     from '../lib/api'
 
 interface FullPost extends PostCardProps {
@@ -25,12 +26,8 @@ const PostPage: React.FC = () => {
     setLoading(true)
     apiFetch(`/posts/${id}`)
       .then(async res => {
-
-        console.log('hello there ');
-        console.log()
         if (!res.ok) throw new Error(`Status ${res.status}`)
         const data = await res.json()
-        console.log(data);
 
         // massage into PostCardProps shape:
         const p: FullPost = {
@@ -69,7 +66,7 @@ const PostPage: React.FC = () => {
     <div className="w-full py-8 flex justify-center min-h-screen bg-gray-900 py-8 px-4">
       <div className="w-full max-w-3xl px-0 sm:px-4">
         <PostCard {...post} />
-        {/* TODO: render full comments thread here */}
+        <Comments postId={post.id} />
       </div>
     </div>
   )
