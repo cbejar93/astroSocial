@@ -29,7 +29,7 @@ export class CommentsService {
     return comment;
   }
 
-  async getCommentsForPost(postId: string) {
+  async getCommentsForPost(postId: string, currentUserId?: string) {
 
     this.logger.log(`Fetching comments for post ${postId}`);
 
@@ -38,6 +38,9 @@ export class CommentsService {
       orderBy: { createdAt: 'asc' },
       include: {
         author: { select: { username: true, avatarUrl: true } },
+        likedBy: currentUserId
+          ? { where: { userId: currentUserId }, select: { id: true } }
+          : false,
       },
     });
     return list.map(c => ({
@@ -48,6 +51,7 @@ export class CommentsService {
       avatarUrl: c.author.avatarUrl ?? '',
       timestamp: c.createdAt.toISOString(),
       likes: c.likes,
+      likedByMe: currentUserId ? c.likedBy.length > 0 : false,
     }));
   }
 

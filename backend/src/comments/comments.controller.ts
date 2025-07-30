@@ -14,10 +14,11 @@ export class CommentsController {
 
   @UseGuards(OptionalAuthGuard)
   @Get('posts/:postId/comments')
-  getComments(@Param('postId') postId: string) {
+  getComments(@Req() req: any, @Param('postId') postId: string) {
 
+    const userId = req.user?.sub as string | undefined;
     this.logger.log(`Fetching comments for post ${postId}`);
-    return this.comments.getCommentsForPost(postId);
+    return this.comments.getCommentsForPost(postId, userId);
   }
 
   @UseGuards(JwtAuthGuard)
