@@ -78,7 +78,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
           />
           <button
             type="submit"
-            className="self-end px-3 py-2 bg-purple-600 rounded-md hover:bg-purple-700"
+            className="self-end px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
           >
             Post
           </button>
@@ -91,9 +91,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
         comments.map((c) => (
           <div
             key={c.id}
-
             className="flex gap-2 relative border-t border-b border-white/20"
-
           >
             <img
               src={c.avatarUrl}
@@ -103,15 +101,15 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
             <div className="flex-1">
               <div className="text-sm text-teal-400">@{c.username}</div>
               <div className="text-sm text-gray-200">{c.text}</div>
+              <button
+                type="button"
+                onClick={() => handleLike(c.id)}
+                className="btn-unstyled flex items-center mt-1 text-yellow-400 hover:text-yellow-300"
+              >
+                <Star className="w-4 h-4" fill={c.likedByMe ? 'currentColor' : 'none'} />
+                <span className="ml-1 text-xs">{c.likes}</span>
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => handleLike(c.id)}
-              className="btn-unstyled flex items-center text-yellow-400 hover:text-yellow-300"
-            >
-              <Star className="w-4 h-4" fill={c.likedByMe ? 'currentColor' : 'none'} />
-              <span className="ml-1 text-xs">{c.likes}</span>
-            </button>
             {user?.id === c.authorId && (
               <div className="relative">
                 <button
