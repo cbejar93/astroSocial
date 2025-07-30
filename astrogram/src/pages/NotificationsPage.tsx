@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+
 import { fetchNotifications, type NotificationItem } from '../lib/api';
+
 import { useNotifications } from '../contexts/NotificationContext';
 
 const NotificationsPage: React.FC = () => {

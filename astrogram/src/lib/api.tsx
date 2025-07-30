@@ -196,6 +196,18 @@ export async function deleteComment(commentId: string): Promise<void> {
   }
 }
 
+
+export async function toggleCommentLike(
+  commentId: string,
+): Promise<{ liked: boolean; count: number }> {
+  const res = await apiFetch(`/comments/${commentId}/like`, { method: 'POST' });
+  if (!res.ok) {
+    throw new Error(`Failed to like comment (${res.status})`);
+  }
+  return res.json();
+}
+
+
 // --------------------------------------------------
 // Notifications API helpers
 

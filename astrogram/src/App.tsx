@@ -41,8 +41,8 @@ const App: React.FC = () => {
 
           <Route path="/signup" element={<SignupPage />} />
         <Route path="/auth/success" element={<AuthSuccessPage />} />
-        <Route path="/" element={<Feed />} />
 
+        <Route path="/" element={<Feed />} />
 
         {/* single-post detail view */}
       <Route path="/posts/:id" element={<PostPage />} />

@@ -1,7 +1,8 @@
+
+import { MoreVertical, Star } from 'lucide-react';
 import React, { useEffect, useState,type FormEvent } from 'react';
-import { MoreVertical } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { fetchComments, createComment, deleteComment } from '../../lib/api';
+import { fetchComments, createComment, deleteComment, toggleCommentLike } from '../../lib/api';
 
 export interface CommentItem {
   id: string;
@@ -11,6 +12,7 @@ export interface CommentItem {
   avatarUrl: string;
   timestamp: string;
   likes: number;
+  likedByMe?: boolean;
 }
 
 const Comments: React.FC<{ postId: string }> = ({ postId }) => {
@@ -23,6 +25,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
   useEffect(() => {
     setLoading(true);
     fetchComments<CommentItem>(postId)
+      .then((data) => data.map((c) => ({ ...c, likedByMe: false })))
       .then(setComments)
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
@@ -33,8 +36,21 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
     if (!text.trim()) return;
     try {
       const newComment = await createComment<CommentItem>(postId, text.trim());
-      setComments((c) => [...c, newComment]);
+      setComments((c) => [...c, { ...newComment, likedByMe: false }]);
       setText('');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleLike = async (id: string) => {
+    try {
+      const { liked, count } = await toggleCommentLike(id);
+      setComments((cs) =>
+        cs.map((cm) =>
+          cm.id === id ? { ...cm, likes: count, likedByMe: liked } : cm,
+        ),
+      );
     } catch (err) {
       console.error(err);
     }
@@ -50,7 +66,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
   };
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-4">
       {user && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           <textarea
@@ -75,7 +91,9 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
         comments.map((c) => (
           <div
             key={c.id}
-            className="flex gap-2 relative border-t border-b border-white/20 py-2"
+
+            className="flex gap-2 relative border-t border-b border-white/20"
+
           >
             <img
               src={c.avatarUrl}
@@ -86,6 +104,14 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
               <div className="text-sm text-teal-400">@{c.username}</div>
               <div className="text-sm text-gray-200">{c.text}</div>
             </div>
+            <button
+              type="button"
+              onClick={() => handleLike(c.id)}
+              className="btn-unstyled flex items-center text-yellow-400 hover:text-yellow-300"
+            >
+              <Star className="w-4 h-4" fill={c.likedByMe ? 'currentColor' : 'none'} />
+              <span className="ml-1 text-xs">{c.likes}</span>
+            </button>
             {user?.id === c.authorId && (
               <div className="relative">
                 <button
