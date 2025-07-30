@@ -61,25 +61,40 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="p-4 max-w-2xl mx-auto text-gray-200">
-      <div className="flex space-x-4 mb-4">
-        <button
-          onClick={() => setActive('posts')}
-          className={`px-3 py-1 rounded ${active === 'posts' ? 'bg-purple-600' : 'bg-gray-700'}`}
-        >
-          Posts
-        </button>
-        <button
-          onClick={() => setActive('comments')}
-          className={`px-3 py-1 rounded ${active === 'comments' ? 'bg-purple-600' : 'bg-gray-700'}`}
-        >
-          Comments
-        </button>
-        <button
-          onClick={() => setActive('profile')}
-          className={`px-3 py-1 rounded ${active === 'profile' ? 'bg-purple-600' : 'bg-gray-700'}`}
-        >
-          Profile
-        </button>
+      {/* Tabs */}
+      <div className="border-b border-gray-700 mb-4">
+        <nav className="-mb-px flex space-x-8" aria-label="Profile tabs">
+          <button
+            onClick={() => setActive('posts')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+              active === 'posts'
+                ? 'border-purple-500 text-purple-400'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
+            }`}
+          >
+            Posts
+          </button>
+          <button
+            onClick={() => setActive('comments')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+              active === 'comments'
+                ? 'border-purple-500 text-purple-400'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
+            }`}
+          >
+            Comments
+          </button>
+          <button
+            onClick={() => setActive('profile')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+              active === 'profile'
+                ? 'border-purple-500 text-purple-400'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
+            }`}
+          >
+            Profile
+          </button>
+        </nav>
       </div>
 
       {active === 'posts' && (
