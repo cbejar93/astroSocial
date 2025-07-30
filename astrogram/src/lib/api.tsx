@@ -186,3 +186,12 @@ export async function createComment<T = any>(postId: string, text: string): Prom
   }
   return res.json();
 }
+
+export async function deleteComment(commentId: string): Promise<void> {
+  const res = await apiFetch(`/comments/${commentId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete comment (${res.status})`);
+  }
+}

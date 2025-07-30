@@ -1,6 +1,6 @@
 import React, { useEffect, useState, FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { fetchComments, createComment } from '../../lib/api';
+import { fetchComments, createComment, deleteComment } from '../../lib/api';
 
 export interface CommentItem {
   id: string;
@@ -38,28 +38,19 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteComment(id);
+      setComments((c) => c.filter((cm) => cm.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="mt-4 space-y-4">
-      {loading ? (
-        <div>Loading comments…</div>
-      ) : (
-        comments.map((c) => (
-          <div key={c.id} className="flex gap-2">
-            <img
-              src={c.avatarUrl}
-              alt="avatar"
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <div>
-              <div className="text-sm text-teal-400">@{c.username}</div>
-              <div className="text-sm text-gray-200">{c.text}</div>
-            </div>
-          </div>
-        ))
-      )}
-
       {user && (
-        <form onSubmit={handleSubmit} className="flex gap-2 items-start mt-4">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-start">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -74,6 +65,32 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
             Post
           </button>
         </form>
+      )}
+
+      {loading ? (
+        <div>Loading comments…</div>
+      ) : (
+        comments.map((c) => (
+          <div key={c.id} className="flex gap-2">
+            <img
+              src={c.avatarUrl}
+              alt="avatar"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <div className="flex-1">
+              <div className="text-sm text-teal-400">@{c.username}</div>
+              <div className="text-sm text-gray-200">{c.text}</div>
+            </div>
+            {user?.id === c.authorId && (
+              <button
+                onClick={() => handleDelete(c.id)}
+                className="text-xs text-red-500 hover:underline"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        ))
       )}
     </div>
   );

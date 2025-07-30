@@ -63,8 +63,8 @@ const PostPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full py-8 flex justify-center min-h-screen bg-gray-900 py-8 px-4">
-      <div className="w-full max-w-3xl px-0 sm:px-4">
+    <div className="w-full py-4 flex justify-center min-h-screen bg-gray-900 px-2">
+      <div className="w-full max-w-3xl px-0 sm:px-2">
         <PostCard {...post} />
         <Comments postId={post.id} />
       </div>

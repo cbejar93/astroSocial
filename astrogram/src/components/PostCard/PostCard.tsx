@@ -135,7 +135,7 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   return (
-    <div className="w-full py-0 sm:py-4 sm:px-4">
+    <div className="w-full py-0 sm:py-2 sm:px-2">
       <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden border border-gray-300 dark:border-gray-700 w-full sm:max-w-2xl sm:mx-auto">
 
         {/* Header */}

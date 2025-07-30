@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req, UseGuards, Logger, Delete } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalAuthGuard } from '../auth/jwt-optional.guard';
@@ -37,5 +37,14 @@ export class CommentsController {
 
     this.logger.log(`User ${userId} toggling like on comment ${id}`);
     return this.comments.toggleLike(userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('comments/:id')
+  delete(@Req() req: any, @Param('id') id: string) {
+    const userId = req.user.sub as string;
+
+    this.logger.log(`User ${userId} deleting comment ${id}`);
+    return this.comments.deleteComment(userId, id);
   }
 }
