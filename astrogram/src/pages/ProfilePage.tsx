@@ -96,6 +96,7 @@ const ProfilePage: React.FC = () => {
             onClick={() => setActive('posts')}
             type="button"
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
+
               active === 'posts'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
@@ -107,6 +108,7 @@ const ProfilePage: React.FC = () => {
             onClick={() => setActive('comments')}
             type="button"
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
+
               active === 'comments'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
@@ -118,6 +120,7 @@ const ProfilePage: React.FC = () => {
             onClick={() => setActive('profile')}
             type="button"
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
+
               active === 'profile'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
