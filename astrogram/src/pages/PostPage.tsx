@@ -38,7 +38,7 @@ const PostPage: React.FC = () => {
           caption:    data.body,
           timestamp:  data.timestamp,
           stars:      data.stars,
-          comments:   data.commentsCount,
+          comments:   data.comments,
           shares:     data.shares,
           likedByMe: data.likedByMe,
           authorId: data.authorId
