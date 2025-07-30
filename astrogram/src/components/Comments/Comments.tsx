@@ -1,6 +1,6 @@
 
 import { MoreVertical, Star } from 'lucide-react';
-import React, { useEffect, useState,type FormEvent } from 'react';
+import React, { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchComments, createComment, deleteComment, toggleCommentLike } from '../../lib/api';
 
@@ -25,7 +25,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
   useEffect(() => {
     setLoading(true);
     fetchComments<CommentItem>(postId)
-      .then((data) => data.map((c) => ({ ...c, likedByMe: false })))
+      .then((data) => data.map((c) => ({ ...c, likedByMe: c.likedByMe ?? false })))
       .then(setComments)
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
@@ -104,12 +104,12 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
               <button
                 type="button"
                 onClick={() => handleLike(c.id)}
-
-                className="btn-unstyled flex items-center gap-1 mt-1 text-yellow-400 hover:text-yellow-300"
+                className="btn-unstyled relative mt-1 text-yellow-400 hover:text-yellow-300 w-5 h-5 flex items-center justify-center"
               >
                 <Star className="w-4 h-4" fill={c.likedByMe ? 'currentColor' : 'none'} />
-                <span className="text-xs">{c.likes}</span>
-
+                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold">
+                  {c.likes}
+                </span>
               </button>
             </div>
             {user?.id === c.authorId && (

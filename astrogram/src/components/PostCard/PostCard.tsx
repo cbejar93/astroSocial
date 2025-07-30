@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
 import { likePost, sharePost, repostPost, apiFetch } from '../../lib/api';
@@ -34,11 +35,12 @@ const PostCard: React.FC<PostCardProps> = ({
 }) => {
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isOwn = user?.id === authorId;
 
   const [liked, setLiked] = useState(likedByMe);
   const [starCount, setStarCount] = useState(stars);
-  const [commentCount, setCommentCount] = useState(comments);
+  const [commentCount] = useState(comments);
   const [shareCount, setShareCount] = useState(shares);
   const [reposted, setReposted] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -221,7 +223,7 @@ const PostCard: React.FC<PostCardProps> = ({
             {/* Comment */}
             <button
               type="button"
-              onClick={() => setCommentCount(c => c + 1)}
+              onClick={() => navigate(`/posts/${id}`)}
               className="btn-unstyled btn-action hover:text-violet-400"
             >
               <MessageCircle className="w-5 h-5" />
