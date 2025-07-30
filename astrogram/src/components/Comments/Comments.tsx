@@ -91,7 +91,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
         comments.map((c) => (
           <div
             key={c.id}
-            className="flex gap-2 relative border-t border-b border-white/20"
+            className="flex gap-2 py-2 relative border-t border-b border-white/20"
           >
             <img
               src={c.avatarUrl}
