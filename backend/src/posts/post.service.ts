@@ -8,9 +8,10 @@ import {
     ForbiddenException
 } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
-import { InteractionType, Post } from '@prisma/client'
+import { InteractionType, Post, NotificationType } from '@prisma/client'
 import { CreatePostDto } from './dto/create-post.dto'
 import { StorageService } from 'src/storage/storage.service'
+import { NotificationsService } from '../notifications/notifications.service'
 
 
 @Injectable()
@@ -34,7 +35,11 @@ export class PostsService {
         return recencyScore + engagementScore;
     }
 
-    constructor(private readonly prisma: PrismaService, private readonly storage: StorageService,) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly storage: StorageService,
+        private readonly notifications: NotificationsService,
+    ) { }
 
     async create(
         userId: string,
@@ -323,13 +328,19 @@ async getPostById(
       }
       throw e;
     }
-  
+
     // If we got here, we just “liked” it
     const updated = await this.prisma.post.update({
       where: { id: postId },
       data: counterOp,
-      select: { likes: true },
+      select: { likes: true, authorId: true },
     });
+    await this.notifications.create(
+      updated.authorId,
+      userId,
+      NotificationType.POST_LIKE,
+      postId,
+    );
     return { liked: true, count: updated.likes };
   }
 

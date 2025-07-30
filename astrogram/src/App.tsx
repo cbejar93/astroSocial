@@ -11,6 +11,7 @@ import AuthSuccessPage from './pages/AuthSuccessPage';
 import CompleteProfilePage from './pages/CompleteProfilePage'
 import { RequireProfileCompletion } from "./components/auth/RequireProfileCompletion";
 import PostPage from './pages/PostPage'
+import NotificationsPage from './pages/NotificationsPage'
 
 
 
@@ -39,10 +40,11 @@ const App: React.FC = () => {
         <Routes>
 
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/auth/success" element={<AuthSuccessPage />} />
+        <Route path="/auth/success" element={<AuthSuccessPage />} />
 
-          {/* single-post detail view */}
-        <Route path="/posts/:id" element={<PostPage />} />
+        {/* single-post detail view */}
+      <Route path="/posts/:id" element={<PostPage />} />
+      <Route path="/notifications" element={<NotificationsPage />} />
 
           <Route element={<RequireProfileCompletion />}>
             <Route path="/upload" element={<UploadForm />} />

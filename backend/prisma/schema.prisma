@@ -13,6 +13,12 @@ enum InteractionType {
   REPOST
 }
 
+enum NotificationType {
+  POST_LIKE
+  COMMENT
+  COMMENT_LIKE
+}
+
 model User {
   id              String            @id @default(uuid())
   email           String            @unique
@@ -80,4 +86,19 @@ model PostInteraction {
   createdAt DateTime        @default(now())
 
   @@unique([postId, userId, type], name: "one_interaction_per_user_per_post")
+}
+
+model Notification {
+  id        String            @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id])
+  userId    String
+  actor     User              @relation("Actor", fields: [actorId], references: [id])
+  actorId   String
+  post      Post?             @relation(fields: [postId], references: [id])
+  postId    String?
+  comment   Comment?          @relation(fields: [commentId], references: [id])
+  commentId String?
+  type      NotificationType
+  read      Boolean           @default(false)
+  createdAt DateTime          @default(now())
 }

@@ -73,7 +73,10 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
         <div>Loading comments…</div>
       ) : (
         comments.map((c) => (
-          <div key={c.id} className="flex gap-2 relative">
+          <div
+            key={c.id}
+            className="flex gap-2 relative border-t border-b border-white/20 py-2"
+          >
             <img
               src={c.avatarUrl}
               alt="avatar"
