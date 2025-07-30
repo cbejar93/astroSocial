@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -70,5 +70,16 @@ export class CommentsService {
 
       throw e;
     }
+  }
+
+  async deleteComment(userId: string, commentId: string) {
+    await this.prisma.commentLike.deleteMany({ where: { commentId } });
+    const { count } = await this.prisma.comment.deleteMany({
+      where: { id: commentId, authorId: userId },
+    });
+    if (count === 0) {
+      throw new ForbiddenException(`Cannot delete comment ${commentId}`);
+    }
+    return { success: true };
   }
 }
