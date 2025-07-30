@@ -207,7 +207,7 @@ const PostCard: React.FC<PostCardProps> = ({
               className="btn-unstyled btn-action hover:text-yellow-400"
             >
               <Star className="w-5 h-5" fill={liked ? "currentColor" : "none"} />
-              <span>{starCount}</span>
+              <span className="ml-1">{starCount}</span>
             </button>
 
             {/* Repost */}
