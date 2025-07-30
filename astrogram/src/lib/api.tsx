@@ -230,3 +230,29 @@ export async function fetchUnreadCount(): Promise<number> {
   const data = await res.json();
   return data.count as number;
 }
+
+// --------------------------------------------------
+// Profile helpers
+
+export async function fetchMyPosts<T = any>(): Promise<T[]> {
+  const res = await apiFetch('/users/me/posts');
+  return res.json();
+}
+
+export async function fetchMyComments<T = any>(): Promise<T[]> {
+  const res = await apiFetch('/users/me/comments');
+  return res.json();
+}
+
+export async function updateAvatar(username: string, file: File) {
+  const form = new FormData();
+  form.append('username', username);
+  form.append('avatar', file);
+  const res = await apiFetch('/users/me', { method: 'PUT', body: form });
+  return res.json();
+}
+
+export async function deleteProfile() {
+  const res = await apiFetch('/users/me', { method: 'DELETE' });
+  return res.json();
+}

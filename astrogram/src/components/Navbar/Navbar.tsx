@@ -76,7 +76,7 @@ const Navbar = () => {
               </span>
             )}
           </Link>
-          <Link to="/signup" className="btn-unstyled" aria-label="Account">
+          <Link to={user ? '/profile' : '/signup'} className="btn-unstyled" aria-label="Account">
           {user?.avatarUrl ? (
             <img
               src={user.avatarUrl}
