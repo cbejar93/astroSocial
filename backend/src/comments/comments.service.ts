@@ -1,21 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class CommentsService {
+
   private readonly logger = new Logger(CommentsService.name);
   constructor(private readonly prisma: PrismaService) {}
 
   async createComment(userId: string, postId: string, dto: CreateCommentDto) {
     this.logger.log(`User ${userId} creating comment on post ${postId}`);
+
+
     return this.prisma.comment.create({
       data: { text: dto.text, authorId: userId, postId },
     });
   }
 
   async getCommentsForPost(postId: string) {
+
     this.logger.log(`Fetching comments for post ${postId}`);
+
     const list = await this.prisma.comment.findMany({
       where: { postId },
       orderBy: { createdAt: 'asc' },
@@ -36,6 +42,7 @@ export class CommentsService {
 
   async toggleLike(userId: string, commentId: string) {
     this.logger.log(`User ${userId} toggling like on comment ${commentId}`);
+
     try {
       await this.prisma.commentLike.create({ data: { userId, commentId } });
       const updated = await this.prisma.comment.update({
@@ -58,7 +65,9 @@ export class CommentsService {
         });
         return { liked: false, count: updated.likes };
       }
+
       this.logger.error(`Failed to toggle like on ${commentId}`, e.stack);
+
       throw e;
     }
   }
