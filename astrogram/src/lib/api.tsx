@@ -43,20 +43,20 @@ export async function apiFetch(
     let res = await fetch(url, init);
   
     // 2) on 401, try to refresh once
-    if (res.status === 401) {
-      try {
-        const newToken = await refreshToken();
-        init.headers = {
-          ...(init.headers as Record<string, string>),
-          Authorization: `Bearer ${newToken}`,
-        };
-        res = await fetch(url, init);
-      } catch {
-        // give up → redirect to login
-        window.location.href = '/signup';
-        throw new Error('Not authenticated');
-      }
-    }
+    // if (res.status === 401) {
+    //   try {
+    //     const newToken = await refreshToken();
+    //     init.headers = {
+    //       ...(init.headers as Record<string, string>),
+    //       Authorization: `Bearer ${newToken}`,
+    //     };
+    //     res = await fetch(url, init);
+    //   } catch {
+    //     // give up → redirect to login
+    //     window.location.href = '/signup';
+    //     throw new Error('Not authenticated');
+    //   }
+    // }
   
     // 3) throw on any other non‑2xx
     if (!res.ok) {
@@ -196,6 +196,7 @@ export async function deleteComment(commentId: string): Promise<void> {
   }
 }
 
+
 export async function toggleCommentLike(
   commentId: string,
 ): Promise<{ liked: boolean; count: number }> {
@@ -205,6 +206,7 @@ export async function toggleCommentLike(
   }
   return res.json();
 }
+
 
 // --------------------------------------------------
 // Notifications API helpers

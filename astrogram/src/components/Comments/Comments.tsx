@@ -1,5 +1,6 @@
-import React, { useEffect, useState, FormEvent } from 'react';
+
 import { MoreVertical, Star } from 'lucide-react';
+import React, { useEffect, useState,type FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchComments, createComment, deleteComment, toggleCommentLike } from '../../lib/api';
 
@@ -90,7 +91,9 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
         comments.map((c) => (
           <div
             key={c.id}
+
             className="flex gap-2 relative border-t border-b border-white/20"
+
           >
             <img
               src={c.avatarUrl}
