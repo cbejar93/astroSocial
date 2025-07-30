@@ -120,13 +120,13 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
                   <MoreVertical className="w-4 h-4" />
                 </button>
                 {menuOpenId === c.id && (
-                  <div className="absolute right-0 mt-2 w-28 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
+                  <div className="absolute right-0 mt-2 w-28 bg-white dark:bg-gray-800 rounded shadow-lg ring-1 ring-gray-200 dark:ring-gray-700 z-10">
                     <button
                       onClick={() => {
                         handleDelete(c.id);
                         setMenuOpenId(null);
                       }}
-                      className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                      className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-700 hover:text-red-600 transition-colors text-left"
                     >
                       Delete
                     </button>
