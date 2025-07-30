@@ -100,6 +100,68 @@ export class UsersService {
   
     return publicUrl;
   }
+
+  async getPostsByUser(userId: string) {
+    const posts = await this.prisma.post.findMany({
+      where: { authorId: userId },
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { comments: true } } },
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true, avatarUrl: true },
+    });
+
+    return posts.map(p => ({
+      id: p.id,
+      authorId: userId,
+      username: user?.username || '',
+      avatarUrl: user?.avatarUrl || '',
+      imageUrl: p.imageUrl ?? '',
+      caption: p.body,
+      timestamp: p.createdAt.toISOString(),
+      stars: p.likes,
+      comments: p._count.comments,
+      shares: p.shares,
+      likedByMe: false,
+    }));
+  }
+
+  async getCommentsByUser(userId: string) {
+    const comments = await this.prisma.comment.findMany({
+      where: { authorId: userId },
+      orderBy: { createdAt: 'desc' },
+      include: { likedBy: { where: { userId }, select: { id: true } } },
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true, avatarUrl: true },
+    });
+
+    return comments.map(c => ({
+      id: c.id,
+      text: c.text,
+      authorId: userId,
+      username: user?.username || '',
+      avatarUrl: user?.avatarUrl || '',
+      timestamp: c.createdAt.toISOString(),
+      likes: c.likes,
+      likedByMe: c.likedBy.length > 0,
+    }));
+  }
+
+  async deleteUser(userId: string) {
+    await this.prisma.$transaction([
+      this.prisma.commentLike.deleteMany({ where: { OR: [{ userId }, { comment: { authorId: userId } }] } }),
+      this.prisma.postInteraction.deleteMany({ where: { OR: [{ userId }, { post: { authorId: userId } }] } }),
+      this.prisma.notification.deleteMany({ where: { OR: [{ userId }, { actorId: userId }] } }),
+      this.prisma.comment.deleteMany({ where: { authorId: userId } }),
+      this.prisma.post.deleteMany({ where: { authorId: userId } }),
+      this.prisma.user.delete({ where: { id: userId } }),
+    ]);
+  }
   
 
   private toDto(user: {

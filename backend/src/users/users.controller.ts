@@ -1,5 +1,5 @@
 // src/users/users.controller.ts
-import { Controller, Get, Req, UseGuards, Logger, Put, UseInterceptors, UploadedFile, InternalServerErrorException, Body } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Logger, Put, UseInterceptors, UploadedFile, InternalServerErrorException, Body, Delete } from '@nestjs/common';
 import { JwtAuthGuard }                             from '../auth/jwt-auth.guard';
 import { UsersService }                             from './users.service';
 import type { Request }                             from 'express';
@@ -74,5 +74,24 @@ export class UsersController {
       this.logger.error(`Error in PUT /api/users/me: ${err.message}`, err.stack);
       throw new InternalServerErrorException('Could not update profile');
     }
+  }
+
+  @Get('me/posts')
+  @UseGuards(JwtAuthGuard)
+  getMyPosts(@Req() req: Request & { user: { sub: string } }) {
+    return this.usersService.getPostsByUser(req.user.sub);
+  }
+
+  @Get('me/comments')
+  @UseGuards(JwtAuthGuard)
+  getMyComments(@Req() req: Request & { user: { sub: string } }) {
+    return this.usersService.getCommentsByUser(req.user.sub);
+  }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  async deleteMe(@Req() req: Request & { user: { sub: string } }) {
+    await this.usersService.deleteUser(req.user.sub);
+    return { success: true };
   }
 }

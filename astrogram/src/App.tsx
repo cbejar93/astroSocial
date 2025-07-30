@@ -12,6 +12,7 @@ import CompleteProfilePage from './pages/CompleteProfilePage'
 import { RequireProfileCompletion } from "./components/auth/RequireProfileCompletion";
 import PostPage from './pages/PostPage'
 import NotificationsPage from './pages/NotificationsPage'
+import ProfilePage from './pages/ProfilePage'
 
 
 
@@ -49,8 +50,9 @@ const App: React.FC = () => {
       <Route path="/notifications" element={<NotificationsPage />} />
 
           <Route element={<RequireProfileCompletion />}>
-            <Route path="/upload" element={<UploadForm />} />
-            <Route path="/completeProfile" element={<CompleteProfilePage />} />
+          <Route path="/upload" element={<UploadForm />} />
+          <Route path="/completeProfile" element={<CompleteProfilePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
 
 
             <Route
