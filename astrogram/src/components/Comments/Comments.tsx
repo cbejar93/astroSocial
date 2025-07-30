@@ -104,12 +104,10 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
               <button
                 type="button"
                 onClick={() => handleLike(c.id)}
-                className="btn-unstyled relative mt-1 text-yellow-400 hover:text-yellow-300 w-5 h-5 flex items-center justify-center"
+                className="btn-unstyled btn-action mt-1 text-yellow-400 hover:text-yellow-300"
               >
                 <Star className="w-4 h-4" fill={c.likedByMe ? 'currentColor' : 'none'} />
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold">
-                  {c.likes}
-                </span>
+                <span className="ml-1 text-xs">{c.likes}</span>
               </button>
             </div>
             {user?.id === c.authorId && (
