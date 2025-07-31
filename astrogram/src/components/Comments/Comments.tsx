@@ -3,6 +3,7 @@ import { MoreVertical, Star } from 'lucide-react';
 import React, { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchComments, createComment, deleteComment, toggleCommentLike } from '../../lib/api';
+import CommentsSkeleton from './CommentsSkeleton';
 
 export interface CommentItem {
   id: string;
@@ -86,7 +87,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
       )}
 
       {loading ? (
-        <div>Loading comments…</div>
+        <CommentsSkeleton />
       ) : (
         comments.map((c) => (
           <div

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
-import PostCard, { type PostCardProps }      from '../components/PostCard/PostCard'
-import Comments                           from '../components/Comments/Comments'
+import PostCard, { type PostCardProps } from '../components/PostCard/PostCard'
+import PostSkeleton                     from '../components/PostCard/PostSkeleton'
+import Comments                         from '../components/Comments/Comments'
+import CommentsSkeleton                 from '../components/Comments/CommentsSkeleton'
 import { apiFetch }                     from '../lib/api'
 
 interface FullPost extends PostCardProps {
@@ -53,7 +55,14 @@ const PostPage: React.FC = () => {
   }, [id, nav])
 
   if (loading) {
-    return <div className="p-8 text-center">Loading post…</div>
+    return (
+      <div className="w-full py-4 flex justify-center min-h-screen bg-gray-900 px-2">
+        <div className="w-full max-w-3xl px-0 sm:px-2 space-y-4">
+          <PostSkeleton />
+          <CommentsSkeleton />
+        </div>
+      </div>
+    )
   }
   if (error) {
     return <div className="p-8 text-center text-red-500">{error}</div>
