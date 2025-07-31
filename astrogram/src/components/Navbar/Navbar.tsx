@@ -68,7 +68,11 @@ const Navbar = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-5">
-          <Link to="/notifications" className="relative btn-unstyled" aria-label="Notifications">
+          <Link
+            to={user ? '/notifications' : '/signup'}
+            className="relative btn-unstyled"
+            aria-label="Notifications"
+          >
             <Bell className="w-6 h-6" />
             {count > 0 && (
               <span
