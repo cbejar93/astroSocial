@@ -345,9 +345,15 @@ async getPostById(
   }
 
   async deletePost(userId: string, postId: string) {
-    const { count } = await this.prisma.post.deleteMany({
-      where: { id: postId, authorId: userId }
-    });
+    const [,, , , { count }] = await this.prisma.$transaction([
+      this.prisma.commentLike.deleteMany({ where: { comment: { postId } } }),
+      this.prisma.postInteraction.deleteMany({ where: { postId } }),
+      this.prisma.notification.deleteMany({
+        where: { OR: [{ postId }, { comment: { postId } }] },
+      }),
+      this.prisma.comment.deleteMany({ where: { postId } }),
+      this.prisma.post.deleteMany({ where: { id: postId, authorId: userId } }),
+    ]);
     if (count === 0) {
       throw new ForbiddenException(`Cannot delete post ${postId}`);
     }
