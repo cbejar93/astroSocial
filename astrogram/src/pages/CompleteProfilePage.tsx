@@ -141,7 +141,7 @@ const CompleteProfilePage: React.FC = () => {
         disabled={loading}
         className={`
           w-full py-2 rounded text-white font-medium transition
-          ${loading ? "bg-purple-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}
+          ${loading ? "bg-brand-light cursor-not-allowed" : "bg-brand hover:bg-brand-dark"}
         `}
       >
         {loading ? (

@@ -103,7 +103,7 @@ const ProfilePage: React.FC = () => {
             to="/profile/posts"
             className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'posts'
-                ? 'border-purple-500 text-white'
+                ? 'border-brand text-white'
                 : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
             }`}
           >
@@ -113,7 +113,7 @@ const ProfilePage: React.FC = () => {
             to="/profile/comments"
             className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'comments'
-                ? 'border-purple-500 text-white'
+                ? 'border-brand text-white'
                 : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
             }`}
           >
@@ -123,7 +123,7 @@ const ProfilePage: React.FC = () => {
             to="/profile/me"
             className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'profile'
-                ? 'border-purple-500 text-white'
+                ? 'border-brand text-white'
                 : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
             }`}
           >
@@ -213,7 +213,7 @@ const ProfilePage: React.FC = () => {
             </label>
             <button
               onClick={handleAvatarUpload}
-              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded"
+              className="px-3 py-1 bg-brand hover:bg-brand-dark rounded"
             >
               Save Avatar
             </button>
