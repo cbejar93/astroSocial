@@ -27,7 +27,11 @@ const NotificationsPage: React.FC = () => {
         <ul className="space-y-4">
           {items.map((n) => (
             <li key={n.id} className="flex gap-2 border-b border-white/20 pb-2">
-              <img src={n.actor.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
+              <img
+                src={n.actor.avatarUrl}
+                alt="avatar"
+                className="w-8 h-8 rounded-full object-cover"
+              />
               <div className="text-sm">
                 <span className="text-teal-400">@{n.actor.username}</span>{' '}
                 {n.type === 'COMMENT'
@@ -35,6 +39,17 @@ const NotificationsPage: React.FC = () => {
                   : n.type === 'POST_LIKE'
                   ? 'liked your post'
                   : 'liked your comment'}
+                {n.postId && (
+                  <>
+                    {' '}
+                    <a
+                      href={`/posts/${n.postId}`}
+                      className="underline text-teal-300 hover:text-teal-200"
+                    >
+                      View post
+                    </a>
+                  </>
+                )}
               </div>
             </li>
           ))}
