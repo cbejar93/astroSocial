@@ -143,8 +143,8 @@ const UploadForm: React.FC = () => {
         disabled={loading}
         className={`w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition
     ${loading
-            ? 'bg-purple-400 cursor-not-allowed'
-            : 'bg-purple-600 hover:bg-purple-700'}
+            ? 'bg-brand-light cursor-not-allowed'
+            : 'bg-brand hover:bg-brand-dark'}
   `}
       >
         {loading ? (
