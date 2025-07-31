@@ -1,7 +1,12 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 
-
+.bg-brand { background-color: #7c3aed; }
+.bg-brand-light { background-color: #a78bfa; }
+.bg-brand-dark { background-color: #6d28d9; }
 
 /* index.css (or main.css) */
 
@@ -44,13 +49,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Button baseline reset */
-button {
+/* button {
   cursor: pointer;
   border: none;
   background: none;
   padding: 0;
   font: inherit;
-}
+} */
 
 /* Unstyled button utility */
 .btn-unstyled {
