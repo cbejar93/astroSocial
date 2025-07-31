@@ -21,7 +21,7 @@ import UserPage from './pages/UserPage'
 
 const App: React.FC = () => {
 
-  const { weather, loading, error } = useWeatherService();
+  const { weather, loading, error, unit, setUnit } = useWeatherService();
 
 
 
@@ -67,6 +67,8 @@ const App: React.FC = () => {
                   weather={weather}
                   loading={loading}
                   error={error}
+                  unit={unit}
+                  setUnit={setUnit}
                 />
               }
             />

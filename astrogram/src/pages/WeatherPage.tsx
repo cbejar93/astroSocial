@@ -46,9 +46,11 @@ interface WeatherPageProps {
   weather: WeatherData | null;
   loading: boolean;
   error: string | null;
+  unit: 'metric' | 'us';
+  setUnit: (u: 'metric' | 'us') => void;
 }
 
-const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) => {
+const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit, setUnit }) => {
   const today = new Date();
   const todayDateStr = today.toDateString();
   const todayStr = today.toISOString().split("T")[0];
@@ -121,6 +123,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error }) =>
         icon={icon} // You can update this dynamically later
         sunrise={sunrise}
         sunset={sunset}
+        unit={unit}
+        onToggle={() => setUnit(unit === 'metric' ? 'us' : 'metric')}
       />
 
       {/* Forecast Cards */}

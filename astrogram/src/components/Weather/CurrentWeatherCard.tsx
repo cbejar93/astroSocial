@@ -7,18 +7,32 @@ type Props = {
   icon: string;
   sunrise?: string;   // e.g. "05:56:49"
   sunset?: string;   // e.g. "20:32:27"
+  unit: 'metric' | 'us';
+  onToggle: () => void;
 };
 
-const CurrentWeatherCard: React.FC<Props> = ({ temperature, condition, icon, sunrise, sunset }) => {
+const CurrentWeatherCard: React.FC<Props> = ({ temperature, condition, icon, sunrise, sunset, unit, onToggle }) => {
 
   const fmt = (t?: string) => t ? t.slice(0, 5) : '';
 
 
   return (
     <div className="bg-neutral-800 p-6 rounded-xl text-center shadow-lg mb-6">
+      <div className="flex justify-end text-xs mb-2">
+        <label className="flex items-center gap-1 cursor-pointer">
+          <span className={unit === 'metric' ? 'text-cyan-400' : ''}>°C</span>
+          <input
+            type="checkbox"
+            checked={unit === 'us'}
+            onChange={onToggle}
+            className="form-checkbox h-3 w-3"
+          />
+          <span className={unit === 'us' ? 'text-cyan-400' : ''}>°F</span>
+        </label>
+      </div>
       <div className="text-5xl">{icon}</div>
       <div className="text-3xl font-semibold">
-        {temperature}°C
+        {temperature}°{unit === 'metric' ? 'C' : 'F'}
       </div>
       <div className="text-sm text-gray-400">{condition}</div>
 

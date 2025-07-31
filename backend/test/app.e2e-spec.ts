@@ -65,7 +65,7 @@ describe('AppController (e2e)', () => {
   it('/api/weather (POST)', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/weather')
-      .send({ latitude: 0, longitude: 0 })
+      .send({ latitude: 0, longitude: 0, unit: 'us' })
       .expect(201);
     expect(res.body).toEqual({
       status: 'ok',
