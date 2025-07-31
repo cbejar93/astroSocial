@@ -96,30 +96,30 @@ const ProfilePage: React.FC = () => {
         <nav className="-mb-px flex justify-center space-x-8" aria-label="Profile tabs">
           <Link
             to="/profile/posts"
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
+            className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'posts'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
+                ? 'border-purple-500 text-white'
+                : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
             }`}
           >
             Posts
           </Link>
           <Link
             to="/profile/comments"
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
+            className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'comments'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
+                ? 'border-purple-500 text-white'
+                : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
             }`}
           >
             Comments
           </Link>
           <Link
             to="/profile/me"
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
+            className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'profile'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-200'
+                ? 'border-purple-500 text-white'
+                : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
             }`}
           >
             Profile
@@ -156,7 +156,7 @@ const ProfilePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleLike(c.id)}
-                    className="mr-2 flex items-center text-yellow-400 hover:text-yellow-300"
+                    className="mr-2 flex items-center text-white hover:text-gray-300"
                   >
                     <Star
                       className="w-4 h-4"
