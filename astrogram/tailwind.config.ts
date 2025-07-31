@@ -2,12 +2,17 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: "class",
-  colors: {
-    // my other colours
-    transparent: 'transparent',
-  },
   theme: {
     extend: {
+      // Define a small "brand" palette for purple buttons
+      colors: {
+        transparent: 'transparent',
+        brand: {
+          light: '#a78bfa',
+          DEFAULT: '#7c3aed',
+          dark: '#6d28d9',
+        },
+      },
       animation: {
         fadeIn: 'fadeIn 0.6s ease-out forwards',
       },

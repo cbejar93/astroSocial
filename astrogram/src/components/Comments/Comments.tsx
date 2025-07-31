@@ -78,7 +78,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
           />
           <button
             type="submit"
-            className="self-end px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+            className="self-end px-3 py-2 bg-brand text-white rounded-md hover:bg-brand-dark"
           >
             Post
           </button>
