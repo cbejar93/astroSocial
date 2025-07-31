@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard'
 import PostSkeleton                     from '../components/PostCard/PostSkeleton'
@@ -15,9 +16,17 @@ interface FullPost extends PostCardProps {
 const PostPage: React.FC = () => {
   const { id }     = useParams<{ id: string }>()
   const nav        = useNavigate()
+  const { user, loading: authLoading } = useAuth()
   const [post, setPost]       = useState<FullPost | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
+
+  // Redirect unauthenticated users to signup
+  useEffect(() => {
+    if (!authLoading && !user) {
+      nav('/signup', { replace: true })
+    }
+  }, [authLoading, user, nav])
 
   useEffect(() => {
     if (!id) {
