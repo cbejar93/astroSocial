@@ -11,6 +11,7 @@ export const useWeatherService = () => {
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unit, setUnit] = useState<'metric' | 'us'>('metric');
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -20,22 +21,12 @@ export const useWeatherService = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const coords = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
         setLocation(coords);
-
-        try {
-          const data = await fetchWeather(coords.latitude, coords.longitude);
-          setWeather(data);
-        } catch (err) {
-          console.error(err);
-          setError('Failed to fetch weather data.');
-        } finally {
-          setLoading(false);
-        }
       },
       (err) => {
         console.error(err);
@@ -45,10 +36,24 @@ export const useWeatherService = () => {
     );
   }, []);
 
+  useEffect(() => {
+    if (!location) return;
+    setLoading(true);
+    fetchWeather(location.latitude, location.longitude, unit)
+      .then(setWeather)
+      .catch((err) => {
+        console.error(err);
+        setError('Failed to fetch weather data.');
+      })
+      .finally(() => setLoading(false));
+  }, [location, unit]);
+
   return {
     location,
     weather,
     loading,
     error,
+    unit,
+    setUnit,
   };
 };

@@ -1,10 +1,10 @@
 // weather.service.ts
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { HttpService }               from '@nestjs/axios';
-import { ConfigService }             from '@nestjs/config';
-import { firstValueFrom }            from 'rxjs';
-import { CACHE_MANAGER }             from '@nestjs/cache-manager';
-import type { Cache }                from 'cache-manager';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class WeatherService {
@@ -16,7 +16,9 @@ export class WeatherService {
     private http: HttpService,
   ) {
     const key = this.apiKey;
-    this.logger.log(`VisualCrossing API key loaded: ${key ? '✅ present' : '❌ missing'}`);
+    this.logger.log(
+      `VisualCrossing API key loaded: ${key ? '✅ present' : '❌ missing'}`,
+    );
   }
 
   private get apiKey(): string {
@@ -27,16 +29,24 @@ export class WeatherService {
     return `astronomy:${lat}:${lon}`;
   }
 
-  async fetchVisibility(lat: number, lon: number) {
-    this.logger.log(`▶️ fetchVisibility start for [${lat},${lon}]`);
+  async fetchVisibility(
+    lat: number,
+    lon: number,
+    unit: 'metric' | 'us' = 'metric',
+  ) {
+    this.logger.log(
+      `▶️ fetchVisibility start for [${lat},${lon}] using ${unit}`,
+    );
 
     try {
       const response = await firstValueFrom(
         this.http.get('https://api.open-meteo.com/v1/forecast', {
           params: {
-            latitude:  lat,
+            latitude: lat,
             longitude: lon,
-            timezone:  'auto',
+            timezone: 'auto',
+            temperature_unit: unit === 'us' ? 'fahrenheit' : 'celsius',
+            windspeed_unit: unit === 'us' ? 'mph' : 'kmh',
             hourly: [
               'temperature_2m',
               'visibility',
@@ -45,20 +55,22 @@ export class WeatherService {
               'precipitation_probability',
               'windspeed_10m',
               'wind_direction_10m',
-              'boundary_layer_height'
+              'boundary_layer_height',
             ].join(','),
           },
         }),
       );
-      this.logger.log(`🌤️  Open-Meteo returned ${response.data.hourly.time.length} entries`);
+      this.logger.log(
+        `🌤️  Open-Meteo returned ${response.data.hourly.time.length} entries`,
+      );
 
-      const hourly    = response.data.hourly;
-      const timeBlocks = new Set([0,3, 6, 12, 18, 21]);
+      const hourly = response.data.hourly;
+      const timeBlocks = new Set([0, 3, 6, 12, 18, 21]);
       const resultMap: Record<string, any> = {};
 
       for (let i = 0; i < hourly.time.length; i++) {
-        const dt   = new Date(hourly.time[i]);
-        const hr   = dt.getHours();
+        const dt = new Date(hourly.time[i]);
+        const hr = dt.getHours();
         if (!timeBlocks.has(hr)) continue;
         const dateKey = dt.toISOString().split('T')[0];
 
@@ -73,35 +85,49 @@ export class WeatherService {
               precipitation: {},
               windspeed: {},
               winddirection: {},
-              seeing: {}
+              seeing: {},
             },
           };
         }
 
-        resultMap[dateKey].conditions.temperature[hr]    = hourly.temperature_2m[i];
-        resultMap[dateKey].conditions.visibility[hr]     = hourly.visibility[i];
-        resultMap[dateKey].conditions.cloudcover[hr]     = hourly.cloudcover[i];
-        resultMap[dateKey].conditions.humidity[hr]       = hourly.relative_humidity_2m[i];
-        resultMap[dateKey].conditions.precipitation[hr]  = hourly.precipitation_probability[i];
-        resultMap[dateKey].conditions.windspeed[hr]      = hourly.windspeed_10m[i];
-        resultMap[dateKey].conditions.winddirection[hr]      = hourly.wind_direction_10m[i];
-        resultMap[dateKey].conditions.seeing[hr]      = hourly.boundary_layer_height[i];
-
+        resultMap[dateKey].conditions.temperature[hr] =
+          hourly.temperature_2m[i];
+        resultMap[dateKey].conditions.visibility[hr] = hourly.visibility[i];
+        resultMap[dateKey].conditions.cloudcover[hr] = hourly.cloudcover[i];
+        resultMap[dateKey].conditions.humidity[hr] =
+          hourly.relative_humidity_2m[i];
+        resultMap[dateKey].conditions.precipitation[hr] =
+          hourly.precipitation_probability[i];
+        resultMap[dateKey].conditions.windspeed[hr] = hourly.windspeed_10m[i];
+        resultMap[dateKey].conditions.winddirection[hr] =
+          hourly.wind_direction_10m[i];
+        resultMap[dateKey].conditions.seeing[hr] =
+          hourly.boundary_layer_height[i];
       }
 
       const result = Object.values(resultMap);
-      this.logger.log(`✅ fetchVisibility complete for [${lat},${lon}] with ${result.length} days`);
+      this.logger.log(
+        `✅ fetchVisibility complete for [${lat},${lon}] with ${result.length} days`,
+      );
       return result;
-
     } catch (err) {
-      this.logger.error(`❌ fetchVisibility failed for [${lat},${lon}]`, (err as Error).stack);
+      this.logger.error(
+        `❌ fetchVisibility failed for [${lat},${lon}]`,
+        (err as Error).stack,
+      );
       throw err;
     }
   }
 
-  async fetchAstronomy(lat: number, lon: number) {
+  async fetchAstronomy(
+    lat: number,
+    lon: number,
+    unit: 'metric' | 'us' = 'metric',
+  ) {
     const cacheKey = this.getAstroKey(lat, lon);
-    this.logger.log(`▶️ fetchAstronomy start for [${lat},${lon}], key=${cacheKey}`);
+    this.logger.log(
+      `▶️ fetchAstronomy start for [${lat},${lon}] (${unit}), key=${cacheKey}`,
+    );
 
     // 1) try cache
     const cached = await this.cache.get(cacheKey);
@@ -122,10 +148,10 @@ export class WeatherService {
       const resp = await firstValueFrom(
         this.http.get(url, {
           params: {
-            unitGroup:   'us',
-            include:     'days',
-            elements:    'datetime,sunrise,sunset,moonphase,moonrise,moonset',
-            key:         this.apiKey,
+            unitGroup: unit,
+            include: 'days',
+            elements: 'datetime,sunrise,sunset,moonphase,moonrise,moonset',
+            key: this.apiKey,
             contentType: 'json',
           },
         }),
@@ -136,9 +162,11 @@ export class WeatherService {
       await this.cache.set(cacheKey, days, 3600);
       this.logger.log(`💾 Cached astronomy data for ${cacheKey} (1h TTL)`);
       return days;
-
     } catch (err) {
-      this.logger.error(`❌ fetchAstronomy failed for [${lat},${lon}]`, (err as Error).stack);
+      this.logger.error(
+        `❌ fetchAstronomy failed for [${lat},${lon}]`,
+        (err as Error).stack,
+      );
       throw err;
     }
   }
@@ -149,7 +177,9 @@ export class WeatherService {
 
     const cached = await this.cache.get<string>(cacheKey);
     if (cached) {
-      this.logger.log(`♻️  fetchLocationName cache hit for ${cacheKey}: ${cached}`);
+      this.logger.log(
+        `♻️  fetchLocationName cache hit for ${cacheKey}: ${cached}`,
+      );
       return cached;
     }
 
@@ -166,21 +196,24 @@ export class WeatherService {
       );
 
       const addr = resp.data.address || {};
-      let city = addr.city
-        || addr.town
-        || addr.village
-        || addr.county
-        || addr.state
-        || 'Unknown location';
+      let city =
+        addr.city ||
+        addr.town ||
+        addr.village ||
+        addr.county ||
+        addr.state ||
+        'Unknown location';
 
-      city+= ', ' + addr.state;
+      city += ', ' + addr.state;
 
       await this.cache.set(cacheKey, city, 86400);
       this.logger.log(`💾 Cached location ${cacheKey}: ${city} (24h TTL)`);
       return city;
-
     } catch (err) {
-      this.logger.error(`❌ fetchLocationName failed for [${lat},${lon}]`, (err as Error).stack);
+      this.logger.error(
+        `❌ fetchLocationName failed for [${lat},${lon}]`,
+        (err as Error).stack,
+      );
       return 'Unknown location';
     }
   }
