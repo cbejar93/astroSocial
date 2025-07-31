@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Star } from 'lucide-react';
+import { Star, UploadCloud } from 'lucide-react';
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard';
 import { useAuth } from '../contexts/AuthContext';
+import ConfirmModal from '../components/Modal/ConfirmModal';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import {
   fetchMyPosts,
@@ -34,6 +35,7 @@ const ProfilePage: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     fetchMyPosts<PostCardProps>()
@@ -69,8 +71,11 @@ const ProfilePage: React.FC = () => {
     window.location.reload();
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Delete your account? This cannot be undone.')) return;
+  const handleDelete = () => {
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async () => {
     await deleteProfile();
     logout();
     navigate('/signup');
@@ -173,28 +178,60 @@ const ProfilePage: React.FC = () => {
       )}
 
       {active === 'profile' && (
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
             <img
               src={previewUrl || user.avatarUrl}
               alt="avatar"
               className="w-20 h-20 rounded-full object-cover"
             />
-            <input type="file" accept="image/*" onChange={handleAvatarChange} />
+            <label
+              htmlFor="avatar-upload"
+              className="flex flex-col items-center justify-center border-2 border-dashed border-gray-600 hover:border-teal-400 p-4 rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition"
+            >
+              <UploadCloud className="w-6 h-6 text-gray-400 mb-2" />
+              <span className="text-sm text-gray-400">
+                {avatarFile ? 'Change' : 'Click to upload'} picture
+              </span>
+              {avatarFile && (
+                <span className="mt-2 text-xs text-gray-300 truncate">{avatarFile.name}</span>
+              )}
+              {previewUrl && (
+                <img
+                  src={previewUrl}
+                  alt="preview"
+                  className="mt-4 w-16 h-16 object-cover rounded-full"
+                />
+              )}
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={handleAvatarChange}
+              />
+            </label>
             <button
               onClick={handleAvatarUpload}
-              className="px-3 py-1 bg-purple-600 rounded"
+              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded"
             >
-              Change Picture
+              Save Avatar
             </button>
           </div>
           <button
             onClick={handleDelete}
-            className="px-3 py-1 bg-red-600 rounded"
+            className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
           >
             Delete Profile
           </button>
         </div>
+      )}
+      {showConfirm && (
+        <ConfirmModal
+          message="Delete your account? This cannot be undone."
+          onCancel={() => setShowConfirm(false)}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   );
