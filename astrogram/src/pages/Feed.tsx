@@ -152,7 +152,7 @@ const Feed: React.FC = () => {
       console.log('hello');
       // setPosts(dummyPosts);
       // setLoading(false);
-      fetchFeed<any>(1, 20)
+      fetchFeed<PostCardProps>(1, 20)
     .then(data => {
       console.log('new data!!!!!')
       console.log(data);
@@ -188,7 +188,12 @@ const Feed: React.FC = () => {
                     className=" animate-fadeIn cursor-pointer"
                     onClick={() => navigate(`/posts/${post.id}`)}
                   >
-                    <PostCard {...post} />
+                    <PostCard
+                      {...post}
+                      onDeleted={(id) =>
+                        setPosts((ps) => ps.filter((p) => p.id !== id))
+                      }
+                    />
                   </div>
                 ))}
         </div>
