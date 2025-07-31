@@ -46,7 +46,8 @@ const PostPage: React.FC = () => {
           username:   data.username,
           avatarUrl:  data.avatarUrl,
           imageUrl:   data.imageUrl!,
-          caption:    data.body,
+          // API returns `caption`, not `body`
+          caption:    data.caption,
           timestamp:  data.timestamp,
           stars:      data.stars,
           comments:   data.comments,
