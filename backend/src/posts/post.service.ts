@@ -25,6 +25,11 @@ export class PostsService {
         shares: number;
         reposts: number;
     }): number {
+        this.logger.verbose(
+            `Computing score for post created ${post.createdAt.toISOString()} ` +
+            `(comments=${post.commentsCount}, likes=${post.likes}, ` +
+            `shares=${post.shares}, reposts=${post.reposts})`,
+        );
         const ageHours = (Date.now() - post.createdAt.getTime()) / 1000 / 60 / 60;
         const recencyScore = Math.exp(-0.1 * ageHours);    // decays over ~10h
         const engagementScore =
@@ -32,7 +37,9 @@ export class PostsService {
             post.likes * 1 +
             post.shares * 2 +
             post.reposts * 2;
-        return recencyScore + engagementScore;
+        const score = recencyScore + engagementScore;
+        this.logger.verbose(`Score computed: ${score.toFixed(2)}`);
+        return score;
     }
 
     constructor(
@@ -226,7 +233,7 @@ export class PostsService {
         }
     }
 
-async getPostById(
+  async getPostById(
     postId: string,
     currentUserId?: string
   ): Promise<{
@@ -243,6 +250,11 @@ async getPostById(
     reposts:     number;
     likedByMe:   boolean;
   }> {
+    this.logger.log(
+      `Fetching post ${postId}` +
+        (currentUserId ? ` for user ${currentUserId}` : ''),
+    );
+
     // 1) Fetch the post (with counts + author)
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
@@ -252,6 +264,7 @@ async getPostById(
       },
     });
     if (!post) {
+      this.logger.warn(`Post ${postId} not found`);
       throw new NotFoundException(`Post ${postId} not found`);
     }
   
@@ -273,7 +286,7 @@ async getPostById(
       }
   
     // 3) Shape and return
-    return {
+    const result = {
       id:        post.id,
       username:  post.author.username!,
       authorId:    post.authorId,
@@ -288,12 +301,15 @@ async getPostById(
       reposts:   post.reposts,
       likedByMe,
     };
+    this.logger.log(`Returning post ${postId}`);
+    return result;
   }
 
   async toggleLike(
     userId: string,
     postId: string,
   ): Promise<{ liked: boolean; count: number }> {
+    this.logger.log(`User ${userId} → TOGGLE LIKE (service) → post ${postId}`);
     const LIKE      = InteractionType.LIKE;
     const compound  = { postId_userId_type: { postId, userId, type: LIKE } };
     const counterOp = { likes: {} as any };
@@ -304,11 +320,11 @@ async getPostById(
         data: { userId, postId, type: LIKE },
       });
       counterOp.likes = { increment: 1 };
-      // report back “now liked”
+      this.logger.verbose(`Like created for ${postId} by ${userId}`);
     } catch (e: any) {
       if (e.code === 'P2002') {
         // Already liked → remove it
-        await this.prisma.postInteraction.delete({ where: 
+        await this.prisma.postInteraction.delete({ where:
             {
                 one_interaction_per_user_per_post: {
                   postId,
@@ -318,12 +334,13 @@ async getPostById(
               },
          });
         counterOp.likes = { decrement: 1 };
-        // report back “now unliked”
+        this.logger.verbose(`Removed like for ${postId} by ${userId}`);
         const updated = await this.prisma.post.update({
           where: { id: postId },
           data: counterOp,
           select: { likes: true },
         });
+        this.logger.log(`User ${userId} unliked ${postId}, total=${updated.likes}`);
         return { liked: false, count: updated.likes };
       }
       throw e;
@@ -341,10 +358,12 @@ async getPostById(
       NotificationType.POST_LIKE,
       postId,
     );
+    this.logger.log(`User ${userId} liked ${postId}, total=${updated.likes}`);
     return { liked: true, count: updated.likes };
   }
 
   async deletePost(userId: string, postId: string) {
+    this.logger.log(`User ${userId} → DELETE POST → ${postId}`);
     const [,, , , { count }] = await this.prisma.$transaction([
       this.prisma.commentLike.deleteMany({ where: { comment: { postId } } }),
       this.prisma.postInteraction.deleteMany({ where: { postId } }),
@@ -355,7 +374,9 @@ async getPostById(
       this.prisma.post.deleteMany({ where: { id: postId, authorId: userId } }),
     ]);
     if (count === 0) {
+      this.logger.warn(`User ${userId} cannot delete post ${postId}`);
       throw new ForbiddenException(`Cannot delete post ${postId}`);
     }
+    this.logger.log(`Post ${postId} deleted`);
   }
 }
