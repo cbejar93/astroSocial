@@ -34,6 +34,7 @@ const ProfilePage: React.FC = () => {
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -58,11 +59,17 @@ const ProfilePage: React.FC = () => {
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) {
-      setAvatarFile(f);
-      const url = URL.createObjectURL(f);
-      setPreviewUrl(url);
+    if (!f) return;
+    if (!f.type.startsWith('image/')) {
+      setAvatarError('Only image files are allowed.');
+      setAvatarFile(null);
+      setPreviewUrl(null);
+      return;
     }
+    setAvatarError(null);
+    setAvatarFile(f);
+    const url = URL.createObjectURL(f);
+    setPreviewUrl(url);
   };
 
   const handleAvatarUpload = async () => {
@@ -211,6 +218,9 @@ const ProfilePage: React.FC = () => {
                 onChange={handleAvatarChange}
               />
             </label>
+            {avatarError && (
+              <p className="text-red-500 text-sm mt-2">{avatarError}</p>
+            )}
             <button
               onClick={handleAvatarUpload}
               className="px-3 py-1 bg-brand hover:bg-brand-dark rounded"

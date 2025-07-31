@@ -31,9 +31,18 @@ const CompleteProfilePage: React.FC = () => {
 
     if (!files || files.length === 0) return;
     const f = files[0];
+    if (!f.type.startsWith('image/')) {
+      setError('Only image files are allowed.');
+      setImageFile(null);
+      setSelectedFile(null);
+      setPreviewUrl('');
+      return;
+    }
+    setError(null);
     setImageFile(f);
+    setSelectedFile(f);
     const url = URL.createObjectURL(f);
-         setPreviewUrl(url);
+    setPreviewUrl(url);
   };
 
   const handleSubmit = async (e: FormEvent) => {

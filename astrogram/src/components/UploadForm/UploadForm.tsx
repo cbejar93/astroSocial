@@ -25,7 +25,14 @@ const UploadForm: React.FC = () => {
   }, [file])
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files?.[0] ?? null)
+    const f = e.target.files?.[0] ?? null
+    if (f && !f.type.startsWith('image/')) {
+      setError('Only image files are allowed.')
+      setFile(null)
+      return
+    }
+    setError(null)
+    setFile(f)
   }
 
   const handleSubmit = async (e: FormEvent) => {
