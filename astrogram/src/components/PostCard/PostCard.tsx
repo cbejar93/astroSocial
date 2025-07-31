@@ -204,7 +204,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <button
               type="button"
               onClick={handleLike}
-              className="btn-unstyled btn-action hover:text-yellow-400"
+              className="btn-unstyled btn-action text-white hover:text-gray-300"
             >
               <Star className="w-5 h-5" fill={liked ? "currentColor" : "none"} />
               <span className="ml-1">{starCount}</span>
