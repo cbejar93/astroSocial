@@ -71,7 +71,9 @@ const Navbar = () => {
           <Link to="/notifications" className="relative btn-unstyled" aria-label="Notifications">
             <Bell className="w-6 h-6" />
             {count > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span
+                className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center"
+              >
                 {count}
               </span>
             )}
