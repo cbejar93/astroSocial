@@ -1,6 +1,7 @@
 
 import { MoreVertical, Star } from 'lucide-react';
 import React, { useEffect, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchComments, createComment, deleteComment, toggleCommentLike } from '../../lib/api';
 import CommentsSkeleton from './CommentsSkeleton';
@@ -100,7 +101,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
               className="w-8 h-8 rounded-full object-cover"
             />
             <div className="flex-1">
-              <div className="text-sm text-teal-400">@{c.username}</div>
+              <Link to={`/users/${c.username}/posts`} className="text-sm text-teal-400 hover:underline">@{c.username}</Link>
               <div className="text-sm text-gray-200">{c.text}</div>
               <button
                 type="button"

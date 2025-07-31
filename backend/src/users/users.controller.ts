@@ -1,5 +1,5 @@
 // src/users/users.controller.ts
-import { Controller, Get, Req, UseGuards, Logger, Put, UseInterceptors, UploadedFile, InternalServerErrorException, Body, Delete } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Logger, Put, UseInterceptors, UploadedFile, InternalServerErrorException, Body, Delete, Param } from '@nestjs/common';
 import { JwtAuthGuard }                             from '../auth/jwt-auth.guard';
 import { UsersService }                             from './users.service';
 import type { Request }                             from 'express';
@@ -93,5 +93,20 @@ export class UsersController {
   async deleteMe(@Req() req: Request & { user: { sub: string } }) {
     await this.usersService.deleteUser(req.user.sub);
     return { success: true };
+  }
+
+  @Get(':username/posts')
+  getUserPosts(@Param('username') username: string) {
+    return this.usersService.getPostsByUsername(username);
+  }
+
+  @Get(':username/comments')
+  getUserComments(@Param('username') username: string) {
+    return this.usersService.getCommentsByUsername(username);
+  }
+
+  @Get(':username')
+  getUser(@Param('username') username: string) {
+    return this.usersService.findByUsername(username);
   }
 }

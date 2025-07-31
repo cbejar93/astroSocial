@@ -244,6 +244,21 @@ export async function fetchMyComments<T = any>(): Promise<T[]> {
   return res.json();
 }
 
+export async function fetchUser(username: string) {
+  const res = await apiFetch(`/users/${username}`);
+  return res.json();
+}
+
+export async function fetchUserPosts<T = any>(username: string): Promise<T[]> {
+  const res = await apiFetch(`/users/${username}/posts`);
+  return res.json();
+}
+
+export async function fetchUserComments<T = any>(username: string): Promise<T[]> {
+  const res = await apiFetch(`/users/${username}/comments`);
+  return res.json();
+}
+
 export async function updateAvatar(username: string, file: File) {
   const form = new FormData();
   form.append('username', username);

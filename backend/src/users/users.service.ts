@@ -152,6 +152,73 @@ export class UsersService {
     }));
   }
 
+  async findByUsername(username: string): Promise<UserDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        avatarUrl: true,
+        profileComplete: true,
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return this.toDto(user);
+  }
+
+  async getPostsByUsername(username: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true, username: true, avatarUrl: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const posts = await this.prisma.post.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { comments: true } } },
+    });
+
+    return posts.map(p => ({
+      id: p.id,
+      authorId: user.id,
+      username: user.username || '',
+      avatarUrl: user.avatarUrl || '',
+      imageUrl: p.imageUrl ?? '',
+      caption: p.body,
+      timestamp: p.createdAt.toISOString(),
+      stars: p.likes,
+      comments: p._count.comments,
+      shares: p.shares,
+      likedByMe: false,
+    }));
+  }
+
+  async getCommentsByUsername(username: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true, username: true, avatarUrl: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const comments = await this.prisma.comment.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return comments.map(c => ({
+      id: c.id,
+      text: c.text,
+      authorId: user.id,
+      username: user.username || '',
+      avatarUrl: user.avatarUrl || '',
+      timestamp: c.createdAt.toISOString(),
+      likes: c.likes,
+      likedByMe: false,
+    }));
+  }
+
   async deleteUser(userId: string) {
     await this.prisma.$transaction([
       this.prisma.commentLike.deleteMany({ where: { OR: [{ userId }, { comment: { authorId: userId } }] } }),
