@@ -157,8 +157,9 @@ const PostCard: React.FC<PostCardProps> = ({
               </span>
             )}
             {isOwn && (
-              <div ref={menuRef} className="relative">
+              <div ref={menuRef} className="relative" onClick={stop}>
                 <button
+                  type="button"
                   onClick={() => setMenuOpen((o) => !o)}
                   className="p-1 text-gray-400 hover:text-gray-600"
                 >
