@@ -40,7 +40,7 @@ export async function apiFetch(
     init.credentials = 'include';
   
     const url = `${API_BASE}${input}`;
-    let res = await fetch(url, init);
+    const res = await fetch(url, init);
   
     // 2) on 401, try to refresh once
     // if (res.status === 401) {

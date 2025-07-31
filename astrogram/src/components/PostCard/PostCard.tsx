@@ -18,6 +18,7 @@ export interface PostCardProps {
   shares?: number;
   avatarUrl: string;
   likedByMe?: boolean;
+  onDeleted?: (id: string) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -31,7 +32,8 @@ const PostCard: React.FC<PostCardProps> = ({
   comments = 0,
   shares = 0,
   likedByMe,
-  authorId
+  authorId,
+  onDeleted
 }) => {
 
   const { user } = useAuth();
@@ -129,7 +131,7 @@ const PostCard: React.FC<PostCardProps> = ({
       }
 
       // inform parent so it can remove this post from the UI
-      // onDeleted?.(postId);
+      onDeleted?.(id);
     } catch (err: any) {
       console.error('Delete post error:', err);
       // you could show a toast here
