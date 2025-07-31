@@ -155,7 +155,7 @@ const ProfilePage: React.FC = () => {
                 className="w-8 h-8 rounded-full object-cover"
               />
               <div className="flex-1">
-                <div className="text-sm text-teal-400">@{c.username}</div>
+                <Link to={`/users/${c.username}/posts`} className="text-sm text-teal-400 hover:underline">@{c.username}</Link>
                 <div className="text-sm text-gray-200">{c.text}</div>
                 <div className="flex items-center text-xs text-gray-400 mt-1">
                   <button

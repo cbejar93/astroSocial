@@ -13,6 +13,7 @@ import { RequireProfileCompletion } from "./components/auth/RequireProfileComple
 import PostPage from './pages/PostPage'
 import NotificationsPage from './pages/NotificationsPage'
 import ProfilePage from './pages/ProfilePage'
+import UserPage from './pages/UserPage'
 
 
 
@@ -48,6 +49,9 @@ const App: React.FC = () => {
         {/* single-post detail view */}
       <Route path="/posts/:id" element={<PostPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
+
+      <Route path="/users/:username" element={<UserPage />} />
+      <Route path="/users/:username/:tab" element={<UserPage />} />
 
           <Route element={<RequireProfileCompletion />}>
           <Route path="/upload" element={<UploadForm />} />

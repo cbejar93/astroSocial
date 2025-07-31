@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
 import { likePost, sharePost, repostPost, apiFetch } from '../../lib/api';
@@ -142,14 +142,14 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <Link to={`/users/${username}/posts`} className="flex items-center gap-2 hover:underline">
             <img
               src={avatarUrl}
               alt={`${username}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
             <span className="font-semibold text-teal-400 text-sm">@{username}</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-2">
             {timestamp && (
               <span className="text-xs text-gray-500 dark:text-gray-400">
