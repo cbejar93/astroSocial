@@ -1,4 +1,11 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom brand color utilities (fallback) */
+.bg-brand { background-color: #7c3aed; }
+.bg-brand-light { background-color: #a78bfa; }
+.bg-brand-dark { background-color: #6d28d9; }
 
 
 
@@ -47,7 +54,7 @@ h1, h2, h3, h4, h5, h6 {
 button {
   cursor: pointer;
   border: none;
-  background: none;
+  /* background: none;  Removed to let Tailwind apply bg classes */
   padding: 0;
   font: inherit;
 }
