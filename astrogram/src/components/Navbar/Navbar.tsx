@@ -137,8 +137,8 @@ const Navbar = () => {
             )}
             <h3 className="mt-4 mb-1 text-lg font-semibold">Settings</h3>
           </div>
-          <div className="absolute bottom-4 left-4 text-sm space-y-1">
-            <a href="#" className="block">Terms and Conditions</a>
+          <div className="absolute bottom-0 left-0 w-full p-4 text-sm space-y-1">
+            <Link to="/terms" className="block">Terms and Conditions</Link>
             <a href="#" className="block">Community Notes</a>
           </div>
         </div>
