@@ -5,9 +5,9 @@ import { WiMoonrise, WiMoonset } from 'react-icons/wi';
 interface MoonPhaseCardProps {
   phase: string; // e.g. "Waxing Crescent", "Full Moon", etc.
   illumination: number; // e.g. 0.62 = 62%
-  moonrise: string;         // "HH:MM:SS"
-  moonset: string;         // "HH:MM:SS"
-  className:string;
+  moonrise?: string;         // "HH:MM:SS"
+  moonset?: string;         // "HH:MM:SS"
+  className: string;
 }
 
 const phaseIcons: Record<string, string> = {
@@ -24,7 +24,7 @@ const phaseIcons: Record<string, string> = {
 const MoonPhaseCard: React.FC<MoonPhaseCardProps> = ({ phase, illumination, moonrise,
   moonset, className }) => {
   const emoji = phaseIcons[phase] ?? "🌙";
-  const fmt = (t: string) => t.slice(0, 5); // drop seconds
+  const fmt = (t?: string) => (t ? t.slice(0, 5) : '--:--'); // drop seconds safely
   const illum =  phaseToIlluminationPercent(illumination);
   console.log(illumination);
 
