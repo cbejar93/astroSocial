@@ -53,9 +53,14 @@ const Navbar = () => {
           <button
             className="btn-unstyled"
             aria-label="Toggle menu"
+            aria-expanded={sideMenuOpen}
             onClick={() => setSideMenuOpen((o) => !o)}
           >
-            <Menu className="w-6 h-6" />
+            <Menu
+              className={`w-6 h-6 transition-transform duration-200 ${
+                sideMenuOpen ? "rotate-90" : ""
+              }`}
+            />
           </button>
 
           {/* ColliMate Dropdown */}
@@ -119,7 +124,7 @@ const Navbar = () => {
           className="absolute inset-0 bg-black bg-opacity-30"
           onClick={() => setSideMenuOpen(false)}
         />
-        <div className="relative bg-neutral-900 w-3/4 h-full p-4 animate-slide-in-left z-50">
+        <div className="relative bg-neutral-900 w-2/3 h-full p-4 animate-slide-in-left z-50">
           <div className="mt-10 space-y-2">
             <button className="flex items-center justify-between w-full py-2" onClick={() => setLoungesOpen(o => !o)}>
               <span>Lounges</span>
