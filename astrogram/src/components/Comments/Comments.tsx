@@ -1,5 +1,5 @@
 
-import { MoreVertical, Star } from 'lucide-react';
+import { MoreVertical, Star, Send } from 'lucide-react';
 import React, { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -80,9 +80,10 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
           />
           <button
             type="submit"
-            className="self-end px-3 py-2 bg-brand text-white rounded-md hover:bg-brand-dark"
+            className="self-end px-3 py-2 bg-brand text-white rounded-md hover:bg-brand-dark flex items-center gap-1"
           >
-            Post
+            <Send className="w-4 h-4" />
+            <span>Post</span>
           </button>
         </form>
       )}
