@@ -121,7 +121,7 @@ const Navbar = () => {
     {sideMenuOpen && (
       <div className="fixed inset-0 z-40 flex">
         <div
-          className="absolute inset-0 bg-black bg-opacity-10"
+          className="absolute inset-0 bg-white/20 backdrop-blur-sm"
           onClick={() => setSideMenuOpen(false)}
         />
         <div className="relative bg-neutral-900 w-2/3 h-full p-4 animate-slide-in-left z-50">
