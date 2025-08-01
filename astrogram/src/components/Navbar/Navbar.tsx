@@ -134,7 +134,41 @@ const Navbar = () => {
             </button>
             {loungesOpen && (
               <ul className="pl-4 text-sm space-y-1">
-                <li><Link to="/lounge" onClick={() => setSideMenuOpen(false)}>Astro Lounge</Link></li>
+                <li>
+                  <Link to="/lounge" onClick={() => setSideMenuOpen(false)}>
+                    Astro Lounge
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/lounge/lunisolar" onClick={() => setSideMenuOpen(false)}>
+                    LuniSolar
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/lounge/planetary" onClick={() => setSideMenuOpen(false)}>
+                    Planetary
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/lounge/dso" onClick={() => setSideMenuOpen(false)}>
+                    DSO
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/lounge/equipmet" onClick={() => setSideMenuOpen(false)}>
+                    Equipmet
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/lounge/astroadjacent" onClick={() => setSideMenuOpen(false)}>
+                    AstroAdjacent
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/lounge/askastro" onClick={() => setSideMenuOpen(false)}>
+                    AskAstro
+                  </Link>
+                </li>
               </ul>
             )}
             <h3 className="mt-4 mb-1 text-lg font-semibold">Settings</h3>
