@@ -4,6 +4,7 @@ export type TimeBlock = "0" | "6" | "12" | "18" | "21";
 
 export const timeBlockDataKeys = {
   temperature: "temperature_2m",
+  dewpoint: "dewpoint_2m",
   visibility: "visibility",
   cloudcover: "cloudcover",
   humidity: "relative_humidity_2m",
@@ -13,6 +14,7 @@ export const timeBlockDataKeys = {
 
 interface WeatherConditions {
     temperature?: Record<string, number>;
+    dewpoint?: Record<string, number>;
     visibility?: Record<string, number>;
     cloudcover?: Record<string, number>;
     humidity?: Record<string, number>;

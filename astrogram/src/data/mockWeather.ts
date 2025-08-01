@@ -41,6 +41,7 @@ export const conditionColors = {
       seeing?: Partial<Record<TimeBlock, number>>;        // custom astronomy score
       transparency?: Partial<Record<TimeBlock, number>>;  // custom transparency score
       temperature?: Partial<Record<TimeBlock, number>>;
+      dewpoint?: Partial<Record<TimeBlock, number>>;
       visibility?: Partial<Record<TimeBlock, number>>;
       cloudcover?: Partial<Record<TimeBlock, number>>;
       humidity?: Partial<Record<TimeBlock, number>>;

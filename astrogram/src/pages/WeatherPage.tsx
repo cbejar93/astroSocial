@@ -8,6 +8,7 @@ import WindCard from "../components/Weather/WindCard";
 
 interface WeatherConditions {
   temperature?: Record<string, number>;
+  dewpoint?: Record<string, number>;
   visibility?: Record<string, number>;
   cloudcover?: Record<string, number>;
   humidity?: Record<string, number>;
