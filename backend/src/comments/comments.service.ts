@@ -19,6 +19,7 @@ export class CommentsService {
 
     const comment = await this.prisma.comment.create({
       data: { text: dto.text, authorId: userId, postId },
+      include: { author: { select: { username: true, avatarUrl: true } } },
     });
 
     const post = await this.prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
@@ -26,7 +27,16 @@ export class CommentsService {
       await this.notifications.create(post.authorId, userId, NotificationType.COMMENT, postId, comment.id);
     }
 
-    return comment;
+    return {
+      id: comment.id,
+      text: comment.text,
+      authorId: comment.authorId,
+      username: comment.author.username!,
+      avatarUrl: comment.author.avatarUrl ?? '',
+      timestamp: comment.createdAt.toISOString(),
+      likes: comment.likes,
+      likedByMe: false,
+    };
   }
 
   async getCommentsForPost(postId: string, currentUserId?: string) {
