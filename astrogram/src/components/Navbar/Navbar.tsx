@@ -92,17 +92,19 @@ const Navbar = () => {
         <div className="flex items-center gap-5">
           <Link
             to={user ? '/notifications' : '/signup'}
-            className="relative btn-unstyled"
+            className="btn-unstyled"
             aria-label="Notifications"
           >
-            <Bell className="w-6 h-6" />
-            {count > 0 && (
-              <span
-                className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center"
-              >
-                {count}
-              </span>
-            )}
+            <div className="relative">
+              <Bell className="w-6 h-6" />
+              {count > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center"
+                >
+                  {count}
+                </span>
+              )}
+            </div>
           </Link>
           <Link to={user ? '/profile' : '/signup'} className="btn-unstyled" aria-label="Account">
           {user?.avatarUrl ? (
