@@ -30,5 +30,9 @@ export default {
     "bg-yellow-500",
     "bg-lime-500",
     "bg-green-500",
+      "bg-brand",
+    "bg-brand-light",
+    "bg-brand-dark",
+    "hover:bg-brand-dark",
   ],
 };
