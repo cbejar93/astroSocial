@@ -23,6 +23,11 @@ export const RequireProfileCompletion: React.FC = () => {
     // else: logged in but not complete → allow
   }
 
+  // send unauthenticated users trying to upload to sign in
+  if (pathname === "/upload" && !user) {
+    return <Navigate to="/signup" replace />;
+  }
+
   // any other route, just render the child routes
   return <Outlet />;
 };
