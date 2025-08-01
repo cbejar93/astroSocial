@@ -20,8 +20,8 @@ interface WeatherConditions {
 export interface AstroData {
   sunrise: string;    // “06:12:34”
   sunset: string;    // “20:03:21”
-  moonrise: string;
-  moonset: string;
+  moonrise?: string;
+  moonset?: string;
   moonPhase: {
     phase: string;        // e.g. “Full Moon”
     illumination: number; // percent 0–100
