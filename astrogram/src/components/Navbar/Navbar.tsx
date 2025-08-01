@@ -1,4 +1,4 @@
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, Bell, User, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../contexts/AuthContext";
@@ -8,6 +8,8 @@ import { useNotifications } from "../../contexts/NotificationContext";
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
+  const [loungesOpen, setLoungesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { count } = useNotifications();
@@ -19,8 +21,18 @@ const Navbar = () => {
         setDropdownOpen(false);
       }
     };
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSideMenuOpen(false);
+        setDropdownOpen(false);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
   }, []);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -33,12 +45,22 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 z-50 w-full bg-transparent  text-white">
+    <>
+    <nav className="fixed top-0 left-0 z-[80] w-full bg-transparent  text-white">
       <div className="flex items-center justify-between px-6 py-4">
         {/* Left Section */}
         <div className="flex items-center gap-5">
-          <button className="btn-unstyled" aria-label="Open menu">
-            <Menu className="w-6 h-6" />
+          <button
+            className="btn-unstyled"
+            aria-label="Toggle menu"
+            aria-expanded={sideMenuOpen}
+            onClick={() => setSideMenuOpen((o) => !o)}
+          >
+            <Menu
+              className={`w-6 h-6 transition-transform duration-200 ${
+                sideMenuOpen ? "rotate-90" : ""
+              }`}
+            />
           </button>
 
           {/* ColliMate Dropdown */}
@@ -96,6 +118,33 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
+    {sideMenuOpen && (
+      <div className="fixed inset-0 z-[60] flex">
+        <div
+          className="absolute inset-0 bg-white/20 backdrop-blur-sm"
+          onClick={() => setSideMenuOpen(false)}
+        />
+        <div className="relative bg-neutral-900 w-2/3 h-full p-4 animate-slide-in-left z-[70]">
+          <div className="mt-10 space-y-2">
+            <button className="flex items-center justify-between w-full py-2" onClick={() => setLoungesOpen(o => !o)}>
+              <span className="text-lg font-semibold">Lounges</span>
+              {loungesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {loungesOpen && (
+              <ul className="pl-4 text-sm space-y-1">
+                <li><Link to="/lounge" onClick={() => setSideMenuOpen(false)}>Astro Lounge</Link></li>
+              </ul>
+            )}
+            <h3 className="mt-4 mb-1 text-lg font-semibold">Settings</h3>
+          </div>
+          <div className="absolute bottom-0 left-0 w-full p-4 text-sm space-y-1">
+            <Link to="/terms" className="block">Terms and Conditions</Link>
+            <a href="#" className="block">Community Notes</a>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
