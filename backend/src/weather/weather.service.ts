@@ -49,6 +49,7 @@ export class WeatherService {
             windspeed_unit: unit === 'us' ? 'mph' : 'kmh',
             hourly: [
               'temperature_2m',
+              'dewpoint_2m',
               'visibility',
               'cloudcover',
               'relative_humidity_2m',
@@ -79,6 +80,7 @@ export class WeatherService {
             date: dateKey,
             conditions: {
               temperature: {},
+              dewpoint: {},
               visibility: {},
               cloudcover: {},
               humidity: {},
@@ -92,6 +94,8 @@ export class WeatherService {
 
         resultMap[dateKey].conditions.temperature[hr] =
           hourly.temperature_2m[i];
+        resultMap[dateKey].conditions.dewpoint[hr] =
+          hourly.dewpoint_2m[i];
         resultMap[dateKey].conditions.visibility[hr] = hourly.visibility[i];
         resultMap[dateKey].conditions.cloudcover[hr] = hourly.cloudcover[i];
         resultMap[dateKey].conditions.humidity[hr] =
