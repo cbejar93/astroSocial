@@ -1,4 +1,4 @@
-import { Menu, Bell, User, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Menu, Bell, User, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../contexts/AuthContext";
@@ -50,7 +50,11 @@ const Navbar = () => {
       <div className="flex items-center justify-between px-6 py-4">
         {/* Left Section */}
         <div className="flex items-center gap-5">
-          <button className="btn-unstyled" aria-label="Open menu" onClick={() => setSideMenuOpen(true)}>
+          <button
+            className="btn-unstyled"
+            aria-label="Toggle menu"
+            onClick={() => setSideMenuOpen((o) => !o)}
+          >
             <Menu className="w-6 h-6" />
           </button>
 
@@ -111,11 +115,11 @@ const Navbar = () => {
     </nav>
     {sideMenuOpen && (
       <div className="fixed inset-0 z-40 flex">
-        <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setSideMenuOpen(false)} />
-        <div className="relative bg-neutral-900 w-2/3 max-w-xs h-full p-4 animate-slide-in-left z-50">
-          <button className="btn-unstyled absolute top-4 right-4" aria-label="Close menu" onClick={() => setSideMenuOpen(false)}>
-            <X className="w-6 h-6" />
-          </button>
+        <div
+          className="absolute inset-0 bg-black bg-opacity-30"
+          onClick={() => setSideMenuOpen(false)}
+        />
+        <div className="relative bg-neutral-900 w-3/4 h-full p-4 animate-slide-in-left z-50">
           <div className="mt-10 space-y-2">
             <button className="flex items-center justify-between w-full py-2" onClick={() => setLoungesOpen(o => !o)}>
               <span>Lounges</span>
