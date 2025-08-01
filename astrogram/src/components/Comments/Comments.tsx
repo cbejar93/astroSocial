@@ -70,7 +70,7 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
   return (
     <div className="mt-4">
       {user && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2 mb-2">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
