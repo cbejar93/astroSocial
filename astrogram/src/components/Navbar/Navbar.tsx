@@ -119,12 +119,12 @@ const Navbar = () => {
       </div>
     </nav>
     {sideMenuOpen && (
-      <div className="fixed inset-0 z-40 flex">
+      <div className="fixed inset-0 z-[60] flex">
         <div
           className="absolute inset-0 bg-white/20 backdrop-blur-sm"
           onClick={() => setSideMenuOpen(false)}
         />
-        <div className="relative bg-neutral-900 w-2/3 h-full p-4 animate-slide-in-left z-50">
+        <div className="relative bg-neutral-900 w-2/3 h-full p-4 animate-slide-in-left z-[70]">
           <div className="mt-10 space-y-2">
             <button className="flex items-center justify-between w-full py-2" onClick={() => setLoungesOpen(o => !o)}>
               <span className="text-lg font-semibold">Lounges</span>
