@@ -15,6 +15,7 @@ export interface CommentItem {
   timestamp: string;
   likes: number;
   likedByMe?: boolean;
+  parentId?: string | null;
   replies?: CommentItem[];
 }
 
@@ -30,7 +31,18 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
   useEffect(() => {
     setLoading(true);
     fetchComments<CommentItem>(postId)
-      .then((data) => data.map((c) => ({ ...c, likedByMe: c.likedByMe ?? false })))
+      .then((data) =>
+        data.map((c) => ({
+          ...c,
+          likedByMe: c.likedByMe ?? false,
+          parentId: c.parentId ?? null,
+          replies: (c.replies ?? []).map((r) => ({
+            ...r,
+            likedByMe: r.likedByMe ?? false,
+            parentId: r.parentId ?? c.id,
+          })),
+        })),
+      )
       .then(setComments)
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
@@ -41,7 +53,10 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
     if (!text.trim()) return;
     try {
       const newComment = await createComment<CommentItem>(postId, text.trim());
-      setComments((c) => [...c, { ...newComment, likedByMe: false, replies: [] }]);
+      setComments((c) => [
+        ...c,
+        { ...newComment, likedByMe: false, replies: [], parentId: null },
+      ]);
       setText('');
     } catch (err) {
       console.error(err);
@@ -52,11 +67,21 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
     e.preventDefault();
     if (!replyText.trim()) return;
     try {
-      const newComment = await createComment<CommentItem>(postId, replyText.trim(), parentId);
+      const newComment = await createComment<CommentItem>(
+        postId,
+        replyText.trim(),
+        parentId,
+      );
       setComments((cs) =>
         cs.map((cm) =>
           cm.id === parentId
-            ? { ...cm, replies: [...(cm.replies ?? []), { ...newComment, likedByMe: false }] }
+            ? {
+                ...cm,
+                replies: [
+                  ...(cm.replies ?? []),
+                  { ...newComment, likedByMe: false, parentId },
+                ],
+              }
             : cm,
         ),
       );
@@ -106,7 +131,9 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
     <div
       key={c.id}
       className={`flex gap-2 py-2 relative ${
-        isReply ? 'ml-8 border-t border-white/10' : 'border-t border-b border-white/20'
+        isReply
+          ? 'ml-6 pl-2 border-l border-t border-white/10'
+          : 'border-t border-b border-white/20'
       }`}
     >
       <img

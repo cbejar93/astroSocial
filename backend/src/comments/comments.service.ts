@@ -54,6 +54,7 @@ export class CommentsService {
       timestamp: comment.createdAt.toISOString(),
       likes: comment.likes,
       likedByMe: false,
+      parentId: comment.parentId,
     };
   }
 
@@ -89,6 +90,7 @@ export class CommentsService {
       timestamp: c.createdAt.toISOString(),
       likes: c.likes,
       likedByMe: currentUserId ? c.likedBy.length > 0 : false,
+      parentId: c.parentId,
       replies: c.replies.map(r => ({
         id: r.id,
         text: r.text,
@@ -98,6 +100,7 @@ export class CommentsService {
         timestamp: r.createdAt.toISOString(),
         likes: r.likes,
         likedByMe: currentUserId ? r.likedBy.length > 0 : false,
+        parentId: r.parentId,
       })),
     }));
   }
