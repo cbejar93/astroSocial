@@ -8,10 +8,7 @@ import Comments                         from '../components/Comments/Comments'
 import CommentsSkeleton                 from '../components/Comments/CommentsSkeleton'
 import { apiFetch }                     from '../lib/api'
 
-interface FullPost extends PostCardProps {
-  // you can extend with other fields like comments array if you have them
-//   commentsCount: number
-}
+type FullPost = PostCardProps
 
 const PostPage: React.FC = () => {
   const { id }     = useParams<{ id: string }>()
@@ -45,7 +42,7 @@ const PostPage: React.FC = () => {
           id:         data.id,
           username:   data.username,
           avatarUrl:  data.avatarUrl,
-          imageUrl:   data.imageUrl!,
+          imageUrl:   data.imageUrl,
           // API returns `caption`, not `body`
           caption:    data.caption,
           timestamp:  data.timestamp,

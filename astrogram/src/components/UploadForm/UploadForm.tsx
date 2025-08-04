@@ -37,17 +37,13 @@ const UploadForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!file) {
-      setError('Please select an image.')
-      return
-    }
     setError(null)
     setLoading(true)
 
     try {
       const form = new FormData()
       form.append('body', caption)
-      form.append('image', file)
+      if (file) form.append('image', file)
 
       const res = await apiFetch('/posts', {
         method: 'POST',
@@ -69,8 +65,9 @@ const UploadForm: React.FC = () => {
       setCaption('')
       setFile(null)
       setPreview(null)
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Something went wrong'
+        setError(message)
     } finally {
       setLoading(false)
     }

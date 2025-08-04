@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from 'react-router-dom';
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
-import { likePost, sharePost, repostPost, apiFetch } from '../../lib/api';
+import { sharePost, repostPost, apiFetch } from '../../lib/api';
 import { useAuth } from "../../contexts/AuthContext";
 
 
@@ -10,7 +10,7 @@ export interface PostCardProps {
   id: string
   authorId: string
   username: string;
-  imageUrl: string;
+  imageUrl?: string;
   caption: string;
   timestamp: string;
   stars?: number;
@@ -94,14 +94,14 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const handleRepost = async () => {
     if (reposted) return;
-    try {
-      const { count } = await repostPost(id);
-      setShareCount(prev => prev); // leave shareCount alone
-      setReposted(true);
-      // if you want to show repost count separately, add another state
-    } catch (err) {
-      console.error("Failed to repost:", err);
-    }
+      try {
+        await repostPost(id);
+        setShareCount(prev => prev); // leave shareCount alone
+        setReposted(true);
+        // if you want to show repost count separately, add another state
+      } catch (err: unknown) {
+        console.error("Failed to repost:", err);
+      }
   };
 
   // close menu on outside click
@@ -132,7 +132,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
       // inform parent so it can remove this post from the UI
       onDeleted?.(id);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Delete post error:', err);
       // you could show a toast here
     }
@@ -188,17 +188,19 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
 
         {/* Image */}
-        <div className="w-full aspect-video overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={`Post by ${username}: ${caption}`}
-            className="object-cover w-full h-full"
-            loading="lazy"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
-            }}
-          />
-        </div>
+        {imageUrl && (
+          <div className="w-full aspect-video overflow-hidden">
+            <img
+              src={imageUrl}
+              alt={`Post by ${username}: ${caption}`}
+              className="object-cover w-full h-full"
+              loading="lazy"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
+              }}
+            />
+          </div>
+        )}
 
         {/* Caption */}
         <div className="px-4 sm:px-6 py-4 text-sm">{caption}</div>
