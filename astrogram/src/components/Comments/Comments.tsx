@@ -146,6 +146,36 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
             </button>
           )}
         </div>
+        {!isReply && (
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              replyingTo === c.id && user ? 'max-h-40 mt-2' : 'max-h-0'
+            }`}
+          >
+            {replyingTo === c.id && user && (
+              <form
+                onSubmit={(e) => handleReplySubmit(e, c.id)}
+                className="flex flex-col gap-2"
+              >
+                <textarea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  className="w-full bg-gray-700 text-gray-100 rounded-md p-2"
+                  placeholder="Write a reply..."
+                  rows={2}
+                />
+                <button
+                  type="submit"
+                  className="self-end px-3 py-1 bg-brand text-white rounded-md hover:bg-brand-dark flex items-center gap-1"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Reply</span>
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+        {!isReply && c.replies?.map((r) => renderComment(r, true))}
       </div>
       {user?.id === c.authorId && (
         <div className="relative">
@@ -173,28 +203,6 @@ const Comments: React.FC<{ postId: string }> = ({ postId }) => {
           )}
         </div>
       )}
-      {!isReply && replyingTo === c.id && user && (
-        <form
-          onSubmit={(e) => handleReplySubmit(e, c.id)}
-          className="flex flex-col gap-2 my-2 ml-8 w-full"
-        >
-          <textarea
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            className="w-full bg-gray-700 text-gray-100 rounded-md p-2"
-            placeholder="Write a reply..."
-            rows={2}
-          />
-          <button
-            type="submit"
-            className="self-end px-3 py-1 bg-brand text-white rounded-md hover:bg-brand-dark flex items-center gap-1"
-          >
-            <Send className="w-4 h-4" />
-            <span>Reply</span>
-          </button>
-        </form>
-      )}
-      {!isReply && c.replies?.map((r) => renderComment(r, true))}
     </div>
   );
 

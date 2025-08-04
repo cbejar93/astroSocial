@@ -3,7 +3,7 @@ import { Injectable, Logger, ForbiddenException, BadRequestException } from '@ne
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class CommentsService {
@@ -120,8 +120,8 @@ export class CommentsService {
         commentId,
       );
       return { liked: true, count: updated.likes };
-    } catch (e: any) {
-      if (e.code === 'P2002') {
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         await this.prisma.commentLike.delete({
           where: {
             one_like_per_user_per_comment: { commentId, userId },
@@ -135,7 +135,10 @@ export class CommentsService {
         return { liked: false, count: updated.likes };
       }
 
-      this.logger.error(`Failed to toggle like on ${commentId}`, e.stack);
+      this.logger.error(
+        `Failed to toggle like on ${commentId}`,
+        e instanceof Error ? e.stack : undefined,
+      );
 
       throw e;
     }

@@ -14,20 +14,6 @@ export async function handleLogin(token: string) {
   localStorage.setItem('jwt', token);
 }
 
-// internal: actually do the refresh
-async function refreshToken(): Promise<string> {
-  const res = await fetch(`${API_BASE}/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include',       // send the jid cookie
-  });
-  if (!res.ok) {
-    throw new Error('Refresh failed');
-  }
-  const { accessToken: newToken } = await res.json();
-  setAccessToken(newToken);
-  return newToken;
-}
-
 export async function apiFetch(
     input: RequestInfo,
     init: RequestInit = {}
@@ -42,21 +28,7 @@ export async function apiFetch(
     const url = `${API_BASE}${input}`;
     const res = await fetch(url, init);
   
-    // 2) on 401, try to refresh once
-    // if (res.status === 401) {
-    //   try {
-    //     const newToken = await refreshToken();
-    //     init.headers = {
-    //       ...(init.headers as Record<string, string>),
-    //       Authorization: `Bearer ${newToken}`,
-    //     };
-    //     res = await fetch(url, init);
-    //   } catch {
-    //     // give up → redirect to login
-    //     window.location.href = '/signup';
-    //     throw new Error('Not authenticated');
-    //   }
-    // }
+    // 2) on 401, we could try to refresh once. TODO: implement refresh logic
   
     // 3) throw on any other non‑2xx
     if (!res.ok) {
@@ -118,7 +90,7 @@ export interface FeedResponse<T> {
    * @param page  1‑based page number (default: 1)
    * @param limit items per page (default: 20)
    */
-  export async function fetchFeed<Item = any>(
+  export async function fetchFeed<Item = unknown>(
     page: number = 1,
     limit: number = 20
   ): Promise<FeedResponse<Item>> {
@@ -167,7 +139,7 @@ export async function interactWithPost(
 // --------------------------------------------------
 // Comments API helpers
 
-export async function fetchComments<T = any>(postId: string): Promise<T[]> {
+export async function fetchComments<T = unknown>(postId: string): Promise<T[]> {
   const res = await apiFetch(`/posts/${postId}/comments`);
   if (!res.ok) {
     throw new Error(`Failed to fetch comments (${res.status})`);
@@ -175,7 +147,7 @@ export async function fetchComments<T = any>(postId: string): Promise<T[]> {
   return res.json();
 }
 
-export async function createComment<T = any>(postId: string, text: string, parentId?: string): Promise<T> {
+export async function createComment<T = unknown>(postId: string, text: string, parentId?: string): Promise<T> {
   const res = await apiFetch(`/posts/${postId}/comments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -234,12 +206,12 @@ export async function fetchUnreadCount(): Promise<number> {
 // --------------------------------------------------
 // Profile helpers
 
-export async function fetchMyPosts<T = any>(): Promise<T[]> {
+export async function fetchMyPosts<T = unknown>(): Promise<T[]> {
   const res = await apiFetch('/users/me/posts');
   return res.json();
 }
 
-export async function fetchMyComments<T = any>(): Promise<T[]> {
+export async function fetchMyComments<T = unknown>(): Promise<T[]> {
   const res = await apiFetch('/users/me/comments');
   return res.json();
 }
@@ -249,12 +221,12 @@ export async function fetchUser(username: string) {
   return res.json();
 }
 
-export async function fetchUserPosts<T = any>(username: string): Promise<T[]> {
+export async function fetchUserPosts<T = unknown>(username: string): Promise<T[]> {
   const res = await apiFetch(`/users/${username}/posts`);
   return res.json();
 }
 
-export async function fetchUserComments<T = any>(username: string): Promise<T[]> {
+export async function fetchUserComments<T = unknown>(username: string): Promise<T[]> {
   const res = await apiFetch(`/users/${username}/comments`);
   return res.json();
 }
