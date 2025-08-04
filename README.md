@@ -2,6 +2,8 @@
 
 ColliMate is a full-stack social app for sharing and discovering cosmic photography and musings. Users can sign up via Google or Facebook, complete their profile, post images with captions, interact (like, share, repost), and browse a weighted feed.
 
+Posts and comments are limited to **314** characters each.
+
 ---
 
 ## 🚀 Tech Stack

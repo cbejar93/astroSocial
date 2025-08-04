@@ -5,7 +5,8 @@ import {
     InternalServerErrorException,
     Logger,
     NotFoundException,
-    ForbiddenException
+    ForbiddenException,
+    BadRequestException,
 } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { InteractionType, Post, NotificationType } from '@prisma/client'
@@ -54,6 +55,10 @@ export class PostsService {
         file?: Express.Multer.File,
     ): Promise<Post> {
         this.logger.log(`Creating post for user ${userId}: "${dto.title}"`)
+
+        if (dto.body && dto.body.length > 314) {
+            throw new BadRequestException('Post body must be 314 characters or fewer')
+        }
 
         // 1) if they sent a file, upload it and grab the public URL
         let imageUrl: string | undefined
