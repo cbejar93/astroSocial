@@ -1,4 +1,4 @@
-import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException, BadRequestException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -16,6 +16,10 @@ export class CommentsService {
 
   async createComment(userId: string, postId: string, dto: CreateCommentDto) {
     this.logger.log(`User ${userId} creating comment on post ${postId}`);
+
+    if (dto.text && dto.text.length > 314) {
+      throw new BadRequestException('Comment text must be 314 characters or fewer');
+    }
 
     const comment = await this.prisma.comment.create({
       data: { text: dto.text, authorId: userId, postId },
