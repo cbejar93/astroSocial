@@ -175,11 +175,11 @@ export async function fetchComments<T = any>(postId: string): Promise<T[]> {
   return res.json();
 }
 
-export async function createComment<T = any>(postId: string, text: string): Promise<T> {
+export async function createComment<T = any>(postId: string, text: string, parentId?: string): Promise<T> {
   const res = await apiFetch(`/posts/${postId}/comments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, parentId }),
   });
   if (!res.ok) {
     throw new Error(`Failed to create comment (${res.status})`);

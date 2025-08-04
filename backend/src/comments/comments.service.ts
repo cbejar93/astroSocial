@@ -20,15 +20,29 @@ export class CommentsService {
     if (dto.text && dto.text.length > 314) {
       throw new BadRequestException('Comment text must be 314 characters or fewer');
     }
+    let parentAuthorId: string | null = null;
+    if (dto.parentId) {
+      const parent = await this.prisma.comment.findUnique({
+        where: { id: dto.parentId },
+        select: { authorId: true, postId: true, parentId: true },
+      });
+      if (!parent || parent.postId !== postId || parent.parentId) {
+        throw new BadRequestException('Invalid parent comment');
+      }
+      parentAuthorId = parent.authorId;
+    }
 
     const comment = await this.prisma.comment.create({
-      data: { text: dto.text, authorId: userId, postId },
+      data: { text: dto.text, authorId: userId, postId, parentId: dto.parentId },
       include: { author: { select: { username: true, avatarUrl: true } } },
     });
 
     const post = await this.prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
     if (post) {
       await this.notifications.create(post.authorId, userId, NotificationType.COMMENT, postId, comment.id);
+    }
+    if (parentAuthorId) {
+      await this.notifications.create(parentAuthorId, userId, NotificationType.COMMENT, postId, comment.id);
     }
 
     return {
@@ -48,13 +62,22 @@ export class CommentsService {
     this.logger.log(`Fetching comments for post ${postId}`);
 
     const list = await this.prisma.comment.findMany({
-      where: { postId },
+      where: { postId, parentId: null },
       orderBy: { createdAt: 'asc' },
       include: {
         author: { select: { username: true, avatarUrl: true } },
         likedBy: currentUserId
           ? { where: { userId: currentUserId }, select: { id: true } }
           : false,
+        replies: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            author: { select: { username: true, avatarUrl: true } },
+            likedBy: currentUserId
+              ? { where: { userId: currentUserId }, select: { id: true } }
+              : false,
+          },
+        },
       },
     });
     return list.map(c => ({
@@ -66,6 +89,16 @@ export class CommentsService {
       timestamp: c.createdAt.toISOString(),
       likes: c.likes,
       likedByMe: currentUserId ? c.likedBy.length > 0 : false,
+      replies: c.replies.map(r => ({
+        id: r.id,
+        text: r.text,
+        authorId: r.authorId,
+        username: r.author.username!,
+        avatarUrl: r.author.avatarUrl ?? '',
+        timestamp: r.createdAt.toISOString(),
+        likes: r.likes,
+        likedByMe: currentUserId ? r.likedBy.length > 0 : false,
+      })),
     }));
   }
 
@@ -109,13 +142,23 @@ export class CommentsService {
   }
 
   async deleteComment(userId: string, commentId: string) {
-    await this.prisma.commentLike.deleteMany({ where: { commentId } });
+    await this.prisma.commentLike.deleteMany({
+      where: {
+        OR: [
+          { commentId },
+          { comment: { parentId: commentId } },
+        ],
+      },
+    });
+
     const { count } = await this.prisma.comment.deleteMany({
       where: { id: commentId, authorId: userId },
     });
     if (count === 0) {
       throw new ForbiddenException(`Cannot delete comment ${commentId}`);
     }
+
+    await this.prisma.comment.deleteMany({ where: { parentId: commentId } });
     return { success: true };
   }
 }

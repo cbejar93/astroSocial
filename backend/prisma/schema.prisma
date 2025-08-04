@@ -65,8 +65,11 @@ model Comment {
   text      String
   likes     Int      @default(0)
   createdAt DateTime @default(now())
+  parentId  String?
   author    User     @relation("UserComments", fields: [authorId], references: [id])
   post      Post     @relation("PostComments", fields: [postId], references: [id])
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
   likedBy   CommentLike[]
   notifications        Notification[]
 
