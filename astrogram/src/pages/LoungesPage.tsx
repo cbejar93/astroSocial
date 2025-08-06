@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { lounges } from "../data/lounges";
+import { useAuth } from "../contexts/AuthContext";
 
 const LoungesPage: React.FC = () => {
+  const { user } = useAuth();
   const [sortBy, setSortBy] = useState<"name" | "lastPost">("name");
   const [followed, setFollowed] = useState<Record<string, boolean>>({});
 
@@ -58,19 +60,21 @@ const LoungesPage: React.FC = () => {
                   <span>
                     {lounge.threads} Threads · {lounge.views} Views
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setFollowed((prev) => ({
-                        ...prev,
-                        [id]: !prev[id],
-                      }));
-                    }}
-                    className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
-                  >
-                    {followed[id] ? "Unfollow" : "Follow"}
-                  </button>
+                  {user && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFollowed((prev) => ({
+                          ...prev,
+                          [id]: !prev[id],
+                        }));
+                      }}
+                      className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
+                    >
+                      {followed[id] ? "Unfollow" : "Follow"}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
