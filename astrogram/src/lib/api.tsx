@@ -129,6 +129,20 @@ export interface FeedResponse<T> {
     return res.json();
   }
 
+export async function fetchLoungePosts<Item = any>(
+  loungeId: string,
+  page: number = 1,
+  limit: number = 20,
+): Promise<FeedResponse<Item>> {
+  const res = await apiFetch(
+    `/lounges/${loungeId}/posts?page=${page}&limit=${limit}`,
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to fetch lounge posts (${res.status})`);
+  }
+  return res.json();
+}
+
 
 export type InteractionType = 'like' | 'share' | 'repost';
 

@@ -6,16 +6,27 @@ import {
   UseInterceptors,
   Get,
   Logger,
+  Param,
+  Req,
+  UseGuards,
+  Query,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { LoungesService } from './lounges.service';
 import { CreateLoungeDto } from './dto/create-lounge.dto';
+import { PostsService } from '../posts/post.service';
+import { CreatePostDto } from '../posts/dto/create-post.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalAuthGuard } from '../auth/jwt-optional.guard';
 
 @Controller('api/lounges')
 export class LoungesController {
   private readonly logger = new Logger(LoungesController.name);
 
-  constructor(private readonly lounges: LoungesService) {}
+  constructor(
+    private readonly lounges: LoungesService,
+    private readonly posts: PostsService,
+  ) {}
 
   @Post()
   @UseInterceptors(
@@ -51,5 +62,41 @@ export class LoungesController {
   @Get()
   async getLounges() {
     return this.lounges.findAll();
+  }
+
+  @UseGuards(OptionalAuthGuard)
+  @Get(':id/posts')
+  async getLoungePosts(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    const userId = req.user ? req.user.sub : null;
+    const p = parseInt(page, 10) || 1;
+    const l = parseInt(limit, 10) || 20;
+    return this.posts.getLoungePosts(id, userId, p, l);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/posts')
+  @UseInterceptors(
+    FilesInterceptor('images', 4, {
+      fileFilter: (_req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/gif'];
+        if (allowed.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('Invalid file type'), false);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  async createLoungePost(
+    @Param('id') id: string,
+    @Req() req: any,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() dto: CreatePostDto,
+  ) {
+    const file = files?.[0];
+    return this.posts.create(req.user.sub, { ...dto, loungeId: id }, file);
   }
 }

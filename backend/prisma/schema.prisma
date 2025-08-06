@@ -46,12 +46,14 @@ model Post {
   title         String
   body          String
   imageUrl      String?
+  loungeId      String?
   likes         Int               @default(0)
   shares        Int               @default(0)
   reposts       Int               @default(0)
   createdAt     DateTime          @default(now())
   comments      Comment[]         @relation("PostComments")
   author        User              @relation("UserPosts", fields: [authorId], references: [id])
+  lounge        Lounge?           @relation(fields: [loungeId], references: [id])
   interactions  PostInteraction[]
   notifications Notification[]
 }
@@ -113,4 +115,5 @@ model Lounge {
   description String @db.Text
   bannerUrl   String
   profileUrl  String
+  posts       Post[]
 }

@@ -1,9 +1,27 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import lounges from "../data/lounges";
+import { fetchLoungePosts } from "../lib/api";
+import PostCard from "../components/PostCard/PostCard";
+import PostSkeleton from "../components/PostCard/PostSkeleton";
+import type { PostCardProps } from "../components/PostCard/PostCard";
 
 const LoungePage: React.FC = () => {
   const { loungeId } = useParams<{ loungeId: string }>();
   const lounge = loungeId ? lounges[loungeId] : undefined;
+  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loungeId) return;
+    fetchLoungePosts<PostCardProps>(loungeId, 1, 20)
+      .then((data) => {
+        setPosts(data.posts);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [loungeId]);
 
   if (!lounge) {
     return <div className="py-6">Lounge not found.</div>;
@@ -34,7 +52,19 @@ const LoungePage: React.FC = () => {
           Post
         </Link>
       </div>
-      <div>Feed coming soon...</div>
+      <div className="w-full max-w-3xl mx-auto space-y-4">
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
+          : posts.map((post) => (
+              <div
+                key={post.id}
+                className="animate-fadeIn cursor-pointer"
+                onClick={() => navigate(`/posts/${post.id}`)}
+              >
+                <PostCard {...post} />
+              </div>
+            ))}
+      </div>
     </div>
   );
 };

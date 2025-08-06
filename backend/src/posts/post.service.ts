@@ -81,8 +81,9 @@ export class PostsService {
             const post = await this.prisma.post.create({
                 data: {
                     authorId: userId,
-                    title: '',
+                    title: dto.title ?? '',
                     body: dto.body,
+                    loungeId: dto.loungeId,
                     ...(imageUrl ? { imageUrl } : {}),
                 },
             })
@@ -167,6 +168,7 @@ export class PostsService {
         try {
             // 1) fetch raw posts + counts
             const posts = await this.prisma.post.findMany({
+                where: { loungeId: null },
                 orderBy: { createdAt: 'desc' },
                 take: page * limit,
                 include: {
@@ -235,6 +237,58 @@ export class PostsService {
         } catch (err: any) {
             this.logger.error(`Failed to fetch weighted feed`, err.stack);
             throw new InternalServerErrorException('Could not fetch feed');
+        }
+    }
+
+    async getLoungePosts(
+        loungeId: string,
+        userId: string | null,
+        page = 1,
+        limit = 20,
+    ) {
+        this.logger.log(`Fetching posts for lounge ${loungeId}`);
+        try {
+            const [total, posts] = await this.prisma.$transaction([
+                this.prisma.post.count({ where: { loungeId } }),
+                this.prisma.post.findMany({
+                    where: { loungeId },
+                    orderBy: { createdAt: 'desc' },
+                    skip: (page - 1) * limit,
+                    take: limit,
+                    include: {
+                        author: {
+                            select: { id: true, username: true, avatarUrl: true },
+                        },
+                        _count: { select: { comments: true } },
+                        interactions: {
+                            where: {
+                                userId: userId || undefined,
+                                type: InteractionType.LIKE,
+                            },
+                            select: { id: true },
+                        },
+                    },
+                }),
+            ]);
+
+            const items = posts.map(p => ({
+                id: p.id,
+                authorId: p.author.id,
+                username: p.author.username!,
+                imageUrl: p.imageUrl ?? '',
+                avatarUrl: p.author.avatarUrl || '',
+                caption: p.body,
+                timestamp: p.createdAt.toISOString(),
+                stars: p.likes,
+                comments: p._count.comments,
+                shares: p.shares,
+                likedByMe: p.interactions.length > 0,
+            }));
+
+            return { posts: items, total, page, limit };
+        } catch (err: any) {
+            this.logger.error(`Failed to fetch lounge posts`, err.stack);
+            throw new InternalServerErrorException('Could not fetch lounge posts');
         }
     }
 
