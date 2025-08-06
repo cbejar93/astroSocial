@@ -1,5 +1,4 @@
-import { useParams } from "react-router-dom";
-import Feed from "./Feed";
+import { Link, useParams } from "react-router-dom";
 import { lounges } from "../data/lounges";
 
 const LoungePage: React.FC = () => {
@@ -33,7 +32,15 @@ const LoungePage: React.FC = () => {
           {lounge.threads} Threads · {lounge.views} Views
         </p>
       </div>
-      <Feed />
+      <div className="flex justify-center mb-6">
+        <Link
+          to={`/lounge/${id}/post`}
+          className="px-4 py-2 rounded bg-brand hover:bg-brand-dark transition"
+        >
+          Post
+        </Link>
+      </div>
+      {/* Forum threads will appear here in the future */}
     </div>
   );
 };
