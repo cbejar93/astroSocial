@@ -27,7 +27,10 @@ const LoungePage: React.FC = () => {
       </div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">{lounge.name}</h1>
-        <Link to={`/lounge/${loungeId}/post`} className="text-blue-400">
+        <Link
+          to={`/lounge/${loungeId}/post`}
+          className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+        >
           Post
         </Link>
       </div>
