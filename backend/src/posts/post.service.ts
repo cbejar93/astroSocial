@@ -300,7 +300,7 @@ export class PostsService {
     username:    string;
     authorId: string;
     avatarUrl:   string;
-    imageUrl:    string;
+    imageUrl?:   string;
     caption:     string;
     timestamp:   string;
     stars:       number;
