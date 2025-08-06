@@ -30,6 +30,7 @@ model User {
   profileComplete Boolean           @default(false)
   username        String?           @unique
   role            String            @default("USER")
+  followedLounges String[]          @default([])
   comments        Comment[]         @relation("UserComments")
   posts           Post[]            @relation("UserPosts")
   interactions    PostInteraction[]

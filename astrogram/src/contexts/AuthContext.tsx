@@ -15,6 +15,7 @@ export interface User {
   username?: string;
   avatarUrl?: string;
   profileComplete: boolean;
+  followedLounges: string[];
 }
 
 interface AuthContextType {
@@ -22,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   login: (accessToken: string) => Promise<User>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -77,8 +79,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // optionally call your backend /logout endpoint to clear the refresh cookie
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await apiFetch("/users/me");
+      if (res.ok) {
+        const me: User = await res.json();
+        setUser(me);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
