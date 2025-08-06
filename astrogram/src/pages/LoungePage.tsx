@@ -27,6 +27,12 @@ const LoungePage: React.FC = () => {
           className="w-24 h-24 rounded-full border-4 border-gray-900 object-cover"
         />
       </div>
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-semibold">{lounge.name}</h1>
+        <p className="text-sm text-neutral-400 mt-1">
+          {lounge.threads} Threads · {lounge.views} Views
+        </p>
+      </div>
       <Feed />
     </div>
   );

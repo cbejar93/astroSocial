@@ -160,8 +160,8 @@ const Navbar = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/equipmet" onClick={() => setSideMenuOpen(false)}>
-                    Equipmet
+                  <Link to="/lounge/equipment" onClick={() => setSideMenuOpen(false)}>
+                    Equipment
                   </Link>
                 </li>
                 <li>
