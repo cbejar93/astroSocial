@@ -12,12 +12,18 @@ const LoungePage: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full h-40 sm:h-60 overflow-hidden">
+      <div className="relative w-full h-40 sm:h-60 overflow-hidden">
         <img
           src={lounge.banner}
           alt={`${lounge.name} banner`}
           className="w-full h-full object-cover"
         />
+        <Link
+          to={`/lounge/${id}/post`}
+          className="absolute top-2 right-2 px-4 py-2 rounded bg-brand hover:bg-brand-dark transition"
+        >
+          Post
+        </Link>
       </div>
       <div className="-mt-12 mb-6 flex justify-center">
         <img
@@ -31,14 +37,6 @@ const LoungePage: React.FC = () => {
         <p className="text-sm text-neutral-400 mt-1">
           {lounge.threads} Threads · {lounge.views} Views
         </p>
-      </div>
-      <div className="flex justify-center mb-6">
-        <Link
-          to={`/lounge/${id}/post`}
-          className="px-4 py-2 rounded bg-brand hover:bg-brand-dark transition"
-        >
-          Post
-        </Link>
       </div>
       {/* Forum threads will appear here in the future */}
     </div>

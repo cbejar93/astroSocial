@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { UploadCloud } from "lucide-react";
 
 const MAX_IMAGES = 4;
 
@@ -95,28 +96,49 @@ const LoungePostPage: React.FC = () => {
           />
         </div>
         <div>
-          <label className="block text-sm mb-1">
-            Images (up to {MAX_IMAGES})
+          <label
+            htmlFor="post-images"
+            className="
+              flex flex-col items-center justify-center
+              border-2 border-dashed border-gray-600
+              hover:border-teal-400 p-6 rounded-lg
+              cursor-pointer bg-gray-700 hover:bg-gray-600
+              transition text-gray-200
+            "
+          >
+            <UploadCloud className="w-8 h-8 mb-2" />
+            <span className="text-sm">
+              {files.length
+                ? "Change images"
+                : `Click to upload up to ${MAX_IMAGES} images`}
+            </span>
+
+            {files.length > 0 && (
+              <span className="mt-2 text-xs">{files.length} selected</span>
+            )}
+
+            {previews.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {previews.map((src, idx) => (
+                  <img
+                    key={idx}
+                    src={src}
+                    alt={`preview-${idx}`}
+                    className="w-24 h-24 object-cover rounded-lg"
+                  />
+                ))}
+              </div>
+            )}
+
+            <input
+              id="post-images"
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              onChange={handleFiles}
+            />
           </label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFiles}
-            className="block w-full text-sm"
-          />
-          {previews.length > 0 && (
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {previews.map((src, idx) => (
-                <img
-                  key={idx}
-                  src={src}
-                  alt={`preview-${idx}`}
-                  className="w-24 h-24 object-cover rounded"
-                />
-              ))}
-            </div>
-          )}
         </div>
         {error && <div className="text-red-500 text-sm">{error}</div>}
         <button
