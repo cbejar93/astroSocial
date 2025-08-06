@@ -1,5 +1,5 @@
 // src/users/users.controller.ts
-import { Controller, Get, Req, UseGuards, Logger, Put, UseInterceptors, UploadedFile, InternalServerErrorException, Body, Delete, Param, Post } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Logger, Put, UseInterceptors, UploadedFile, InternalServerErrorException, Body, Delete, Param } from '@nestjs/common';
 import { JwtAuthGuard }                             from '../auth/jwt-auth.guard';
 import { UsersService }                             from './users.service';
 import type { Request }                             from 'express';
@@ -34,7 +34,6 @@ export class UsersController {
         username:        user.username,
         avatarUrl:       user.avatarUrl,
         profileComplete: user.profileComplete,
-        followedLounges: user.followedLounges,
       };
     } catch (error: any) {
       this.logger.error(
@@ -96,24 +95,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   getMyComments(@Req() req: Request & { user: { sub: string } }) {
     return this.usersService.getCommentsByUser(req.user.sub);
-  }
-
-  @Post('me/lounges/:id/follow')
-  @UseGuards(JwtAuthGuard)
-  followLounge(
-    @Req() req: Request & { user: { sub: string } },
-    @Param('id') id: string,
-  ) {
-    return this.usersService.followLounge(req.user.sub, id);
-  }
-
-  @Delete('me/lounges/:id/follow')
-  @UseGuards(JwtAuthGuard)
-  unfollowLounge(
-    @Req() req: Request & { user: { sub: string } },
-    @Param('id') id: string,
-  ) {
-    return this.usersService.unfollowLounge(req.user.sub, id);
   }
 
   @Delete('me')

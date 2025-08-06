@@ -1,44 +1,32 @@
-import { Link, useParams } from "react-router-dom";
-import { lounges } from "../data/lounges";
+import { useParams } from "react-router-dom";
+import lounges from "../data/lounges";
 
 const LoungePage: React.FC = () => {
   const { loungeId } = useParams<{ loungeId: string }>();
-  const id = loungeId ?? "astro";
-  const lounge = lounges[id];
+  const lounge = loungeId ? lounges[loungeId] : undefined;
 
   if (!lounge) {
-    return <div className="text-center mt-10">Lounge not found.</div>;
+    return <div className="py-6">Lounge not found.</div>;
   }
 
   return (
-    <div className="w-full">
-      <div className="relative w-full h-40 sm:h-60 overflow-hidden">
+    <div className="py-6">
+      <div className="w-full h-40 overflow-hidden mb-4">
         <img
           src={lounge.banner}
           alt={`${lounge.name} banner`}
           className="w-full h-full object-cover"
         />
-        <Link
-          to={`/lounge/${id}/post`}
-          className="absolute top-2 right-2 px-4 py-2 rounded bg-brand hover:bg-brand-dark transition"
-        >
-          Post
-        </Link>
       </div>
-      <div className="-mt-12 mb-6 flex justify-center">
+      <div className="flex items-center gap-4 mb-6">
         <img
           src={lounge.icon}
           alt={`${lounge.name} icon`}
-          className="w-24 h-24 rounded-full border-4 border-gray-900 object-cover"
+          className="w-20 h-20 rounded-full object-cover"
         />
+        <h1 className="text-2xl font-bold">{lounge.name}</h1>
       </div>
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-semibold">{lounge.name}</h1>
-        <p className="text-sm text-neutral-400 mt-1">
-          {lounge.threads} Threads · {lounge.views} Views
-        </p>
-      </div>
-      {/* Forum threads will appear here in the future */}
+      <div>Feed coming soon...</div>
     </div>
   );
 };

@@ -43,30 +43,22 @@ const App: React.FC = () => {
       {/* Main Content */}
       <main className="flex-grow max-w-screen-lg w-full mx-auto px-4 sm:px-6 md:px-8 pt-6 pb-24">
         <Routes>
-
           <Route path="/signup" element={<SignupPage />} />
-        <Route path="/auth/success" element={<AuthSuccessPage />} />
-
-        <Route path="/" element={<Feed />} />
-
-        {/* single-post detail view */}
-      <Route path="/posts/:id" element={<PostPage />} />
-      <Route path="/notifications" element={<NotificationsPage />} />
-
-      <Route path="/users/:username" element={<UserPage />} />
-      <Route path="/users/:username/:tab" element={<UserPage />} />
-
-      <Route path="/lounge" element={<LoungesPage />} />
-      <Route path="/lounge/:loungeId" element={<LoungePage />} />
-
+          <Route path="/auth/success" element={<AuthSuccessPage />} />
+          <Route path="/" element={<Feed />} />
+          {/* single-post detail view */}
+          <Route path="/posts/:id" element={<PostPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/users/:username" element={<UserPage />} />
+          <Route path="/users/:username/:tab" element={<UserPage />} />
+          <Route path="/lounge" element={<LoungesPage />} />
+          <Route path="/lounge/:loungeId" element={<LoungePage />} />
           <Route element={<RequireProfileCompletion />}>
-          <Route path="/lounge/:loungeId/post" element={<LoungePostPage />} />
-          <Route path="/upload" element={<UploadForm />} />
-          <Route path="/completeProfile" element={<CompleteProfilePage />} />
-          <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
-          <Route path="/profile/:tab" element={<ProfilePage />} />
-
-
+            <Route path="/lounge/:loungeId/post" element={<LoungePostPage />} />
+            <Route path="/upload" element={<UploadForm />} />
+            <Route path="/completeProfile" element={<CompleteProfilePage />} />
+            <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
+            <Route path="/profile/:tab" element={<ProfilePage />} />
             <Route
               path="/weather"
               element={
@@ -80,7 +72,6 @@ const App: React.FC = () => {
               }
             />
           </Route>
-
         </Routes>
       </main>
 

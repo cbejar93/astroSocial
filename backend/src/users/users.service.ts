@@ -20,7 +20,6 @@ export class UsersService {
         username: true,
         avatarUrl: true,
         profileComplete: true,     // ← add this
-        followedLounges: true,
       },
     });
   
@@ -162,7 +161,6 @@ export class UsersService {
         username: true,
         avatarUrl: true,
         profileComplete: true,
-        followedLounges: true,
       },
     });
     if (!user) throw new NotFoundException('User not found');
@@ -221,27 +219,6 @@ export class UsersService {
     }));
   }
 
-  async followLounge(userId: string, loungeId: string): Promise<UserDto> {
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { followedLounges: { push: loungeId } },
-    });
-    return this.toDto(user);
-  }
-
-  async unfollowLounge(userId: string, loungeId: string): Promise<UserDto> {
-    const existing = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { followedLounges: true },
-    });
-    const remaining = existing?.followedLounges.filter(l => l !== loungeId) ?? [];
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { followedLounges: { set: remaining } },
-    });
-    return this.toDto(user);
-  }
-
   async deleteUser(userId: string) {
     await this.prisma.$transaction([
       this.prisma.commentLike.deleteMany({ where: { OR: [{ userId }, { comment: { authorId: userId } }] } }),
@@ -260,7 +237,6 @@ export class UsersService {
     username?: string | null;
     avatarUrl?: string | null;
     profileComplete: boolean;
-    followedLounges: string[];
   }): UserDto {
     return {
       id:              user.id,
@@ -268,7 +244,6 @@ export class UsersService {
       username:        user.username ?? undefined,
       avatarUrl:       user.avatarUrl ?? undefined,
       profileComplete: user.profileComplete,
-      followedLounges: user.followedLounges,
     };
   }
 }

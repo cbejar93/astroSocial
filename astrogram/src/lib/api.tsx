@@ -271,17 +271,3 @@ export async function deleteProfile() {
   const res = await apiFetch('/users/me', { method: 'DELETE' });
   return res.json();
 }
-
-export async function followLounge(id: string) {
-  const res = await apiFetch(`/users/me/lounges/${id}/follow`, {
-    method: 'POST',
-  });
-  return res.json();
-}
-
-export async function unfollowLounge(id: string) {
-  const res = await apiFetch(`/users/me/lounges/${id}/follow`, {
-    method: 'DELETE',
-  });
-  return res.json();
-}

@@ -140,11 +140,6 @@ const Navbar = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/astro" onClick={() => setSideMenuOpen(false)}>
-                    Astro Lounge
-                  </Link>
-                </li>
-                <li>
                   <Link to="/lounge/lunisolar" onClick={() => setSideMenuOpen(false)}>
                     LuniSolar
                   </Link>
@@ -160,8 +155,8 @@ const Navbar = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/equipment" onClick={() => setSideMenuOpen(false)}>
-                    Equipment
+                  <Link to="/lounge/equipmet" onClick={() => setSideMenuOpen(false)}>
+                    Equipmet
                   </Link>
                 </li>
                 <li>
