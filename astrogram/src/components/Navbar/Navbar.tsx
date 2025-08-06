@@ -136,6 +136,11 @@ const Navbar = () => {
               <ul className="pl-4 text-sm space-y-1">
                 <li>
                   <Link to="/lounge" onClick={() => setSideMenuOpen(false)}>
+                    All Lounges
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/lounge/astro" onClick={() => setSideMenuOpen(false)}>
                     Astro Lounge
                   </Link>
                 </li>

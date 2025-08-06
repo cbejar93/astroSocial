@@ -15,6 +15,7 @@ import NotificationsPage from './pages/NotificationsPage'
 import ProfilePage from './pages/ProfilePage'
 import UserPage from './pages/UserPage'
 import LoungePage from './pages/LoungePage'
+import LoungesPage from './pages/LoungesPage'
 
 
 
@@ -54,7 +55,7 @@ const App: React.FC = () => {
       <Route path="/users/:username" element={<UserPage />} />
       <Route path="/users/:username/:tab" element={<UserPage />} />
 
-      <Route path="/lounge" element={<LoungePage />} />
+      <Route path="/lounge" element={<LoungesPage />} />
       <Route path="/lounge/:loungeId" element={<LoungePage />} />
 
           <Route element={<RequireProfileCompletion />}>    
