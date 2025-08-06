@@ -5,15 +5,13 @@ import { WeatherModule } from './weather/weather.module';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { SupabaseModule } from './supabase/supabase.module';
-import { PrismaModule }   from './prisma/prisma.module';
-import { AuthModule }    from './auth/auth.module';
-import { RequestLoggingMiddleware }  from './middleware/logging.middleware';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { RequestLoggingMiddleware } from './middleware/logging.middleware';
 import { PostsModule } from './posts/post.module';
 import { CommentsModule } from './comments/comments.module';
 import { NotificationsModule } from './notifications/notifications.module';
-
-
-
+import { LoungesModule } from './lounges/lounges.module';
 
 @Module({
   imports: [
@@ -25,16 +23,14 @@ import { NotificationsModule } from './notifications/notifications.module';
     AuthModule,
     PostsModule,
     CommentsModule,
-    NotificationsModule
-
+    NotificationsModule,
+    LoungesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(RequestLoggingMiddleware)
-      .forRoutes('*');  // or limit to certain controllers
+    consumer.apply(RequestLoggingMiddleware).forRoutes('*'); // or limit to certain controllers
   }
 }
