@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import lounges from "../data/lounges";
 
 const LoungePage: React.FC = () => {
@@ -11,20 +11,25 @@ const LoungePage: React.FC = () => {
 
   return (
     <div className="py-6">
-      <div className="w-full h-40 overflow-hidden mb-4">
-        <img
-          src={lounge.banner}
-          alt={`${lounge.name} banner`}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <div className="flex items-center gap-4 mb-6">
+      <div className="relative mb-12">
+        <div className="w-full h-40 overflow-hidden">
+          <img
+            src={lounge.banner}
+            alt={`${lounge.name} banner`}
+            className="w-full h-full object-cover"
+          />
+        </div>
         <img
           src={lounge.icon}
           alt={`${lounge.name} icon`}
-          className="w-20 h-20 rounded-full object-cover"
+          className="w-24 h-24 rounded-full object-cover absolute left-4 bottom-0 translate-y-1/2 border-4 border-neutral-900"
         />
+      </div>
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">{lounge.name}</h1>
+        <Link to={`/lounge/${loungeId}/post`} className="text-blue-400">
+          Post
+        </Link>
       </div>
       <div>Feed coming soon...</div>
     </div>

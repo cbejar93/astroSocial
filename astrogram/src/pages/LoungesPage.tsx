@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { lounges } from "../data/lounges";
 
 const LoungesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<"name" | "lastPost">("name");
-  const navigate = useNavigate();
+  const [followed, setFollowed] = useState<Record<string, boolean>>({});
 
   const sortedLounges = Object.entries(lounges).sort((a, b) => {
     if (sortBy === "lastPost") {
@@ -62,11 +62,14 @@ const LoungesPage: React.FC = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      navigate(`/lounge/${id}/post`);
+                      setFollowed((prev) => ({
+                        ...prev,
+                        [id]: !prev[id],
+                      }));
                     }}
-                    className="text-blue-400"
+                    className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
                   >
-                    Post
+                    {followed[id] ? "Unfollow" : "Follow"}
                   </button>
                 </div>
               </div>
