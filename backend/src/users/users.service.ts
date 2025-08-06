@@ -20,6 +20,7 @@ export class UsersService {
         username: true,
         avatarUrl: true,
         profileComplete: true,     // ← add this
+        followedLounges: { select: { id: true } },
       },
     });
   
@@ -56,6 +57,7 @@ export class UsersService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data,
+      include: { followedLounges: { select: { id: true } } },
     });
     return this.toDto(user);
   }
@@ -161,6 +163,7 @@ export class UsersService {
         username: true,
         avatarUrl: true,
         profileComplete: true,
+        followedLounges: { select: { id: true } },
       },
     });
     if (!user) throw new NotFoundException('User not found');
@@ -237,6 +240,7 @@ export class UsersService {
     username?: string | null;
     avatarUrl?: string | null;
     profileComplete: boolean;
+    followedLounges?: { id: string }[];
   }): UserDto {
     return {
       id:              user.id,
@@ -244,6 +248,7 @@ export class UsersService {
       username:        user.username ?? undefined,
       avatarUrl:       user.avatarUrl ?? undefined,
       profileComplete: user.profileComplete,
+      followedLounges: user.followedLounges?.map(l => l.id),
     };
   }
 }

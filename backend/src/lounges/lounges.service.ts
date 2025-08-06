@@ -67,4 +67,26 @@ export class LoungesService {
   async findAll(): Promise<Lounge[]> {
     return this.prisma.lounge.findMany();
   }
+
+  async follow(loungeId: string, userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        followedLounges: {
+          connect: { id: loungeId },
+        },
+      },
+    });
+  }
+
+  async unfollow(loungeId: string, userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        followedLounges: {
+          disconnect: { id: loungeId },
+        },
+      },
+    });
+  }
 }

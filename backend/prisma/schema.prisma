@@ -36,6 +36,7 @@ model User {
   commentLikes      CommentLike[]
   sentNotifications Notification[]    @relation("Actor") // created by this user
   notifications     Notification[] // received by this user
+  followedLounges   Lounge[]          @relation("LoungeFollowers")
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -116,4 +117,5 @@ model Lounge {
   bannerUrl   String
   profileUrl  String
   posts       Post[]
+  followers   User[]  @relation("LoungeFollowers")
 }

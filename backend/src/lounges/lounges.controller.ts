@@ -10,6 +10,7 @@ import {
   Req,
   UseGuards,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { LoungesService } from './lounges.service';
@@ -98,5 +99,19 @@ export class LoungesController {
   ) {
     const file = files?.[0];
     return this.posts.create(req.user.sub, { ...dto, loungeId: id }, file);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/follow')
+  async followLounge(@Param('id') id: string, @Req() req: any) {
+    await this.lounges.follow(id, req.user.sub);
+    return { success: true };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/follow')
+  async unfollowLounge(@Param('id') id: string, @Req() req: any) {
+    await this.lounges.unfollow(id, req.user.sub);
+    return { success: true };
   }
 }

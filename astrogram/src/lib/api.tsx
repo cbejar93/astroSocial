@@ -143,6 +143,14 @@ export async function fetchLoungePosts<Item = any>(
   return res.json();
 }
 
+export async function followLounge(loungeId: string) {
+  await apiFetch(`/lounges/${loungeId}/follow`, { method: 'POST' });
+}
+
+export async function unfollowLounge(loungeId: string) {
+  await apiFetch(`/lounges/${loungeId}/follow`, { method: 'DELETE' });
+}
+
 
 export type InteractionType = 'like' | 'share' | 'repost';
 

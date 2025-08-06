@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { lounges } from "../data/lounges";
 import { useAuth } from "../contexts/AuthContext";
+import { followLounge, unfollowLounge } from "../lib/api";
 
 const LoungesPage: React.FC = () => {
   const { user } = useAuth();
   const [sortBy, setSortBy] = useState<"name" | "lastPost">("name");
   const [followed, setFollowed] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (user?.followedLounges) {
+      const map: Record<string, boolean> = {};
+      for (const id of user.followedLounges) {
+        map[id] = true;
+      }
+      setFollowed(map);
+    }
+  }, [user]);
 
   const sortedLounges = Object.entries(lounges).sort((a, b) => {
     if (sortBy === "lastPost") {
@@ -62,13 +73,17 @@ const LoungesPage: React.FC = () => {
                   </span>
                   {user && (
                     <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setFollowed((prev) => ({
-                          ...prev,
-                          [id]: !prev[id],
-                        }));
+                        try {
+                          if (followed[id]) await unfollowLounge(id);
+                          else await followLounge(id);
+                          setFollowed((prev) => ({
+                            ...prev,
+                            [id]: !prev[id],
+                          }));
+                        } catch {}
                       }}
                       className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
                     >
