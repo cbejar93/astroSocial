@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
 
 interface Post {
   id: string;
   title: string;
   caption: string;
+  username: string;
+  avatarUrl: string;
+  timestamp: string;
 }
 
 const LoungePostDetailPage: React.FC = () => {
@@ -29,7 +33,20 @@ const LoungePostDetailPage: React.FC = () => {
 
   return (
     <div className="py-6">
-      <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+      <div className="flex items-center mb-4">
+        <img
+          src={post.avatarUrl}
+          alt={`${post.username} avatar`}
+          className="w-10 h-10 rounded-full object-cover mr-3"
+        />
+        <div>
+          <div className="font-medium">{post.username}</div>
+          <div className="text-sm text-gray-500">
+            {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+          </div>
+        </div>
+      </div>
+      <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
       <p>{post.caption}</p>
     </div>
   );
