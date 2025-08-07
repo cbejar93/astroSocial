@@ -1,5 +1,8 @@
 // src/lib/api.ts
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+// Some endpoints like the lounges API live at the root without the `/api` prefix.
+// Strip a trailing `/api` segment from the base URL so we can reuse the origin
+// when constructing those absolute URLs.
 
 let accessToken = '';  // in‑memory only
 
@@ -16,7 +19,8 @@ export async function handleLogin(token: string) {
 
 export async function apiFetch(
     input: RequestInfo,
-    init: RequestInit = {}
+    init: RequestInit = {},
+    useBase: boolean = true
   ): Promise<Response> {
     // 1) attach Authorization header + credentials
     init.headers = {
@@ -25,7 +29,7 @@ export async function apiFetch(
     };
     init.credentials = 'include';
   
-    const url = `${API_BASE}${input}`;
+    const url = useBase ? `${API_BASE}${input}` : (input as string);
     const res = await fetch(url, init);
   
     // 2) on 401, we could try to refresh once. TODO: implement refresh logic
@@ -100,6 +104,56 @@ export interface FeedResponse<T> {
     }
     return res.json();
   }
+
+export async function fetchLoungePosts<Item = any>(
+  loungeName: string,
+  page: number = 1,
+  limit: number = 20,
+): Promise<FeedResponse<Item>> {
+  const res = await apiFetch(
+    `${API_BASE}/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
+    {},
+    false,
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to fetch lounge posts (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function fetchLounges<T = any>(): Promise<T[]> {
+  console.log('in the api');
+  console.log(API_BASE)
+  const res = await apiFetch(`${API_BASE}/lounges`, {}, false);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch lounges (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function fetchLounge<T = any>(name: string): Promise<T> {
+  const res = await apiFetch(`${API_BASE}/lounges/${encodeURIComponent(name)}`, {}, false);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch lounge (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function followLounge(name: string) {
+  await apiFetch(
+    `${API_BASE}/lounges/${encodeURIComponent(name)}/follow`,
+    { method: 'POST' },
+    false,
+  );
+}
+
+export async function unfollowLounge(name: string) {
+  await apiFetch(
+    `${API_BASE}/lounges/${encodeURIComponent(name)}/follow`,
+    { method: 'DELETE' },
+    false,
+  );
+}
 
 
 export type InteractionType = 'like' | 'share' | 'repost';

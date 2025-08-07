@@ -56,7 +56,7 @@ export class PostsService {
     ): Promise<Post> {
         this.logger.log(`Creating post for user ${userId}: "${dto.title}"`)
 
-        if (dto.body && dto.body.length > 314) {
+        if (!dto.loungeId && dto.body && dto.body.length > 314) {
             throw new BadRequestException('Post body must be 314 characters or fewer')
         }
 
@@ -81,8 +81,9 @@ export class PostsService {
             const post = await this.prisma.post.create({
                 data: {
                     authorId: userId,
-                    title: '',
+                    title: dto.title ?? '',
                     body: dto.body,
+                    loungeId: dto.loungeId,
                     ...(imageUrl ? { imageUrl } : {}),
                 },
             })
@@ -167,6 +168,7 @@ export class PostsService {
         try {
             // 1) fetch raw posts + counts
             const posts = await this.prisma.post.findMany({
+                where: { loungeId: null },
                 orderBy: { createdAt: 'desc' },
                 take: page * limit,
                 include: {
@@ -213,9 +215,9 @@ export class PostsService {
             const start = (page - 1) * limit;
             const pageItems = scored.slice(start, start + limit).map(p => ({
                 id:        p.id,
-                authorId:    p.author.id,
-                username:  p.author.username!,          // unwrap since it’s required for feed
-                imageUrl:  p.imageUrl ?? '',            // fallback if you didn’t upload an image
+                authorId:  p.author.id,
+                username:  p.author.username!,
+                ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
                 avatarUrl: p.author.avatarUrl || '',
                 caption:   p.body,
                 timestamp: p.createdAt.toISOString(),
@@ -238,6 +240,58 @@ export class PostsService {
         }
     }
 
+    async getLoungePosts(
+        loungeId: string,
+        userId: string | null,
+        page = 1,
+        limit = 20,
+    ) {
+        this.logger.log(`Fetching posts for lounge ${loungeId}`);
+        try {
+            const [total, posts] = await this.prisma.$transaction([
+                this.prisma.post.count({ where: { loungeId } }),
+                this.prisma.post.findMany({
+                    where: { loungeId },
+                    orderBy: { createdAt: 'desc' },
+                    skip: (page - 1) * limit,
+                    take: limit,
+                    include: {
+                        author: {
+                            select: { id: true, username: true, avatarUrl: true },
+                        },
+                        _count: { select: { comments: true } },
+                        interactions: {
+                            where: {
+                                userId: userId || undefined,
+                                type: InteractionType.LIKE,
+                            },
+                            select: { id: true },
+                        },
+                    },
+                }),
+            ]);
+
+            const items = posts.map(p => ({
+                id: p.id,
+                authorId: p.author.id,
+                username: p.author.username!,
+                ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+                avatarUrl: p.author.avatarUrl || '',
+                caption: p.body,
+                timestamp: p.createdAt.toISOString(),
+                stars: p.likes,
+                comments: p._count.comments,
+                shares: p.shares,
+                likedByMe: p.interactions.length > 0,
+            }));
+
+            return { posts: items, total, page, limit };
+        } catch (err: any) {
+            this.logger.error(`Failed to fetch lounge posts`, err.stack);
+            throw new InternalServerErrorException('Could not fetch lounge posts');
+        }
+    }
+
   async getPostById(
     postId: string,
     currentUserId?: string
@@ -246,7 +300,7 @@ export class PostsService {
     username:    string;
     authorId: string;
     avatarUrl:   string;
-    imageUrl:    string;
+    imageUrl?:   string;
     caption:     string;
     timestamp:   string;
     stars:       number;
@@ -294,10 +348,10 @@ export class PostsService {
     const result = {
       id:        post.id,
       username:  post.author.username!,
-      authorId:    post.authorId,
+      authorId:  post.authorId,
 
       avatarUrl: post.author.avatarUrl ?? '',
-      imageUrl:  post.imageUrl  ?? '',
+      ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
       caption:   post.body,
       timestamp: post.createdAt.toISOString(),
       stars:     post.likes,

@@ -136,36 +136,36 @@ const Navbar = () => {
               <ul className="pl-4 text-sm space-y-1">
                 <li>
                   <Link to="/lounge" onClick={() => setSideMenuOpen(false)}>
-                    Astro Lounge
+                    All Lounges
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/lunisolar" onClick={() => setSideMenuOpen(false)}>
+                  <Link to="/lounge/LuniSolar" onClick={() => setSideMenuOpen(false)}>
                     LuniSolar
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/planetary" onClick={() => setSideMenuOpen(false)}>
+                  <Link to="/lounge/Planetary" onClick={() => setSideMenuOpen(false)}>
                     Planetary
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/dso" onClick={() => setSideMenuOpen(false)}>
+                  <Link to="/lounge/DSO" onClick={() => setSideMenuOpen(false)}>
                     DSO
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/equipmet" onClick={() => setSideMenuOpen(false)}>
-                    Equipmet
+                  <Link to="/lounge/Equipment" onClick={() => setSideMenuOpen(false)}>
+                    Equipment
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/astroadjacent" onClick={() => setSideMenuOpen(false)}>
+                  <Link to="/lounge/AstroAdjacent" onClick={() => setSideMenuOpen(false)}>
                     AstroAdjacent
                   </Link>
                 </li>
                 <li>
-                  <Link to="/lounge/askastro" onClick={() => setSideMenuOpen(false)}>
+                  <Link to="/lounge/AskAstro" onClick={() => setSideMenuOpen(false)}>
                     AskAstro
                   </Link>
                 </li>

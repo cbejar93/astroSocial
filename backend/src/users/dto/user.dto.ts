@@ -9,4 +9,5 @@ export interface UserDto {
   profileComplete: boolean;
   // role:           string;
   name?:          string;
+  followedLounges?: string[];
 }
