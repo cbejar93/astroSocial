@@ -65,7 +65,7 @@ const LoungesPage: React.FC = () => {
         {sortedLounges.map((lounge) => (
           <Link
             key={lounge.id}
-            to={`/lounge/${lounge.id}`}
+            to={`/lounge/${encodeURIComponent(lounge.name)}`}
             className="bg-neutral-800 rounded-lg overflow-hidden hover:bg-neutral-700 transition-colors"
           >
             <div className="w-full h-32 overflow-hidden">
@@ -93,8 +93,8 @@ const LoungesPage: React.FC = () => {
                         e.preventDefault();
                         e.stopPropagation();
                         try {
-                          if (followed[lounge.id]) await unfollowLounge(lounge.id);
-                          else await followLounge(lounge.id);
+                          if (followed[lounge.id]) await unfollowLounge(lounge.name);
+                          else await followLounge(lounge.name);
                           setFollowed((prev) => ({
                             ...prev,
                             [lounge.id]: !prev[lounge.id],

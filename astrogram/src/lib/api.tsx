@@ -130,12 +130,12 @@ export interface FeedResponse<T> {
   }
 
 export async function fetchLoungePosts<Item = any>(
-  loungeId: string,
+  loungeName: string,
   page: number = 1,
   limit: number = 20,
 ): Promise<FeedResponse<Item>> {
   const res = await apiFetch(
-    `/lounges/${loungeId}/posts?page=${page}&limit=${limit}`,
+    `/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
   );
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge posts (${res.status})`);
@@ -151,12 +151,20 @@ export async function fetchLounges<T = any>(): Promise<T[]> {
   return res.json();
 }
 
-export async function followLounge(loungeId: string) {
-  await apiFetch(`/lounges/${loungeId}/follow`, { method: 'POST' });
+export async function fetchLounge<T = any>(name: string): Promise<T> {
+  const res = await apiFetch(`/lounges/${encodeURIComponent(name)}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch lounge (${res.status})`);
+  }
+  return res.json();
 }
 
-export async function unfollowLounge(loungeId: string) {
-  await apiFetch(`/lounges/${loungeId}/follow`, { method: 'DELETE' });
+export async function followLounge(name: string) {
+  await apiFetch(`/lounges/${encodeURIComponent(name)}/follow`, { method: 'POST' });
+}
+
+export async function unfollowLounge(name: string) {
+  await apiFetch(`/lounges/${encodeURIComponent(name)}/follow`, { method: 'DELETE' });
 }
 
 

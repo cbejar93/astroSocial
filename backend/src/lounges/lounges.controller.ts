@@ -11,6 +11,7 @@ import {
   UseGuards,
   Query,
   Delete,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { LoungesService } from './lounges.service';
@@ -66,9 +67,9 @@ export class LoungesController {
   }
 
   @UseGuards(OptionalAuthGuard)
-  @Get(':id/posts')
+  @Get(':name/posts')
   async getLoungePosts(
-    @Param('id') id: string,
+    @Param('name') name: string,
     @Req() req: any,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
@@ -76,11 +77,13 @@ export class LoungesController {
     const userId = req.user ? req.user.sub : null;
     const p = parseInt(page, 10) || 1;
     const l = parseInt(limit, 10) || 20;
-    return this.posts.getLoungePosts(id, userId, p, l);
+    const lounge = await this.lounges.findByName(name);
+    if (!lounge) throw new NotFoundException('Lounge not found');
+    return this.posts.getLoungePosts(lounge.id, userId, p, l);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post(':id/posts')
+  @Post(':name/posts')
   @UseInterceptors(
     FilesInterceptor('images', 4, {
       fileFilter: (_req, file, cb) => {
@@ -92,26 +95,39 @@ export class LoungesController {
     }),
   )
   async createLoungePost(
-    @Param('id') id: string,
+    @Param('name') name: string,
     @Req() req: any,
     @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: CreatePostDto,
   ) {
     const file = files?.[0];
-    return this.posts.create(req.user.sub, { ...dto, loungeId: id }, file);
+    const lounge = await this.lounges.findByName(name);
+    if (!lounge) throw new NotFoundException('Lounge not found');
+    return this.posts.create(req.user.sub, { ...dto, loungeId: lounge.id }, file);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post(':id/follow')
-  async followLounge(@Param('id') id: string, @Req() req: any) {
-    await this.lounges.follow(id, req.user.sub);
+  @Post(':name/follow')
+  async followLounge(@Param('name') name: string, @Req() req: any) {
+    const lounge = await this.lounges.findByName(name);
+    if (!lounge) throw new NotFoundException('Lounge not found');
+    await this.lounges.follow(lounge.id, req.user.sub);
     return { success: true };
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':id/follow')
-  async unfollowLounge(@Param('id') id: string, @Req() req: any) {
-    await this.lounges.unfollow(id, req.user.sub);
+  @Delete(':name/follow')
+  async unfollowLounge(@Param('name') name: string, @Req() req: any) {
+    const lounge = await this.lounges.findByName(name);
+    if (!lounge) throw new NotFoundException('Lounge not found');
+    await this.lounges.unfollow(lounge.id, req.user.sub);
     return { success: true };
+  }
+
+  @Get(':name')
+  async getLounge(@Param('name') name: string) {
+    const lounge = await this.lounges.findByName(name);
+    if (!lounge) throw new NotFoundException('Lounge not found');
+    return lounge;
   }
 }

@@ -84,6 +84,29 @@ export class LoungesService {
     }));
   }
 
+  async findByName(name: string) {
+    const lounge = await this.prisma.lounge.findUnique({
+      where: { name },
+      include: {
+        _count: { select: { posts: true } },
+        posts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+    });
+
+    if (!lounge) return null;
+
+    return {
+      id: lounge.id,
+      name: lounge.name,
+      description: lounge.description,
+      bannerUrl: lounge.bannerUrl,
+      profileUrl: lounge.profileUrl,
+      threads: lounge._count.posts,
+      views: 0,
+      lastPostAt: lounge.posts[0]?.createdAt ?? null,
+    };
+  }
+
   async follow(loungeId: string, userId: string) {
     return this.prisma.user.update({
       where: { id: userId },

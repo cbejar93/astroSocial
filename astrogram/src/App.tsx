@@ -52,9 +52,9 @@ const App: React.FC = () => {
           <Route path="/users/:username" element={<UserPage />} />
           <Route path="/users/:username/:tab" element={<UserPage />} />
           <Route path="/lounge" element={<LoungesPage />} />
-          <Route path="/lounge/:loungeId" element={<LoungePage />} />
+          <Route path="/lounge/:loungeName" element={<LoungePage />} />
           <Route element={<RequireProfileCompletion />}>
-            <Route path="/lounge/:loungeId/post" element={<LoungePostPage />} />
+            <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
             <Route path="/upload" element={<UploadForm />} />
             <Route path="/completeProfile" element={<CompleteProfilePage />} />
             <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />

@@ -11,7 +11,7 @@ import { UploadCloud } from "lucide-react";
 const MAX_IMAGES = 4;
 
 const LoungePostPage: React.FC = () => {
-  const { loungeId } = useParams<{ loungeId: string }>();
+  const { loungeName } = useParams<{ loungeName: string }>();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
@@ -52,10 +52,9 @@ const LoungePostPage: React.FC = () => {
       const form = new FormData();
       form.append("title", title);
       form.append("body", body);
-      if (loungeId) form.append("loungeId", loungeId);
       files.forEach((file) => form.append("images", file));
 
-      const res = await apiFetch(`/lounges/${loungeId}/posts`, {
+      const res = await apiFetch(`/lounges/${encodeURIComponent(loungeName ?? '')}/posts`, {
         method: "POST",
         body: form,
       });
@@ -64,7 +63,7 @@ const LoungePostPage: React.FC = () => {
         throw new Error(text || "Failed to create post");
       }
 
-      navigate(`/lounge/${loungeId}`, { replace: true });
+      navigate(`/lounge/${encodeURIComponent(loungeName ?? '')}`, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       setError(msg);
