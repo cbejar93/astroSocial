@@ -2,6 +2,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fetchLoungePosts, fetchLounge } from "../lib/api";
+import { useAuth } from "../contexts/AuthContext";
 
 interface LoungePostSummary {
   id: string;
@@ -21,6 +22,7 @@ interface LoungeInfo {
 
 const LoungePage: React.FC = () => {
   const { loungeName } = useParams<{ loungeName: string }>();
+  const { user } = useAuth();
   const [lounge, setLounge] = useState<LoungeInfo | null>(null);
   const [loadingLounge, setLoadingLounge] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -70,12 +72,14 @@ const LoungePage: React.FC = () => {
       </div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">{lounge.name}</h1>
-        <Link
-          to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
-          className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-        >
-          Post
-        </Link>
+        {user && (
+          <Link
+            to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
+            className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+          >
+            Post
+          </Link>
+        )}
       </div>
       <div className="w-full max-w-3xl mx-auto space-y-4">
         {loadingPosts ? (

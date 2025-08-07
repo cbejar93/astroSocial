@@ -5,6 +5,7 @@ import React, {
   useEffect,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { apiFetch } from "../lib/api";
 import { UploadCloud } from "lucide-react";
 
@@ -13,6 +14,7 @@ const MAX_IMAGES = 4;
 const LoungePostPage: React.FC = () => {
   const { loungeName } = useParams<{ loungeName: string }>();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -20,6 +22,12 @@ const LoungePostPage: React.FC = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/signup', { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
