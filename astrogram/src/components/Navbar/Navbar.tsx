@@ -171,7 +171,20 @@ const Navbar = () => {
                 </li>
               </ul>
             )}
-            <h3 className="mt-4 mb-1 text-lg font-semibold">Settings</h3>
+            <Link
+              to="/saved"
+              onClick={() => setSideMenuOpen(false)}
+              className="block mt-4 mb-1 text-lg font-semibold"
+            >
+              Saved
+            </Link>
+            <Link
+              to="/settings"
+              onClick={() => setSideMenuOpen(false)}
+              className="block mb-1 text-lg font-semibold"
+            >
+              Settings
+            </Link>
           </div>
           <div className="absolute bottom-0 left-0 w-full p-4 text-sm space-y-1">
             <Link to="/terms" className="block">Terms and Conditions</Link>
