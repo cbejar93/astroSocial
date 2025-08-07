@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { followLounge, unfollowLounge, fetchLounges } from "../lib/api";
+import { fetchLounges } from "../lib/api";
 
 interface LoungeInfo {
   id: string;
@@ -16,27 +16,12 @@ interface LoungeInfo {
 const LoungesPage: React.FC = () => {
   const { user, updateFollowedLounge } = useAuth();
   const [sortBy, setSortBy] = useState<"name" | "lastPost">("name");
-  const [followed, setFollowed] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    if (user?.followedLounges) {
-      const map: Record<string, boolean> = {};
-      for (const id of user.followedLounges) {
-        map[id] = true;
-      }
-      setFollowed(map);
-    }
-  }, [user]);
 
   const [lounges, setLounges] = useState<LoungeInfo[]>([]);
 
   useEffect(() => {
-    console.log('before calling get lounges')
     fetchLounges<LoungeInfo>()
-      .then((data) => {
-        
-        console.log('what is the issue here?')
-        setLounges(data)})
+      .then((data) => setLounges(data))
       .catch(() => {});
   }, []);
 
@@ -66,57 +51,55 @@ const LoungesPage: React.FC = () => {
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {sortedLounges.map((lounge) => (
-          <Link
-            key={lounge.id}
-            to={`/lounge/${encodeURIComponent(lounge.name)}`}
-            className="bg-neutral-800 rounded-lg overflow-hidden hover:bg-neutral-700 transition-colors"
-          >
-            <div className="w-full h-32 overflow-hidden">
-              <img
-                src={lounge.bannerUrl}
-                alt={`${lounge.name} banner`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-4 flex items-center gap-4">
-              <img
-                src={lounge.profileUrl}
-                alt={`${lounge.name} icon`}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-              <div>
-                <div className="text-lg font-semibold">{lounge.name}</div>
-                <div className="text-sm text-neutral-400 flex items-center gap-2">
-                  <span>
-                    {lounge.threads ?? 0} Threads · {lounge.views ?? 0} Views
-                  </span>
-                  {user && (
-                    <button
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        try {
-                          const isFollowed = !!followed[lounge.id];
-                          if (isFollowed) await unfollowLounge(lounge.name);
-                          else await followLounge(lounge.name);
-                          setFollowed((prev) => ({
-                            ...prev,
-                            [lounge.id]: !prev[lounge.id],
-                          }));
-                          updateFollowedLounge(lounge.id, !isFollowed);
-                        } catch {}
-                      }}
-                      className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
-                    >
-                      {followed[lounge.id] ? "Unfollow" : "Follow"}
-                    </button>
-                  )}
+        {sortedLounges.map((lounge) => {
+          const isFollowed = user?.followedLounges?.includes(lounge.id) ?? false;
+          return (
+            <Link
+              key={lounge.id}
+              to={`/lounge/${encodeURIComponent(lounge.name)}`}
+              className="bg-neutral-800 rounded-lg overflow-hidden hover:bg-neutral-700 transition-colors"
+            >
+              <div className="w-full h-32 overflow-hidden">
+                <img
+                  src={lounge.bannerUrl}
+                  alt={`${lounge.name} banner`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex items-center gap-4">
+                <img
+                  src={lounge.profileUrl}
+                  alt={`${lounge.name} icon`}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <div className="text-lg font-semibold">{lounge.name}</div>
+                  <div className="text-sm text-neutral-400 flex items-center gap-2">
+                    <span>
+                      {lounge.threads ?? 0} Threads · {lounge.views ?? 0} Views
+                    </span>
+                    {user && (
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          await updateFollowedLounge(
+                            lounge.id,
+                            lounge.name,
+                            !isFollowed,
+                          );
+                        }}
+                        className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
+                      >
+                        {isFollowed ? "Unfollow" : "Follow"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

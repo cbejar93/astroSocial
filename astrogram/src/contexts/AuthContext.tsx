@@ -7,7 +7,7 @@ import React, {
   
 } from "react";
 import type { ReactNode } from 'react';
-import { apiFetch, setAccessToken } from "../lib/api";
+import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/api";
 
 export interface User {
   id: string;
@@ -23,7 +23,11 @@ interface AuthContextType {
   loading: boolean;
   login: (accessToken: string) => Promise<User>;
   logout: () => void;
-  updateFollowedLounge: (loungeId: string, follow: boolean) => void;
+  updateFollowedLounge: (
+    loungeId: string,
+    loungeName: string,
+    follow: boolean,
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,15 +83,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // optionally call your backend /logout endpoint to clear the refresh cookie
   };
 
-  const updateFollowedLounge = (loungeId: string, follow: boolean) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const current = prev.followedLounges ?? [];
-      const followedLounges = follow
-        ? [...current, loungeId]
-        : current.filter((id) => id !== loungeId);
-      return { ...prev, followedLounges };
-    });
+  const updateFollowedLounge = async (
+    loungeId: string,
+    loungeName: string,
+    follow: boolean,
+  ) => {
+    try {
+      if (follow) await followLounge(loungeName);
+      else await unfollowLounge(loungeName);
+      setUser((prev) => {
+        if (!prev) return prev;
+        const current = prev.followedLounges ?? [];
+        const followedLounges = follow
+          ? [...current, loungeId]
+          : current.filter((id) => id !== loungeId);
+        return { ...prev, followedLounges };
+      });
+    } catch (err) {
+      // silently ignore for now
+    }
   };
 
   return (
