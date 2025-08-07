@@ -113,6 +113,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
+  if (!ctx) {
+    return {
+      user: null,
+      loading: false,
+      // provide stubs that warn when used without provider
+      login: async () => {
+        throw new Error('AuthProvider is missing');
+      },
+      logout: () => {
+        throw new Error('AuthProvider is missing');
+      },
+      updateFollowedLounge: async () => {
+        throw new Error('AuthProvider is missing');
+      },
+    };
+  }
   return ctx;
 }
