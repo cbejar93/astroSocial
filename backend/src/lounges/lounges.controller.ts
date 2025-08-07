@@ -21,7 +21,7 @@ import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalAuthGuard } from '../auth/jwt-optional.guard';
 
-@Controller('api/lounges')
+@Controller('lounges')
 export class LoungesController {
   private readonly logger = new Logger(LoungesController.name);
 

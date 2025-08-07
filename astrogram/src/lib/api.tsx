@@ -30,7 +30,8 @@ async function refreshToken(): Promise<string> {
 
 export async function apiFetch(
     input: RequestInfo,
-    init: RequestInit = {}
+    init: RequestInit = {},
+    useBase: boolean = true
   ): Promise<Response> {
     // 1) attach Authorization header + credentials
     init.headers = {
@@ -39,7 +40,7 @@ export async function apiFetch(
     };
     init.credentials = 'include';
   
-    const url = `${API_BASE}${input}`;
+    const url = useBase ? `${API_BASE}${input}` : (input as string);
     const res = await fetch(url, init);
   
     // 2) on 401, try to refresh once
@@ -129,14 +130,16 @@ export interface FeedResponse<T> {
     return res.json();
   }
 
-export async function fetchLoungePosts<Item = any>(
-  loungeName: string,
-  page: number = 1,
-  limit: number = 20,
-): Promise<FeedResponse<Item>> {
-  const res = await apiFetch(
-    `/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
-  );
+  export async function fetchLoungePosts<Item = any>(
+    loungeName: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<FeedResponse<Item>> {
+    const res = await apiFetch(
+      `/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
+      {},
+      false,
+    );
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge posts (${res.status})`);
   }
@@ -144,7 +147,7 @@ export async function fetchLoungePosts<Item = any>(
 }
 
 export async function fetchLounges<T = any>(): Promise<T[]> {
-  const res = await apiFetch('/lounges');
+  const res = await apiFetch('/lounges', {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounges (${res.status})`);
   }
@@ -152,7 +155,7 @@ export async function fetchLounges<T = any>(): Promise<T[]> {
 }
 
 export async function fetchLounge<T = any>(name: string): Promise<T> {
-  const res = await apiFetch(`/lounges/${encodeURIComponent(name)}`);
+  const res = await apiFetch(`/lounges/${encodeURIComponent(name)}`, {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge (${res.status})`);
   }
@@ -160,11 +163,19 @@ export async function fetchLounge<T = any>(name: string): Promise<T> {
 }
 
 export async function followLounge(name: string) {
-  await apiFetch(`/lounges/${encodeURIComponent(name)}/follow`, { method: 'POST' });
+  await apiFetch(
+    `/lounges/${encodeURIComponent(name)}/follow`,
+    { method: 'POST' },
+    false,
+  );
 }
 
 export async function unfollowLounge(name: string) {
-  await apiFetch(`/lounges/${encodeURIComponent(name)}/follow`, { method: 'DELETE' });
+  await apiFetch(
+    `/lounges/${encodeURIComponent(name)}/follow`,
+    { method: 'DELETE' },
+    false,
+  );
 }
 
 
