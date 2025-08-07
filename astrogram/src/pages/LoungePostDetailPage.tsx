@@ -48,7 +48,7 @@ const LoungePostDetailPage: React.FC = () => {
         </div>
       </div>
       <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
-      <p>{post.caption}</p>
+      <div dangerouslySetInnerHTML={{ __html: post.caption }} />
       <hr className="my-4 border-t border-white/20" />
       <Comments postId={post.id} />
     </div>
