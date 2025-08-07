@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
+import Comments from "../components/Comments/Comments";
 
 interface Post {
   id: string;
@@ -48,6 +49,8 @@ const LoungePostDetailPage: React.FC = () => {
       </div>
       <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
       <p>{post.caption}</p>
+      <hr className="my-4 border-t border-white/20" />
+      <Comments postId={post.id} />
     </div>
   );
 };
