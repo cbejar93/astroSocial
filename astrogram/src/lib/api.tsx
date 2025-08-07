@@ -106,14 +106,12 @@ export interface FeedResponse<T> {
   }
 
 export async function fetchLoungePosts<Item = any>(
-  loungeName: string,
+  loungeId: string,
   page: number = 1,
   limit: number = 20,
 ): Promise<FeedResponse<Item>> {
   const res = await apiFetch(
-    `${API_BASE}/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
-    {},
-    false,
+    `/lounges/${encodeURIComponent(loungeId)}/posts?page=${page}&limit=${limit}`,
   );
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge posts (${res.status})`);

@@ -34,8 +34,8 @@ const LoungePage: React.FC = () => {
   }, [loungeName]);
 
   useEffect(() => {
-    if (!loungeName) return;
-    fetchLoungePosts<LoungePost>(loungeName, 1, 20)
+    if (!lounge) return;
+    fetchLoungePosts<LoungePost>(lounge.id, 1, 20)
       .then((data) => {
         const normalized = data.posts.map((p) => ({
           id: p.id,
@@ -46,7 +46,7 @@ const LoungePage: React.FC = () => {
         setLoadingPosts(false);
       })
       .catch(() => setLoadingPosts(false));
-  }, [loungeName]);
+  }, [lounge]);
 
   if (loadingLounge) {
     return <div className="py-6">Loading...</div>;

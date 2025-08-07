@@ -13,7 +13,10 @@ import {
   Delete,
   NotFoundException,
 } from '@nestjs/common';
-import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { LoungesService } from './lounges.service';
 import { CreateLoungeDto } from './dto/create-lounge.dto';
 import { PostsService } from '../posts/post.service';
@@ -67,9 +70,9 @@ export class LoungesController {
   }
 
   @UseGuards(OptionalAuthGuard)
-  @Get(':name/posts')
+  @Get(':id/posts')
   async getLoungePosts(
-    @Param('name') name: string,
+    @Param('id') id: string,
     @Req() req: any,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
@@ -77,7 +80,7 @@ export class LoungesController {
     const userId = req.user ? req.user.sub : null;
     const p = parseInt(page, 10) || 1;
     const l = parseInt(limit, 10) || 20;
-    const lounge = await this.lounges.findByName(name);
+    const lounge = await this.lounges.findById(id);
     if (!lounge) throw new NotFoundException('Lounge not found');
     return this.posts.getLoungePosts(lounge.id, userId, p, l);
   }
@@ -103,7 +106,11 @@ export class LoungesController {
     const file = files?.[0];
     const lounge = await this.lounges.findByName(name);
     if (!lounge) throw new NotFoundException('Lounge not found');
-    return this.posts.create(req.user.sub, { ...dto, loungeId: lounge.id }, file);
+    return this.posts.create(
+      req.user.sub,
+      { ...dto, loungeId: lounge.id },
+      file,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

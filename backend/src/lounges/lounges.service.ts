@@ -65,12 +65,16 @@ export class LoungesService {
   }
 
   async findAll() {
-    console.log('is this not hit at all?')
+    console.log('is this not hit at all?');
     this.logger.log('Fetching all lounges');
     const lounges = await this.prisma.lounge.findMany({
       include: {
         _count: { select: { posts: true } },
-        posts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+        posts: {
+          select: { createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -93,7 +97,11 @@ export class LoungesService {
       where: { name },
       include: {
         _count: { select: { posts: true } },
-        posts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+        posts: {
+          select: { createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -103,6 +111,37 @@ export class LoungesService {
     }
 
     this.logger.log(`Found lounge id=${lounge.id} for name=${name}`);
+    return {
+      id: lounge.id,
+      name: lounge.name,
+      description: lounge.description,
+      bannerUrl: lounge.bannerUrl,
+      profileUrl: lounge.profileUrl,
+      threads: lounge._count.posts,
+      views: 0,
+      lastPostAt: lounge.posts[0]?.createdAt ?? null,
+    };
+  }
+
+  async findById(id: string) {
+    this.logger.log(`Fetching lounge by id=${id}`);
+    const lounge = await this.prisma.lounge.findUnique({
+      where: { id },
+      include: {
+        _count: { select: { posts: true } },
+        posts: {
+          select: { createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!lounge) {
+      this.logger.warn(`Lounge not found with id=${id}`);
+      return null;
+    }
+
     return {
       id: lounge.id,
       name: lounge.name,
