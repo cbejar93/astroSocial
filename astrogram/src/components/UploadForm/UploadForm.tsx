@@ -10,6 +10,7 @@ const UploadForm: React.FC = () => {
   const [preview, setPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [captionError, setCaptionError] = useState<string | null>(null)
   const navigate = useNavigate()
 
 
@@ -38,6 +39,11 @@ const UploadForm: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!caption.trim()) {
+      setCaptionError('Caption is required')
+      return
+    }
+    setCaptionError(null)
     setLoading(true)
 
     try {
@@ -90,10 +96,16 @@ const UploadForm: React.FC = () => {
         <textarea
           rows={3}
           value={caption}
-          onChange={(e) => setCaption(e.target.value)}
+          onChange={(e) => {
+            setCaption(e.target.value)
+            if (captionError && e.target.value.trim()) setCaptionError(null)
+          }}
           placeholder="Describe your image..."
           className="w-full px-4 py-2 bg-gray-700 placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none text-gray-100"
         />
+        {captionError && (
+          <p className="mt-1 text-sm text-red-500">{captionError}</p>
+        )}
       </div>
 
       {/* File upload */}
