@@ -17,9 +17,6 @@ export class CommentsService {
   async createComment(userId: string, postId: string, dto: CreateCommentDto) {
     this.logger.log(`User ${userId} creating comment on post ${postId}`);
 
-    if (dto.text && dto.text.length > 314) {
-      throw new BadRequestException('Comment text must be 314 characters or fewer');
-    }
     let parentAuthorId: string | null = null;
     if (dto.parentId) {
       const parent = await this.prisma.comment.findUnique({
