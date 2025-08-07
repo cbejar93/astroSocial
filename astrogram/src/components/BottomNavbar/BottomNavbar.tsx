@@ -25,6 +25,12 @@ const BottomNavbar: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
+    if (location.pathname.includes("lounge")) {
+      const loungeIdx = tabs.findIndex(tab => tab.name === "Lounges");
+      if (loungeIdx !== -1) setActiveIndex(loungeIdx);
+      return;
+    }
+
     const idx = tabs.findIndex(tab => tab.path === location.pathname);
     if (idx !== -1) setActiveIndex(idx);
   }, [location.pathname]);
