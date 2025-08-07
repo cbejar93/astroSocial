@@ -3,7 +3,6 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 // Some endpoints like the lounges API live at the root without the `/api` prefix.
 // Strip a trailing `/api` segment from the base URL so we can reuse the origin
 // when constructing those absolute URLs.
-const API_ORIGIN = API_BASE.replace(/\/api$/, '');
 
 let accessToken = '';  // in‑memory only
 
@@ -140,7 +139,7 @@ export async function fetchLoungePosts<Item = any>(
   limit: number = 20,
 ): Promise<FeedResponse<Item>> {
   const res = await apiFetch(
-    `${API_ORIGIN}/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
+    `${API_BASE}/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
     {},
     false,
   );
@@ -151,7 +150,9 @@ export async function fetchLoungePosts<Item = any>(
 }
 
 export async function fetchLounges<T = any>(): Promise<T[]> {
-  const res = await apiFetch(`${API_ORIGIN}/lounges`, {}, false);
+  console.log('in the api');
+  console.log(API_BASE)
+  const res = await apiFetch(`${API_BASE}/lounges`, {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounges (${res.status})`);
   }
@@ -159,7 +160,7 @@ export async function fetchLounges<T = any>(): Promise<T[]> {
 }
 
 export async function fetchLounge<T = any>(name: string): Promise<T> {
-  const res = await apiFetch(`${API_ORIGIN}/lounges/${encodeURIComponent(name)}`, {}, false);
+  const res = await apiFetch(`${API_BASE}/lounges/${encodeURIComponent(name)}`, {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge (${res.status})`);
   }
@@ -168,7 +169,7 @@ export async function fetchLounge<T = any>(name: string): Promise<T> {
 
 export async function followLounge(name: string) {
   await apiFetch(
-    `${API_ORIGIN}/lounges/${encodeURIComponent(name)}/follow`,
+    `${API_BASE}/lounges/${encodeURIComponent(name)}/follow`,
     { method: 'POST' },
     false,
   );
@@ -176,7 +177,7 @@ export async function followLounge(name: string) {
 
 export async function unfollowLounge(name: string) {
   await apiFetch(
-    `${API_ORIGIN}/lounges/${encodeURIComponent(name)}/follow`,
+    `${API_BASE}/lounges/${encodeURIComponent(name)}/follow`,
     { method: 'DELETE' },
     false,
   );

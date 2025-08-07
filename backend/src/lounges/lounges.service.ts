@@ -65,6 +65,7 @@ export class LoungesService {
   }
 
   async findAll() {
+    console.log('is this not hit at all?')
     this.logger.log('Fetching all lounges');
     const lounges = await this.prisma.lounge.findMany({
       include: {

@@ -31,8 +31,12 @@ const LoungesPage: React.FC = () => {
   const [lounges, setLounges] = useState<LoungeInfo[]>([]);
 
   useEffect(() => {
+    console.log('before calling get lounges')
     fetchLounges<LoungeInfo>()
-      .then((data) => setLounges(data))
+      .then((data) => {
+        
+        console.log('what is the issue here?')
+        setLounges(data)})
       .catch(() => {});
   }, []);
 
