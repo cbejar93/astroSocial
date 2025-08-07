@@ -3,8 +3,10 @@ import React, {
   type ChangeEvent,
   type FormEvent,
   useEffect,
+  useRef,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { apiFetch } from "../lib/api";
 import { UploadCloud } from "lucide-react";
 
@@ -13,13 +15,21 @@ const MAX_IMAGES = 4;
 const LoungePostPage: React.FC = () => {
   const { loungeName } = useParams<{ loungeName: string }>();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const editorRef = useRef<HTMLDivElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/signup', { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
@@ -46,6 +56,11 @@ const LoungePostPage: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    const plain = body.replace(/<[^>]*>/g, "").trim();
+    if (!title.trim() || !plain) {
+      setError("Title and body are required");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -80,20 +95,63 @@ const LoungePostPage: React.FC = () => {
           <label className="block text-sm mb-1">Title</label>
           <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-gray-800"
-          />
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          className="w-full px-3 py-2 rounded bg-gray-800"
+        />
+      </div>
+      <div>
+        <label className="block text-sm mb-1">Body</label>
+        <div className="flex gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => {
+              document.execCommand("bold");
+              editorRef.current?.focus();
+            }}
+            className="px-2 py-1 rounded bg-gray-700"
+          >
+            B
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              document.execCommand("italic");
+              editorRef.current?.focus();
+            }}
+            className="px-2 py-1 rounded bg-gray-700 italic"
+          >
+            I
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              document.execCommand("insertUnorderedList");
+              editorRef.current?.focus();
+            }}
+            className="px-2 py-1 rounded bg-gray-700"
+          >
+            •
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              document.execCommand("insertOrderedList");
+              editorRef.current?.focus();
+            }}
+            className="px-2 py-1 rounded bg-gray-700"
+          >
+            1.
+          </button>
         </div>
-        <div>
-          <label className="block text-sm mb-1">Body</label>
-          <textarea
-            rows={4}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-gray-800"
-          />
-        </div>
+        <div
+          ref={editorRef}
+          contentEditable
+          className="w-full px-3 py-2 rounded bg-gray-800 min-h-[6rem]"
+          onInput={() => setBody(editorRef.current?.innerHTML || "")}
+        />
+      </div>
         <div>
           <label
             htmlFor="post-images"

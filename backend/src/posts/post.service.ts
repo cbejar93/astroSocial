@@ -56,6 +56,10 @@ export class PostsService {
     ): Promise<Post> {
         this.logger.log(`Creating post for user ${userId}: "${dto.title}"`)
 
+        if (dto.loungeId && (!dto.title?.trim() || !dto.body?.trim())) {
+            throw new BadRequestException('Title and body are required for lounge posts')
+        }
+
         if (!dto.loungeId && dto.body && dto.body.length > 314) {
             throw new BadRequestException('Post body must be 314 characters or fewer')
         }
@@ -217,6 +221,7 @@ export class PostsService {
                 id:        p.id,
                 authorId:  p.author.id,
                 username:  p.author.username!,
+                ...(p.title ? { title: p.title } : {}),
                 ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
                 avatarUrl: p.author.avatarUrl || '',
                 caption:   p.body,
@@ -275,6 +280,7 @@ export class PostsService {
                 id: p.id,
                 authorId: p.author.id,
                 username: p.author.username!,
+                title: p.title,
                 ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
                 avatarUrl: p.author.avatarUrl || '',
                 caption: p.body,
@@ -301,6 +307,7 @@ export class PostsService {
     authorId: string;
     avatarUrl:   string;
     imageUrl?:   string;
+    title?:      string;
     caption:     string;
     timestamp:   string;
     stars:       number;
@@ -352,6 +359,7 @@ export class PostsService {
 
       avatarUrl: post.author.avatarUrl ?? '',
       ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
+      ...(post.loungeId || post.title ? { title: post.title } : {}),
       caption:   post.body,
       timestamp: post.createdAt.toISOString(),
       stars:     post.likes,

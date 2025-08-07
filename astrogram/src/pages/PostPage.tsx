@@ -41,6 +41,7 @@ const PostPage: React.FC = () => {
         const p: FullPost = {
           id:         data.id,
           username:   data.username,
+          ...(data.title ? { title: data.title } : {}),
           avatarUrl:  data.avatarUrl,
           imageUrl:   data.imageUrl,
           // API returns `caption`, not `body`

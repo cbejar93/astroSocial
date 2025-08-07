@@ -7,7 +7,7 @@ import React, {
   
 } from "react";
 import type { ReactNode } from 'react';
-import { apiFetch, setAccessToken } from "../lib/api";
+import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/api";
 
 export interface User {
   id: string;
@@ -23,6 +23,11 @@ interface AuthContextType {
   loading: boolean;
   login: (accessToken: string) => Promise<User>;
   logout: () => void;
+  updateFollowedLounge: (
+    loungeId: string,
+    loungeName: string,
+    follow: boolean,
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,8 +83,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // optionally call your backend /logout endpoint to clear the refresh cookie
   };
 
+  const updateFollowedLounge = async (
+    loungeId: string,
+    loungeName: string,
+    follow: boolean,
+  ) => {
+    try {
+      if (follow) await followLounge(loungeName);
+      else await unfollowLounge(loungeName);
+      setUser((prev) => {
+        if (!prev) return prev;
+        const current = prev.followedLounges ?? [];
+        const followedLounges = follow
+          ? [...current, loungeId]
+          : current.filter((id) => id !== loungeId);
+        return { ...prev, followedLounges };
+      });
+    } catch (err) {
+      // silently ignore for now
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateFollowedLounge }}>
       {children}
     </AuthContext.Provider>
   );
@@ -87,6 +113,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
+  if (!ctx) {
+    return {
+      user: null,
+      loading: false,
+      // provide stubs that warn when used without provider
+      login: async () => {
+        throw new Error('AuthProvider is missing');
+      },
+      logout: () => {
+        throw new Error('AuthProvider is missing');
+      },
+      updateFollowedLounge: async () => {
+        throw new Error('AuthProvider is missing');
+      },
+    };
+  }
   return ctx;
 }

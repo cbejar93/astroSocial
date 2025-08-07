@@ -28,6 +28,11 @@ export const RequireProfileCompletion: React.FC = () => {
     return <Navigate to="/signup" replace />;
   }
 
+  // redirect unauthenticated users away from lounge post creation
+  if (/^\/lounge\/[^/]+\/post$/.test(pathname) && !user) {
+    return <Navigate to="/signup" replace />;
+  }
+
   // any other route, just render the child routes
   return <Outlet />;
 };

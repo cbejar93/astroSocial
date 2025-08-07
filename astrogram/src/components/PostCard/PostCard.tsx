@@ -10,6 +10,7 @@ export interface PostCardProps {
   id: string
   authorId: string
   username: string;
+  title?: string;
   imageUrl?: string;
   caption: string;
   timestamp: string;

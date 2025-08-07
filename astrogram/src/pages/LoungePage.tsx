@@ -1,9 +1,17 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { fetchLoungePosts, fetchLounge } from "../lib/api";
-import PostCard from "../components/PostCard/PostCard";
-import PostSkeleton from "../components/PostCard/PostSkeleton";
-import type { PostCardProps } from "../components/PostCard/PostCard";
+import { useAuth } from "../contexts/AuthContext";
+
+interface LoungePostSummary {
+  id: string;
+  title: string;
+  username: string;
+  avatarUrl: string;
+  timestamp: string;
+  comments: number;
+}
 
 interface LoungeInfo {
   id: string;
@@ -14,10 +22,11 @@ interface LoungeInfo {
 
 const LoungePage: React.FC = () => {
   const { loungeName } = useParams<{ loungeName: string }>();
+  const { user } = useAuth();
   const [lounge, setLounge] = useState<LoungeInfo | null>(null);
   const [loadingLounge, setLoadingLounge] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const [posts, setPosts] = useState<LoungePostSummary[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,7 +39,7 @@ const LoungePage: React.FC = () => {
 
   useEffect(() => {
     if (!loungeName) return;
-    fetchLoungePosts<PostCardProps>(loungeName, 1, 20)
+    fetchLoungePosts<LoungePostSummary>(loungeName, 1, 20)
       .then((data) => {
         setPosts(data.posts);
         setLoadingPosts(false);
@@ -63,25 +72,47 @@ const LoungePage: React.FC = () => {
       </div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">{lounge.name}</h1>
-        <Link
-          to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
-          className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-        >
-          Post
-        </Link>
+        {user && (
+          <Link
+            to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
+            className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+          >
+            Post
+          </Link>
+        )}
       </div>
       <div className="w-full max-w-3xl mx-auto space-y-4">
-        {loadingPosts
-          ? Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
-          : posts.map((post) => (
-              <div
-                key={post.id}
-                className="animate-fadeIn cursor-pointer"
-                onClick={() => navigate(`/posts/${post.id}`)}
-              >
-                <PostCard {...post} />
+        {loadingPosts ? (
+          <div>Loading posts...</div>
+        ) : (
+          posts.map((post) => (
+            <div
+              key={post.id}
+              className="p-4 bg-white dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={() =>
+                navigate(
+                  `/lounge/${encodeURIComponent(lounge.name)}/posts/${post.id}`,
+                )
+              }
+            >
+              <div className="flex items-center mb-1">
+                <img
+                  src={post.avatarUrl}
+                  alt={`${post.username} avatar`}
+                  className="w-8 h-8 rounded-full object-cover mr-2"
+                />
+                <span className="font-medium">{post.username}</span>
+                <span className="ml-2 text-sm text-gray-500">
+                  {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+                </span>
+                <span className="ml-auto text-sm text-gray-500">
+                  {post.comments} replies
+                </span>
               </div>
-            ))}
+              <h2 className="text-lg font-semibold">{post.title}</h2>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

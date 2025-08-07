@@ -17,6 +17,7 @@ import UserPage from './pages/UserPage'
 import LoungePage from './pages/LoungePage'
 import LoungesPage from './pages/LoungesPage'
 import LoungePostPage from './pages/LoungePostPage'
+import LoungePostDetailPage from './pages/LoungePostDetailPage'
 
 
 
@@ -53,6 +54,7 @@ const App: React.FC = () => {
           <Route path="/users/:username/:tab" element={<UserPage />} />
           <Route path="/lounge" element={<LoungesPage />} />
           <Route path="/lounge/:loungeName" element={<LoungePage />} />
+          <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
           <Route element={<RequireProfileCompletion />}>
             <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
             <Route path="/upload" element={<UploadForm />} />
