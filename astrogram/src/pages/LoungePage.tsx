@@ -6,8 +6,9 @@ import LoungePostItem from "../components/LoungePostItem/LoungePostItem";
 
 interface LoungePost {
   id: string;
-  title: string;
-  body: string;
+  title?: string;
+  body?: string;
+  caption?: string; // fallback field from older API responses
 }
 
 interface LoungeInfo {
@@ -36,7 +37,12 @@ const LoungePage: React.FC = () => {
     if (!loungeName) return;
     fetchLoungePosts<LoungePost>(loungeName, 1, 20)
       .then((data) => {
-        setPosts(data.posts);
+        const normalized = data.posts.map((p) => ({
+          id: p.id,
+          title: p.title,
+          body: p.body ?? p.caption,
+        }));
+        setPosts(normalized);
         setLoadingPosts(false);
       })
       .catch(() => setLoadingPosts(false));
