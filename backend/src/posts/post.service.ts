@@ -56,6 +56,10 @@ export class PostsService {
     ): Promise<Post> {
         this.logger.log(`Creating post for user ${userId}: "${dto.title}"`)
 
+        if (dto.loungeId && (!dto.title?.trim() || !dto.body?.trim())) {
+            throw new BadRequestException('Title and body are required for lounge posts')
+        }
+
         if (!dto.loungeId && dto.body && dto.body.length > 314) {
             throw new BadRequestException('Post body must be 314 characters or fewer')
         }

@@ -54,6 +54,10 @@ const LoungePostPage: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!title.trim() || !body.trim()) {
+      setError("Title and body are required");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -88,20 +92,22 @@ const LoungePostPage: React.FC = () => {
           <label className="block text-sm mb-1">Title</label>
           <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-gray-800"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Body</label>
-          <textarea
-            rows={4}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-gray-800"
-          />
-        </div>
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          className="w-full px-3 py-2 rounded bg-gray-800"
+        />
+      </div>
+      <div>
+        <label className="block text-sm mb-1">Body</label>
+        <textarea
+          rows={4}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          required
+          className="w-full px-3 py-2 rounded bg-gray-800"
+        />
+      </div>
         <div>
           <label
             htmlFor="post-images"
