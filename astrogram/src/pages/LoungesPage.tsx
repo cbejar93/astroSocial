@@ -14,7 +14,7 @@ interface LoungeInfo {
 }
 
 const LoungesPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateFollowedLounge } = useAuth();
   const [sortBy, setSortBy] = useState<"name" | "lastPost">("name");
   const [followed, setFollowed] = useState<Record<string, boolean>>({});
 
@@ -97,12 +97,14 @@ const LoungesPage: React.FC = () => {
                         e.preventDefault();
                         e.stopPropagation();
                         try {
-                          if (followed[lounge.id]) await unfollowLounge(lounge.name);
+                          const isFollowed = !!followed[lounge.id];
+                          if (isFollowed) await unfollowLounge(lounge.name);
                           else await followLounge(lounge.name);
                           setFollowed((prev) => ({
                             ...prev,
                             [lounge.id]: !prev[lounge.id],
                           }));
+                          updateFollowedLounge(lounge.id, !isFollowed);
                         } catch {}
                       }}
                       className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
