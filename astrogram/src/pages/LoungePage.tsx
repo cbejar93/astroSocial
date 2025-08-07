@@ -1,9 +1,14 @@
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchLoungePosts, fetchLounge } from "../lib/api";
-import PostCard from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
-import type { PostCardProps } from "../components/PostCard/PostCard";
+import LoungePostItem from "../components/LoungePostItem/LoungePostItem";
+
+interface LoungePost {
+  id: string;
+  title: string;
+  body: string;
+}
 
 interface LoungeInfo {
   id: string;
@@ -17,8 +22,7 @@ const LoungePage: React.FC = () => {
   const [lounge, setLounge] = useState<LoungeInfo | null>(null);
   const [loadingLounge, setLoadingLounge] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [posts, setPosts] = useState<PostCardProps[]>([]);
-  const navigate = useNavigate();
+  const [posts, setPosts] = useState<LoungePost[]>([]);
 
   useEffect(() => {
     if (!loungeName) return;
@@ -30,7 +34,7 @@ const LoungePage: React.FC = () => {
 
   useEffect(() => {
     if (!loungeName) return;
-    fetchLoungePosts<PostCardProps>(loungeName, 1, 20)
+    fetchLoungePosts<LoungePost>(loungeName, 1, 20)
       .then((data) => {
         setPosts(data.posts);
         setLoadingPosts(false);
@@ -74,13 +78,7 @@ const LoungePage: React.FC = () => {
         {loadingPosts
           ? Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
           : posts.map((post) => (
-              <div
-                key={post.id}
-                className="animate-fadeIn cursor-pointer"
-                onClick={() => navigate(`/posts/${post.id}`)}
-              >
-                <PostCard {...post} />
-              </div>
+              <LoungePostItem key={post.id} title={post.title} body={post.body} />
             ))}
       </div>
     </div>
