@@ -60,6 +60,10 @@ export class PostsService {
             throw new BadRequestException('Title and body are required for lounge posts')
         }
 
+        if (!dto.loungeId && !dto.body?.trim()) {
+            throw new BadRequestException('Caption is required')
+        }
+
         if (!dto.loungeId && dto.body && dto.body.length > 314) {
             throw new BadRequestException('Post body must be 314 characters or fewer')
         }
