@@ -65,6 +65,7 @@ export class LoungesService {
   }
 
   async findAll() {
+    this.logger.log('Fetching all lounges');
     const lounges = await this.prisma.lounge.findMany({
       include: {
         _count: { select: { posts: true } },
@@ -72,6 +73,7 @@ export class LoungesService {
       },
     });
 
+    this.logger.log(`Found ${lounges.length} lounges`);
     return lounges.map((l) => ({
       id: l.id,
       name: l.name,
@@ -85,6 +87,7 @@ export class LoungesService {
   }
 
   async findByName(name: string) {
+    this.logger.log(`Fetching lounge by name=${name}`);
     const lounge = await this.prisma.lounge.findUnique({
       where: { name },
       include: {
@@ -93,8 +96,12 @@ export class LoungesService {
       },
     });
 
-    if (!lounge) return null;
+    if (!lounge) {
+      this.logger.warn(`Lounge not found with name=${name}`);
+      return null;
+    }
 
+    this.logger.log(`Found lounge id=${lounge.id} for name=${name}`);
     return {
       id: lounge.id,
       name: lounge.name,
@@ -108,6 +115,7 @@ export class LoungesService {
   }
 
   async follow(loungeId: string, userId: string) {
+    this.logger.log(`User ${userId} following lounge ${loungeId}`);
     return this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -119,6 +127,7 @@ export class LoungesService {
   }
 
   async unfollow(loungeId: string, userId: string) {
+    this.logger.log(`User ${userId} unfollowing lounge ${loungeId}`);
     return this.prisma.user.update({
       where: { id: userId },
       data: {
