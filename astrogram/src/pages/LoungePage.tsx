@@ -1,9 +1,11 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchLoungePosts, fetchLounge } from "../lib/api";
-import PostCard from "../components/PostCard/PostCard";
-import PostSkeleton from "../components/PostCard/PostSkeleton";
-import type { PostCardProps } from "../components/PostCard/PostCard";
+
+interface LoungePostSummary {
+  id: string;
+  title: string;
+}
 
 interface LoungeInfo {
   id: string;
@@ -17,7 +19,7 @@ const LoungePage: React.FC = () => {
   const [lounge, setLounge] = useState<LoungeInfo | null>(null);
   const [loadingLounge, setLoadingLounge] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const [posts, setPosts] = useState<LoungePostSummary[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,7 +32,7 @@ const LoungePage: React.FC = () => {
 
   useEffect(() => {
     if (!loungeName) return;
-    fetchLoungePosts<PostCardProps>(loungeName, 1, 20)
+    fetchLoungePosts<LoungePostSummary>(loungeName, 1, 20)
       .then((data) => {
         setPosts(data.posts);
         setLoadingPosts(false);
@@ -71,17 +73,23 @@ const LoungePage: React.FC = () => {
         </Link>
       </div>
       <div className="w-full max-w-3xl mx-auto space-y-4">
-        {loadingPosts
-          ? Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
-          : posts.map((post) => (
-              <div
-                key={post.id}
-                className="animate-fadeIn cursor-pointer"
-                onClick={() => navigate(`/posts/${post.id}`)}
-              >
-                <PostCard {...post} />
-              </div>
-            ))}
+        {loadingPosts ? (
+          <div>Loading posts...</div>
+        ) : (
+          posts.map((post) => (
+            <div
+              key={post.id}
+              className="p-4 bg-white dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={() =>
+                navigate(
+                  `/lounge/${encodeURIComponent(lounge.name)}/posts/${post.id}`,
+                )
+              }
+            >
+              <h2 className="text-lg font-semibold">{post.title}</h2>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

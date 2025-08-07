@@ -275,6 +275,7 @@ export class PostsService {
                 id: p.id,
                 authorId: p.author.id,
                 username: p.author.username!,
+                title: p.title ?? '',
                 ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
                 avatarUrl: p.author.avatarUrl || '',
                 caption: p.body,
@@ -301,6 +302,7 @@ export class PostsService {
     authorId: string;
     avatarUrl:   string;
     imageUrl?:   string;
+    title:       string;
     caption:     string;
     timestamp:   string;
     stars:       number;
@@ -352,6 +354,7 @@ export class PostsService {
 
       avatarUrl: post.author.avatarUrl ?? '',
       ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
+      title:     post.title ?? '',
       caption:   post.body,
       timestamp: post.createdAt.toISOString(),
       stars:     post.likes,
