@@ -1,5 +1,9 @@
 // src/lib/api.ts
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+// Some endpoints like the lounges API live at the root without the `/api` prefix.
+// Strip a trailing `/api` segment from the base URL so we can reuse the origin
+// when constructing those absolute URLs.
+const API_ORIGIN = API_BASE.replace(/\/api$/, '');
 
 let accessToken = '';  // in‑memory only
 
@@ -130,16 +134,16 @@ export interface FeedResponse<T> {
     return res.json();
   }
 
-  export async function fetchLoungePosts<Item = any>(
-    loungeName: string,
-    page: number = 1,
-    limit: number = 20,
-  ): Promise<FeedResponse<Item>> {
-    const res = await apiFetch(
-      `/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
-      {},
-      false,
-    );
+export async function fetchLoungePosts<Item = any>(
+  loungeName: string,
+  page: number = 1,
+  limit: number = 20,
+): Promise<FeedResponse<Item>> {
+  const res = await apiFetch(
+    `${API_ORIGIN}/lounges/${encodeURIComponent(loungeName)}/posts?page=${page}&limit=${limit}`,
+    {},
+    false,
+  );
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge posts (${res.status})`);
   }
@@ -147,7 +151,7 @@ export interface FeedResponse<T> {
 }
 
 export async function fetchLounges<T = any>(): Promise<T[]> {
-  const res = await apiFetch('/lounges', {}, false);
+  const res = await apiFetch(`${API_ORIGIN}/lounges`, {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounges (${res.status})`);
   }
@@ -155,7 +159,7 @@ export async function fetchLounges<T = any>(): Promise<T[]> {
 }
 
 export async function fetchLounge<T = any>(name: string): Promise<T> {
-  const res = await apiFetch(`/lounges/${encodeURIComponent(name)}`, {}, false);
+  const res = await apiFetch(`${API_ORIGIN}/lounges/${encodeURIComponent(name)}`, {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge (${res.status})`);
   }
@@ -164,7 +168,7 @@ export async function fetchLounge<T = any>(name: string): Promise<T> {
 
 export async function followLounge(name: string) {
   await apiFetch(
-    `/lounges/${encodeURIComponent(name)}/follow`,
+    `${API_ORIGIN}/lounges/${encodeURIComponent(name)}/follow`,
     { method: 'POST' },
     false,
   );
@@ -172,7 +176,7 @@ export async function followLounge(name: string) {
 
 export async function unfollowLounge(name: string) {
   await apiFetch(
-    `/lounges/${encodeURIComponent(name)}/follow`,
+    `${API_ORIGIN}/lounges/${encodeURIComponent(name)}/follow`,
     { method: 'DELETE' },
     false,
   );
