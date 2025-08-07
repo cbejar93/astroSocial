@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { lounges } from "../data/lounges";
 import { useAuth } from "../contexts/AuthContext";
-import { followLounge, unfollowLounge } from "../lib/api";
+import { followLounge, unfollowLounge, fetchLounges } from "../lib/api";
+
+interface LoungeInfo {
+  id: string;
+  name: string;
+  bannerUrl: string;
+  profileUrl: string;
+  threads?: number;
+  views?: number;
+  lastPostAt?: string | null;
+}
 
 const LoungesPage: React.FC = () => {
   const { user } = useAuth();
@@ -19,14 +28,21 @@ const LoungesPage: React.FC = () => {
     }
   }, [user]);
 
-  const sortedLounges = Object.entries(lounges).sort((a, b) => {
+  const [lounges, setLounges] = useState<LoungeInfo[]>([]);
+
+  useEffect(() => {
+    fetchLounges<LoungeInfo>()
+      .then((data) => setLounges(data))
+      .catch(() => {});
+  }, []);
+
+  const sortedLounges = lounges.slice().sort((a, b) => {
     if (sortBy === "lastPost") {
-      return (
-        new Date(b[1].lastPostAt).getTime() -
-        new Date(a[1].lastPostAt).getTime()
-      );
+      const aTime = a.lastPostAt ? new Date(a.lastPostAt).getTime() : 0;
+      const bTime = b.lastPostAt ? new Date(b.lastPostAt).getTime() : 0;
+      return bTime - aTime;
     }
-    return a[1].name.localeCompare(b[1].name);
+    return a.name.localeCompare(b.name);
   });
 
   return (
@@ -46,22 +62,22 @@ const LoungesPage: React.FC = () => {
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {sortedLounges.map(([id, lounge]) => (
+        {sortedLounges.map((lounge) => (
           <Link
-            key={id}
-            to={`/lounge/${id}`}
+            key={lounge.id}
+            to={`/lounge/${lounge.id}`}
             className="bg-neutral-800 rounded-lg overflow-hidden hover:bg-neutral-700 transition-colors"
           >
             <div className="w-full h-32 overflow-hidden">
               <img
-                src={lounge.banner}
+                src={lounge.bannerUrl}
                 alt={`${lounge.name} banner`}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="p-4 flex items-center gap-4">
               <img
-                src={lounge.icon}
+                src={lounge.profileUrl}
                 alt={`${lounge.name} icon`}
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -69,7 +85,7 @@ const LoungesPage: React.FC = () => {
                 <div className="text-lg font-semibold">{lounge.name}</div>
                 <div className="text-sm text-neutral-400 flex items-center gap-2">
                   <span>
-                    {lounge.threads} Threads · {lounge.views} Views
+                    {lounge.threads ?? 0} Threads · {lounge.views ?? 0} Views
                   </span>
                   {user && (
                     <button
@@ -77,17 +93,17 @@ const LoungesPage: React.FC = () => {
                         e.preventDefault();
                         e.stopPropagation();
                         try {
-                          if (followed[id]) await unfollowLounge(id);
-                          else await followLounge(id);
+                          if (followed[lounge.id]) await unfollowLounge(lounge.id);
+                          else await followLounge(lounge.id);
                           setFollowed((prev) => ({
                             ...prev,
-                            [id]: !prev[id],
+                            [lounge.id]: !prev[lounge.id],
                           }));
                         } catch {}
                       }}
                       className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
                     >
-                      {followed[id] ? "Unfollow" : "Follow"}
+                      {followed[lounge.id] ? "Unfollow" : "Follow"}
                     </button>
                   )}
                 </div>

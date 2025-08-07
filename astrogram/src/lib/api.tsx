@@ -143,6 +143,14 @@ export async function fetchLoungePosts<Item = any>(
   return res.json();
 }
 
+export async function fetchLounges<T = any>(): Promise<T[]> {
+  const res = await apiFetch('/lounges');
+  if (!res.ok) {
+    throw new Error(`Failed to fetch lounges (${res.status})`);
+  }
+  return res.json();
+}
+
 export async function followLounge(loungeId: string) {
   await apiFetch(`/lounges/${loungeId}/follow`, { method: 'POST' });
 }

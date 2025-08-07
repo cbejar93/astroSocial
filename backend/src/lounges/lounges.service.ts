@@ -64,8 +64,24 @@ export class LoungesService {
     }
   }
 
-  async findAll(): Promise<Lounge[]> {
-    return this.prisma.lounge.findMany();
+  async findAll() {
+    const lounges = await this.prisma.lounge.findMany({
+      include: {
+        _count: { select: { posts: true } },
+        posts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+    });
+
+    return lounges.map((l) => ({
+      id: l.id,
+      name: l.name,
+      description: l.description,
+      bannerUrl: l.bannerUrl,
+      profileUrl: l.profileUrl,
+      threads: l._count.posts,
+      views: 0,
+      lastPostAt: l.posts[0]?.createdAt ?? null,
+    }));
   }
 
   async follow(loungeId: string, userId: string) {
