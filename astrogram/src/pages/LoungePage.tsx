@@ -1,10 +1,15 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { fetchLoungePosts, fetchLounge } from "../lib/api";
 
 interface LoungePostSummary {
   id: string;
   title: string;
+  username: string;
+  avatarUrl: string;
+  timestamp: string;
+  comments: number;
 }
 
 interface LoungeInfo {
@@ -86,6 +91,20 @@ const LoungePage: React.FC = () => {
                 )
               }
             >
+              <div className="flex items-center mb-1">
+                <img
+                  src={post.avatarUrl}
+                  alt={`${post.username} avatar`}
+                  className="w-8 h-8 rounded-full object-cover mr-2"
+                />
+                <span className="font-medium">{post.username}</span>
+                <span className="ml-2 text-sm text-gray-500">
+                  {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+                </span>
+                <span className="ml-auto text-sm text-gray-500">
+                  {post.comments} replies
+                </span>
+              </div>
               <h2 className="text-lg font-semibold">{post.title}</h2>
             </div>
           ))
