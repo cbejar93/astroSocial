@@ -5,7 +5,7 @@ import * as express from 'express';
 import * as path from 'path';
 import { Request, Response } from 'express';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 
 
@@ -18,6 +18,7 @@ async function bootstrap() {
 
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.use(cookieParser());
   const isProduction = process.env.NODE_ENV === 'production';
 
