@@ -1,8 +1,9 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { fetchLoungePosts, fetchLounge } from "../lib/api";
+import { fetchLoungePosts, fetchLounge, apiFetch } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { MoreVertical } from "lucide-react";
 
 interface LoungePostSummary {
   id: string;
@@ -11,6 +12,8 @@ interface LoungePostSummary {
   avatarUrl: string;
   timestamp: string;
   comments: number;
+  lastReplyUsername?: string;
+  lastReplyTimestamp?: string;
 }
 
 interface LoungeInfo {
@@ -27,7 +30,14 @@ const LoungePage: React.FC = () => {
   const [loadingLounge, setLoadingLounge] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [posts, setPosts] = useState<LoungePostSummary[]>([]);
+  const [menuPostId, setMenuPostId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = () => setMenuPostId(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, []);
 
   useEffect(() => {
     if (!loungeName) return;
@@ -41,11 +51,30 @@ const LoungePage: React.FC = () => {
     if (!loungeName) return;
     fetchLoungePosts<LoungePostSummary>(loungeName, 1, 20)
       .then((data) => {
-        setPosts(data.posts);
+        const sorted = data.posts.sort((a, b) => {
+          const aTime = a.lastReplyTimestamp || a.timestamp;
+          const bTime = b.lastReplyTimestamp || b.timestamp;
+          return new Date(bTime).getTime() - new Date(aTime).getTime();
+        });
+        setPosts(sorted);
         setLoadingPosts(false);
       })
       .catch(() => setLoadingPosts(false));
   }, [loungeName]);
+
+  const handleDelete = async (id: string) => {
+    setMenuPostId(null);
+    try {
+      const res = await apiFetch(`/posts/delete/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || "Failed to delete post");
+      }
+      setPosts((ps) => ps.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error("Delete post error:", err);
+    }
+  };
 
   if (loadingLounge) {
     return <div className="py-6">Loading...</div>;
@@ -85,33 +114,76 @@ const LoungePage: React.FC = () => {
         {loadingPosts ? (
           <div>Loading posts...</div>
         ) : (
-          posts.map((post) => (
-            <div
-              key={post.id}
-              className="p-4 bg-white dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={() =>
-                navigate(
-                  `/lounge/${encodeURIComponent(lounge.name)}/posts/${post.id}`,
-                )
-              }
-            >
-              <div className="flex items-center mb-1">
-                <img
-                  src={post.avatarUrl}
-                  alt={`${post.username} avatar`}
-                  className="w-8 h-8 rounded-full object-cover mr-2"
-                />
-                <span className="font-medium">{post.username}</span>
-                <span className="ml-2 text-sm text-gray-500">
-                  {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
-                </span>
-                <span className="ml-auto text-sm text-gray-500">
-                  {post.comments} replies
-                </span>
+          posts.map((post) => {
+            const isOwn = user?.username === post.username;
+            return (
+              <div
+                key={post.id}
+                className="p-4 bg-white dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() =>
+                  navigate(
+                    `/lounge/${encodeURIComponent(lounge.name)}/posts/${post.id}`,
+                  )
+                }
+              >
+                <div className="flex items-center mb-1">
+                  <img
+                    src={post.avatarUrl}
+                    alt={`${post.username} avatar`}
+                    className="w-8 h-8 rounded-full object-cover mr-2"
+                  />
+                  <span className="font-medium">{post.username}</span>
+                  <span className="ml-2 text-sm text-gray-500">
+                    {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-sm text-gray-500">
+                      {post.comments} replies
+                    </span>
+                    {isOwn && (
+                      <div
+                        className="relative"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuPostId((id) => (id === post.id ? null : post.id));
+                          }}
+                          className="p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <MoreVertical className="w-5 h-5" />
+                        </button>
+                        {menuPostId === post.id && (
+                          <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(post.id);
+                              }}
+                              className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                            >
+                              Delete Post
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <h2 className="text-lg font-semibold">{post.title}</h2>
+                {post.lastReplyTimestamp && post.lastReplyUsername && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Last reply by {post.lastReplyUsername}{' '}
+                    {formatDistanceToNow(new Date(post.lastReplyTimestamp), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                )}
               </div>
-              <h2 className="text-lg font-semibold">{post.title}</h2>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

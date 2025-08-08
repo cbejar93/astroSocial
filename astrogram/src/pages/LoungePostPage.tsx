@@ -87,6 +87,27 @@ const LoungePostPage: React.FC = () => {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData("text/html");
+    const text = e.clipboardData.getData("text/plain");
+    let sanitized = text;
+
+    if (html) {
+      const div = document.createElement("div");
+      div.innerHTML = html;
+      div.querySelectorAll("[style]").forEach((el) => {
+        (el as HTMLElement).style.removeProperty("color");
+      });
+      div.querySelectorAll("[color]").forEach((el) => {
+        el.removeAttribute("color");
+      });
+      sanitized = div.innerHTML;
+    }
+
+    document.execCommand("insertHTML", false, sanitized);
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto py-6">
       <h1 className="text-xl font-semibold mb-4">New Post</h1>
@@ -107,8 +128,8 @@ const LoungePostPage: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              document.execCommand("bold");
               editorRef.current?.focus();
+              document.execCommand("bold");
             }}
             className="px-2 py-1 rounded bg-gray-700"
           >
@@ -117,8 +138,8 @@ const LoungePostPage: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              document.execCommand("italic");
               editorRef.current?.focus();
+              document.execCommand("italic");
             }}
             className="px-2 py-1 rounded bg-gray-700 italic"
           >
@@ -127,8 +148,8 @@ const LoungePostPage: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              document.execCommand("insertUnorderedList");
               editorRef.current?.focus();
+              document.execCommand("insertUnorderedList");
             }}
             className="px-2 py-1 rounded bg-gray-700"
           >
@@ -137,8 +158,8 @@ const LoungePostPage: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              document.execCommand("insertOrderedList");
               editorRef.current?.focus();
+              document.execCommand("insertOrderedList");
             }}
             className="px-2 py-1 rounded bg-gray-700"
           >
@@ -150,6 +171,7 @@ const LoungePostPage: React.FC = () => {
           contentEditable
           className="w-full px-3 py-2 rounded bg-gray-800 min-h-[6rem]"
           onInput={() => setBody(editorRef.current?.innerHTML || "")}
+          onPaste={handlePaste}
         />
       </div>
         <div>

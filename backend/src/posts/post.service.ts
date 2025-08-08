@@ -268,6 +268,13 @@ export class PostsService {
                         author: {
                             select: { id: true, username: true, avatarUrl: true },
                         },
+                        comments: {
+                            orderBy: { createdAt: 'desc' },
+                            take: 1,
+                            include: {
+                                author: { select: { username: true } },
+                            },
+                        },
                         _count: { select: { comments: true } },
                         interactions: {
                             where: {
@@ -280,7 +287,7 @@ export class PostsService {
                 }),
             ]);
 
-            const items = posts.map(p => ({
+            const items = posts.map((p) => ({
                 id: p.id,
                 authorId: p.author.id,
                 username: p.author.username!,
@@ -293,6 +300,8 @@ export class PostsService {
                 comments: p._count.comments,
                 shares: p.shares,
                 likedByMe: p.interactions.length > 0,
+                lastReplyUsername: p.comments[0]?.author.username,
+                lastReplyTimestamp: p.comments[0]?.createdAt.toISOString(),
             }));
 
             return { posts: items, total, page, limit };
