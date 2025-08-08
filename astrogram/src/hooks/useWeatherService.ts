@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchWeather } from './weatherApi';
+import type { WeatherData } from '../pages/WeatherPage';
 
 type Coordinates = {
   latitude: number;
@@ -8,7 +9,7 @@ type Coordinates = {
 
 export const useWeatherService = () => {
   const [location, setLocation] = useState<Coordinates | null>(null);
-  const [weather, setWeather] = useState<any>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [unit, setUnit] = useState<'metric' | 'us'>('metric');

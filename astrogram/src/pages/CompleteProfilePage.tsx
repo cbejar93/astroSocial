@@ -11,20 +11,16 @@ const CompleteProfilePage: React.FC = () => {
   const navigate        = useNavigate();
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [preview, setPreview]     = useState<string | null>(null);
   const [error, setError]         = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
   const [username,     setUsername]      = useState("");
   const [selectedFile, setSelectedFile]  = useState<File | null>(null);
   const [previewUrl,   setPreviewUrl]    = useState<string>("");
 
-  const [file, setFile] = useState<File | null>(null);
-
-
   // clean up object URL
   useEffect(() => {
-    return () => { if (preview) URL.revokeObjectURL(preview); };
-  }, [preview]);
+    return () => { if (previewUrl) URL.revokeObjectURL(previewUrl); };
+  }, [previewUrl]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -68,8 +64,9 @@ const CompleteProfilePage: React.FC = () => {
 
       if (!res.ok) throw new Error('Failed to update profile');
       navigate('/', { replace: true });
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong';
+      setError(message);
     } finally {
       setLoading(false);
     }

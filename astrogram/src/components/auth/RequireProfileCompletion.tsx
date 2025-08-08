@@ -4,7 +4,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth }                       from "../../contexts/AuthContext";
 
 export const RequireProfileCompletion: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const { pathname }      = useLocation();
 
   // while we’re checking auth, don’t render anything

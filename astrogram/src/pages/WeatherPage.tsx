@@ -37,7 +37,7 @@ export interface WeatherDay {
 
 
 
-interface WeatherData {
+export interface WeatherData {
   status: string;
   coordinates: string;
   data: WeatherDay[];
@@ -52,28 +52,31 @@ interface WeatherPageProps {
 }
 
 const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit, setUnit }) => {
-  const today = new Date();
-  const todayDateStr = today.toDateString();
+  const today = useMemo(() => new Date(), []);
   const todayStr = today.toISOString().split("T")[0];
-
-  if (loading) return <WeatherSkeleton />;
-  if (error) return <div className="text-red-500 text-center py-6">{error}</div>;
-  if (!weather || !weather.data) return <div className="text-center text-gray-400 py-6">No weather data available.</div>;
+  const todayMidnight = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }, []);
 
   const todayData = useMemo(
-    () => weather.data.find((day) => day.date === todayStr),
-    [weather.data, todayStr]
+    () => (weather?.data ?? []).find((day) => day.date === todayStr),
+    [weather, todayStr]
   );
 
   const futureWeatherData = useMemo(
     () =>
-
-      weather.data.filter(
-        (day) => new Date(day.date).setHours(0, 0, 0, 0) >= today.setHours(0, 0, 0, 0)
+      (weather?.data ?? []).filter(
+        (day) => new Date(day.date).setHours(0, 0, 0, 0) >= todayMidnight
       ),
-
-    [weather.data, today]
+    [weather, todayMidnight]
   );
+
+  if (loading) return <WeatherSkeleton />;
+  if (error) return <div className="text-red-500 text-center py-6">{error}</div>;
+  if (!weather || !weather.data)
+    return <div className="text-center text-gray-400 py-6">No weather data available.</div>;
 
   // const currentTemp = todayData?.conditions.temperature?.["12"] ?? 0;
   // const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);

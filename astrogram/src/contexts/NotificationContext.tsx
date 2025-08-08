@@ -29,6 +29,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useNotifications() {
   const ctx = useContext(NotificationContext);
   if (!ctx) throw new Error('useNotifications must be inside NotificationProvider');

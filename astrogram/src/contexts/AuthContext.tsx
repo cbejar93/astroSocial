@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           : current.filter((id) => id !== loungeId);
         return { ...prev, followedLounges };
       });
-    } catch (err) {
+    } catch {
       // silently ignore for now
     }
   };
@@ -111,6 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {

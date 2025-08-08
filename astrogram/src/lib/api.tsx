@@ -105,7 +105,7 @@ export interface FeedResponse<T> {
     return res.json();
   }
 
-export async function fetchLoungePosts<Item = any>(
+export async function fetchLoungePosts<Item = unknown>(
   loungeName: string,
   page: number = 1,
   limit: number = 20,
@@ -121,7 +121,7 @@ export async function fetchLoungePosts<Item = any>(
   return res.json();
 }
 
-export async function fetchLounges<T = any>(): Promise<T[]> {
+export async function fetchLounges<T = unknown>(): Promise<T[]> {
   console.log('in the api');
   console.log(API_BASE)
   const res = await apiFetch(`${API_BASE}/lounges`, {}, false);
@@ -131,7 +131,7 @@ export async function fetchLounges<T = any>(): Promise<T[]> {
   return res.json();
 }
 
-export async function fetchLounge<T = any>(name: string): Promise<T> {
+export async function fetchLounge<T = unknown>(name: string): Promise<T> {
   const res = await apiFetch(`${API_BASE}/lounges/${encodeURIComponent(name)}`, {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounge (${res.status})`);
