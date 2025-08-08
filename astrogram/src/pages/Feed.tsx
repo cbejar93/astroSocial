@@ -149,13 +149,10 @@ const Feed: React.FC = () => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.log('hello');
       // setPosts(dummyPosts);
       // setLoading(false);
       fetchFeed<PostCardProps>(1, 20)
     .then(data => {
-      console.log('new data!!!!!')
-      console.log(data);
       setPosts(data.posts);
       setLoading(false);
     })

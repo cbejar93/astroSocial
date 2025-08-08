@@ -23,7 +23,7 @@ const conditionLabels: Record<string, string> = {
   seeing : "Seeing",
 };
 
-export function getClosestTimeBlock(): TimeBlock {
+function getClosestTimeBlock(): TimeBlock {
   const now = new Date().getHours();
   // convert to numbers & sort just in case
   const blocks = timeBlocks
@@ -96,7 +96,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
 
 export default WeatherCard;
 
-export function mapValueToLevel(condition: string, value: number): number {
+function mapValueToLevel(condition: string, value: number): number {
   if (value == null || isNaN(value)) return 1;
 
   switch (condition) {

@@ -61,8 +61,7 @@ const UploadForm: React.FC = () => {
         throw new Error(text || 'Upload failed')
       }
 
-      const post = await res.json()
-      console.log('Post created:', post)
+      await res.json()
 
       navigate('/', { replace: true })
 
