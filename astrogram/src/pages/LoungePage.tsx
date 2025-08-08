@@ -12,6 +12,8 @@ interface LoungePostSummary {
   avatarUrl: string;
   timestamp: string;
   comments: number;
+  lastReplyUsername?: string;
+  lastReplyTimestamp?: string;
 }
 
 interface LoungeInfo {
@@ -49,7 +51,12 @@ const LoungePage: React.FC = () => {
     if (!loungeName) return;
     fetchLoungePosts<LoungePostSummary>(loungeName, 1, 20)
       .then((data) => {
-        setPosts(data.posts);
+        const sorted = data.posts.sort((a, b) => {
+          const aTime = a.lastReplyTimestamp || a.timestamp;
+          const bTime = b.lastReplyTimestamp || b.timestamp;
+          return new Date(bTime).getTime() - new Date(aTime).getTime();
+        });
+        setPosts(sorted);
         setLoadingPosts(false);
       })
       .catch(() => setLoadingPosts(false));
@@ -166,6 +173,14 @@ const LoungePage: React.FC = () => {
                   </div>
                 </div>
                 <h2 className="text-lg font-semibold">{post.title}</h2>
+                {post.lastReplyTimestamp && post.lastReplyUsername && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Last reply by {post.lastReplyUsername}{' '}
+                    {formatDistanceToNow(new Date(post.lastReplyTimestamp), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                )}
               </div>
             );
           })
