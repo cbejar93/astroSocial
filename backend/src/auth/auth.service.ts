@@ -1,6 +1,7 @@
 import { Injectable }   from '@nestjs/common';
 import { JwtService }   from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
+import { encryptEmail, hashEmail } from '../utils/crypto';
 
 @Injectable()
 export class AuthService {
@@ -29,13 +30,22 @@ export class AuthService {
     
 
     // upsert user in your DB
+    const emailEncrypted = encryptEmail(cleanEmail);
+    const emailHash      = hashEmail(cleanEmail);
+
     const user = await this.prisma.user.upsert({
       where:  { provider_providerId: { provider, providerId: cleanProviderId } },
-      create: { email: cleanEmail, name: cleanName, provider, providerId: cleanProviderId },
-      update: { name: cleanName },
+      create: {
+        emailEncrypted: emailEncrypted,
+        emailHash:      emailHash,
+        name:           cleanName,
+        provider,
+        providerId:     cleanProviderId,
+      },
+      update: { name: cleanName, emailEncrypted: emailEncrypted, emailHash: emailHash },
     });
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: cleanEmail };
 
     // 1) short‑lived access token (e.g. 15 minutes)
     const accessToken = this.jwtService.sign(payload, {
