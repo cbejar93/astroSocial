@@ -34,6 +34,8 @@
     "@supabase/supabase-js": "^2.51.0",
     "axios": "^1.10.0",
     "cache-manager": "^7.0.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
     "lodash": "^4.17.21",
     "passport": "^0.7.0",
