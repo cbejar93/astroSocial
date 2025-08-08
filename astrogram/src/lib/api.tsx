@@ -122,8 +122,6 @@ export async function fetchLoungePosts<Item = unknown>(
 }
 
 export async function fetchLounges<T = unknown>(): Promise<T[]> {
-  console.log('in the api');
-  console.log(API_BASE)
   const res = await apiFetch(`${API_BASE}/lounges`, {}, false);
   if (!res.ok) {
     throw new Error(`Failed to fetch lounges (${res.status})`);

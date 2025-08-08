@@ -17,7 +17,6 @@ export const RequireProfileCompletion: React.FC = () => {
     }
     // 2) already complete → send to feed
     if (user.profileComplete) {
-        console.log('back to feed');
       return <Navigate to="/" replace />;
     }
     // else: logged in but not complete → allow

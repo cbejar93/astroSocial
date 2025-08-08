@@ -26,7 +26,6 @@ const MoonPhaseCard: React.FC<MoonPhaseCardProps> = ({ phase, illumination, moon
   const emoji = phaseIcons[phase] ?? "🌙";
   const fmt = (t?: string) => (t ? t.slice(0, 5) : '--:--'); // drop seconds safely
   const illum =  phaseToIlluminationPercent(illumination);
-  console.log(illumination);
 
   return (
     <div className={`

@@ -82,7 +82,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   // const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
   const sunrise = todayData?.astro?.sunrise;
   const sunset = todayData?.astro?.sunset;
-  console.log(weather);
 
   const isDaytime = todayData?.astro
     ? checkDaytime(todayData.astro.sunrise, todayData.astro.sunset)

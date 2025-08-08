@@ -51,16 +51,10 @@ const CompleteProfilePage: React.FC = () => {
       const form = new FormData();
       form.append('username', username);
       if (imageFile) form.append('avatar', imageFile);
-
-      console.log('before the call');
-
       const res = await apiFetch('/users/me', {
         method: 'PUT',
         body: form,
       });
-
-      console.log('in the submit');
-      console.log(res);
 
       if (!res.ok) throw new Error('Failed to update profile');
       navigate('/', { replace: true });
