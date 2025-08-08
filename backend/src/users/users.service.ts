@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from 'src/storage/storage.service';
+import { decryptEmail } from '../utils/crypto';
 
 @Injectable()
 export class UsersService {
@@ -16,7 +17,7 @@ export class UsersService {
       where: { id: userId },
       select: {
         id: true,
-        email: true,
+        emailEncrypted: true,
         username: true,
         avatarUrl: true,
         profileComplete: true,     // ← add this
@@ -159,7 +160,7 @@ export class UsersService {
       where: { username },
       select: {
         id: true,
-        email: true,
+        emailEncrypted: true,
         username: true,
         avatarUrl: true,
         profileComplete: true,
@@ -236,7 +237,7 @@ export class UsersService {
 
   private toDto(user: {
     id: string;
-    email: string;
+    emailEncrypted: string | null;
     username?: string | null;
     avatarUrl?: string | null;
     profileComplete: boolean;
@@ -244,7 +245,7 @@ export class UsersService {
   }): UserDto {
     return {
       id:              user.id,
-      email:           user.email,
+      email:           user.emailEncrypted ? decryptEmail(user.emailEncrypted) : '',
       username:        user.username ?? undefined,
       avatarUrl:       user.avatarUrl ?? undefined,
       profileComplete: user.profileComplete,
