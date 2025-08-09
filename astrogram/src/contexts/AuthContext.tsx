@@ -43,11 +43,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (saved) {
       setAccessToken(saved);
       apiFetch("/users/me")
-        .then((res) => {
-          if (!res.ok) throw new Error("Not authenticated");
-          return res.json();
-        })
-        .then(setUser)
+        .then((res) => res.json() as Promise<User>)
+        .then((u) => setUser(u))
         .catch(() => {
           setUser(null);
           setAccessToken("");
@@ -72,10 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 2) fetch the user profile
     setLoading(true);
     const res = await apiFetch("/users/me");
-    if (!res.ok) {
-      throw new Error("Login failed");
-    }
-    const me: User = await res.json();
+    const me = (await res.json()) as User;
     setUser(me);
     setLoading(false);
     return me;

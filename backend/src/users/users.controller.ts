@@ -25,17 +25,10 @@ export class UsersController {
     try {
       const user = await this.usersService.findById(userId);
       this.logger.log(
-        `Returning user: id=${user.id}, username=${user.username}, profileComplete=${user.profileComplete}`
+        `Returning user: id=${user.id}, username=${user.username}, profileComplete=${user.profileComplete}, role=${user.role}`
       );
 
-      return {
-        id:              user.id,
-        email:           user.email,
-        username:        user.username,
-        avatarUrl:       user.avatarUrl,
-        profileComplete: user.profileComplete,
-        role:            user.role,
-      };
+      return user;
     } catch (error: any) {
       this.logger.error(
         `Error in GET /api/users/me for ${userId}: ${error.message}`,
