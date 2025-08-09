@@ -12,6 +12,7 @@ const Navbar = () => {
   const [loungesOpen, setLoungesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const isAdmin = user?.role?.trim().toUpperCase() === 'ADMIN';
   const { count } = useNotifications();
 
 
@@ -171,7 +172,7 @@ const Navbar = () => {
                 </li>
               </ul>
             )}
-            {user?.role === 'ADMIN' && (
+            {isAdmin && (
               <Link
                 to="/admin"
                 onClick={() => setSideMenuOpen(false)}
@@ -183,7 +184,7 @@ const Navbar = () => {
             <Link
               to="/saved"
               onClick={() => setSideMenuOpen(false)}
-              className={`block mb-1 text-lg font-semibold ${user?.role === 'ADMIN' ? '' : 'mt-4'}`}
+              className={`block mb-1 text-lg font-semibold ${isAdmin ? '' : 'mt-4'}`}
             >
               Saved
             </Link>
