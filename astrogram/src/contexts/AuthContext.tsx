@@ -11,10 +11,10 @@ import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/a
 
 export interface User {
   id: string;
-  email: string;
   username?: string;
   avatarUrl?: string;
   profileComplete: boolean;
+  role: string;
   followedLounges?: string[];
 }
 
@@ -57,6 +57,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    console.log('AuthContext user', user);
+  }, [user]);
 
   const login = async (accessToken: string) => {
     // 1) store new access token

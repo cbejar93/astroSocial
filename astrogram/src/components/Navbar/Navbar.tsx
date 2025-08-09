@@ -185,6 +185,15 @@ const Navbar = () => {
             >
               Settings
             </Link>
+            {user?.role === 'ADMIN' && (
+              <Link
+                to="/admin"
+                onClick={() => setSideMenuOpen(false)}
+                className="block mb-1 text-lg font-semibold"
+              >
+                Admin
+              </Link>
+            )}
           </div>
           <div className="absolute bottom-0 left-0 w-full p-4 text-sm space-y-1">
             <Link to="/terms" className="block">Terms and Conditions</Link>

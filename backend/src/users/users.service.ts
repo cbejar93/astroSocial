@@ -1,13 +1,22 @@
-import { Injectable, BadRequestException, NotFoundException, Inject, InternalServerErrorException,  Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from 'src/storage/storage.service';
-import { decryptEmail } from '../utils/crypto';
 
 @Injectable()
 export class UsersService {
-  constructor( @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,private readonly storage: StorageService,private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,
+    private readonly storage: StorageService,
+    private readonly prisma: PrismaService,
+  ) {}
   private readonly logger = new Logger(UsersService.name);
   /**
    * Fetch a user by their ID.
@@ -17,21 +26,17 @@ export class UsersService {
       where: { id: userId },
       select: {
         id: true,
-        emailEncrypted: true,
         username: true,
         avatarUrl: true,
-        profileComplete: true,     // ← add this
+        profileComplete: true, // ← add this
+        role: true,
         followedLounges: { select: { id: true } },
       },
     });
-  
+
     if (!user) throw new NotFoundException('User not found');
     return this.toDto(user);
   }
-
-   clean = (s: string) => s.replace(/\u0000/g, '');
-
-
   /**
    * Update the current user's profile.
    * Marks profileComplete = true once username is set.
@@ -44,8 +49,6 @@ export class UsersService {
     if (!username.trim()) {
       throw new BadRequestException('Username is required');
     }
-
-    
 
     const data: Record<string, any> = {
       username,
@@ -65,7 +68,7 @@ export class UsersService {
 
   async uploadAvatar(userId: string, file: Express.Multer.File) {
     // const filePath = `${userId}/${file.originalname}`;
-  
+
     // // 1) Upload
     // const { data: uploadData, error: uploadError } = await this.supabase
     //   .storage
@@ -76,31 +79,31 @@ export class UsersService {
     //     contentType: file.mimetype,
     //   });
 
-      const publicUrl = await this.storage.uploadFile(
-        'avatars',
-        `${userId}/${file.originalname}`,
-        file,
-      )
-  
+    const publicUrl = await this.storage.uploadFile(
+      'avatars',
+      `${userId}/${file.originalname}`,
+      file,
+    );
+
     // if (uploadError || !uploadData) {
     //   this.logger.error(`Supabase upload error: ${uploadError?.message}`);
     //   throw new InternalServerErrorException('Failed to upload avatar');
     // }
-  
+
     // 2) Get the public URL (no error to check here)
     // const { data: urlData } = this.supabase
     //   .storage
     //   .from('avatars')
     //   .getPublicUrl(uploadData.path);
-  
+
     // const publicUrl = urlData.publicUrl;
-  
+
     // 3) Save to your database
     await this.prisma.user.update({
       where: { id: userId },
       data: { avatarUrl: publicUrl, profileComplete: true },
     });
-  
+
     return publicUrl;
   }
 
@@ -116,7 +119,7 @@ export class UsersService {
       select: { username: true, avatarUrl: true },
     });
 
-    return posts.map(p => ({
+    return posts.map((p) => ({
       id: p.id,
       authorId: userId,
       username: user?.username || '',
@@ -143,7 +146,7 @@ export class UsersService {
       select: { username: true, avatarUrl: true },
     });
 
-    return comments.map(c => ({
+    return comments.map((c) => ({
       id: c.id,
       text: c.text,
       authorId: userId,
@@ -160,10 +163,10 @@ export class UsersService {
       where: { username },
       select: {
         id: true,
-        emailEncrypted: true,
         username: true,
         avatarUrl: true,
         profileComplete: true,
+        role: true,
         followedLounges: { select: { id: true } },
       },
     });
@@ -184,7 +187,7 @@ export class UsersService {
       include: { _count: { select: { comments: true } } },
     });
 
-    return posts.map(p => ({
+    return posts.map((p) => ({
       id: p.id,
       authorId: user.id,
       username: user.username || '',
@@ -211,7 +214,7 @@ export class UsersService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return comments.map(c => ({
+    return comments.map((c) => ({
       id: c.id,
       text: c.text,
       authorId: user.id,
@@ -225,31 +228,36 @@ export class UsersService {
 
   async deleteUser(userId: string) {
     await this.prisma.$transaction([
-      this.prisma.commentLike.deleteMany({ where: { OR: [{ userId }, { comment: { authorId: userId } }] } }),
-      this.prisma.postInteraction.deleteMany({ where: { OR: [{ userId }, { post: { authorId: userId } }] } }),
-      this.prisma.notification.deleteMany({ where: { OR: [{ userId }, { actorId: userId }] } }),
+      this.prisma.commentLike.deleteMany({
+        where: { OR: [{ userId }, { comment: { authorId: userId } }] },
+      }),
+      this.prisma.postInteraction.deleteMany({
+        where: { OR: [{ userId }, { post: { authorId: userId } }] },
+      }),
+      this.prisma.notification.deleteMany({
+        where: { OR: [{ userId }, { actorId: userId }] },
+      }),
       this.prisma.comment.deleteMany({ where: { authorId: userId } }),
       this.prisma.post.deleteMany({ where: { authorId: userId } }),
       this.prisma.user.delete({ where: { id: userId } }),
     ]);
   }
-  
 
   private toDto(user: {
     id: string;
-    emailEncrypted: string | null;
     username?: string | null;
     avatarUrl?: string | null;
     profileComplete: boolean;
+    role: string;
     followedLounges?: { id: string }[];
   }): UserDto {
     return {
-      id:              user.id,
-      email:           user.emailEncrypted ? decryptEmail(user.emailEncrypted) : '',
-      username:        user.username ?? undefined,
-      avatarUrl:       user.avatarUrl ?? undefined,
+      id: user.id,
+      username: user.username ?? undefined,
+      avatarUrl: user.avatarUrl ?? undefined,
       profileComplete: user.profileComplete,
-      followedLounges: user.followedLounges?.map(l => l.id),
+      role: user.role,
+      followedLounges: user.followedLounges?.map((l) => l.id),
     };
   }
 }

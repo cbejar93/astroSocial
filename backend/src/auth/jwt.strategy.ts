@@ -1,12 +1,12 @@
 // src/auth/jwt.strategy.ts
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
-import { PassportStrategy }                         from '@nestjs/passport';
-import { ExtractJwt, Strategy }                     from 'passport-jwt';
-import { ConfigService }                            from '@nestjs/config';
-import { UsersService }                             from '../users/users.service';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
+import { UsersService } from '../users/users.service';
 
 export interface JwtPayload {
-  sub:   string;
+  sub: string;
   email: string;
 }
 
@@ -30,33 +30,35 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     // only now call super()
     super({
-      jwtFromRequest:  ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:     secret,
+      secretOrKey: secret,
     });
 
     this.logger = logger;
   }
 
   async validate(payload: JwtPayload) {
- 
     try {
       const user = await this.usersService.findById(payload.sub);
       if (!user) {
         throw new UnauthorizedException('User not found during JWT validation');
       }
       return {
-        sub:             user.id,
-        email:           user.email,
-        username:        user.username,
-        avatarUrl:       user.avatarUrl,
+        sub: user.id,
+        email: payload.email,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
         profileComplete: user.profileComplete,
+        role: user.role,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       // only log here (this.logger is now initialized)
+      const message = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
       this.logger.error(
-        `JWT validation failed for ${payload.sub}: ${err.message}`,
-        err.stack,
+        `JWT validation failed for ${payload.sub}: ${message}`,
+        stack,
       );
       throw new UnauthorizedException('Invalid or expired token');
     }

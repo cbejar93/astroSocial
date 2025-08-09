@@ -1,9 +1,22 @@
 // src/users/users.controller.ts
-import { Controller, Get, Req, UseGuards, Logger, Put, UseInterceptors, UploadedFile, InternalServerErrorException, Body, Delete, Param } from '@nestjs/common';
-import { JwtAuthGuard }                             from '../auth/jwt-auth.guard';
-import { UsersService }                             from './users.service';
-import type { Request }                             from 'express';
-import { UserDto }                                  from './dto/user.dto';
+import {
+  Controller,
+  Get,
+  Req,
+  UseGuards,
+  Logger,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+  InternalServerErrorException,
+  Body,
+  Delete,
+  Param,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UsersService } from './users.service';
+import type { Request } from 'express';
+import { UserDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('api/users')
@@ -15,7 +28,7 @@ export class UsersController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(
-    @Req() req: Request & { user: { sub: string; email: string } }
+    @Req() req: Request & { user: { sub: string; email: string } },
   ): Promise<UserDto> {
     const userId = req.user.sub;
     const userEmail = req.user.email;
@@ -25,20 +38,22 @@ export class UsersController {
     try {
       const user = await this.usersService.findById(userId);
       this.logger.log(
-        `Returning user: id=${user.id}, username=${user.username}, profileComplete=${user.profileComplete}`
+        `Returning user: id=${user.id}, username=${user.username}, profileComplete=${user.profileComplete}`,
       );
 
       return {
-        id:              user.id,
-        email:           user.email,
-        username:        user.username,
-        avatarUrl:       user.avatarUrl,
+        id: user.id,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
         profileComplete: user.profileComplete,
+        role: user.role,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Error in GET /api/users/me for ${userId}: ${error.message}`,
-        error.stack
+        `Error in GET /api/users/me for ${userId}: ${message}`,
+        stack,
       );
       throw error;
     }
@@ -58,8 +73,7 @@ export class UsersController {
   )
   async updateProfile(
     @Req() req: Request & { user: { sub: string; email: string } },
-    @Body("username") username: string,
-
+    @Body('username') username: string,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<UserDto> {
     const userId = req.user.sub;
@@ -79,8 +93,10 @@ export class UsersController {
       // You might also accept other body fields (e.g. username)
       // but for now we'll just update avatar + mark profileComplete
       return this.usersService.updateProfile(userId, username, avatarUrl);
-    } catch (err: any) {
-      this.logger.error(`Error in PUT /api/users/me: ${err.message}`, err.stack);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
+      this.logger.error(`Error in PUT /api/users/me: ${message}`, stack);
       throw new InternalServerErrorException('Could not update profile');
     }
   }
