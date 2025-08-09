@@ -21,6 +21,7 @@ export class UsersService {
         username: true,
         avatarUrl: true,
         profileComplete: true,     // ← add this
+        role: true,
         followedLounges: { select: { id: true } },
       },
     });
@@ -164,6 +165,7 @@ export class UsersService {
         username: true,
         avatarUrl: true,
         profileComplete: true,
+        role: true,
         followedLounges: { select: { id: true } },
       },
     });
@@ -241,6 +243,7 @@ export class UsersService {
     username?: string | null;
     avatarUrl?: string | null;
     profileComplete: boolean;
+    role: string;
     followedLounges?: { id: string }[];
   }): UserDto {
     return {
@@ -249,6 +252,7 @@ export class UsersService {
       username:        user.username ?? undefined,
       avatarUrl:       user.avatarUrl ?? undefined,
       profileComplete: user.profileComplete,
+      role:            user.role,
       followedLounges: user.followedLounges?.map(l => l.id),
     };
   }

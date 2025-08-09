@@ -15,6 +15,7 @@ export interface User {
   username?: string;
   avatarUrl?: string;
   profileComplete: boolean;
+  role: string;
   followedLounges?: string[];
 }
 

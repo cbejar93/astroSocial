@@ -18,6 +18,7 @@ import LoungePage from './pages/LoungePage'
 import LoungesPage from './pages/LoungesPage'
 import LoungePostPage from './pages/LoungePostPage'
 import LoungePostDetailPage from './pages/LoungePostDetailPage'
+import AdminPage from './pages/AdminPage'
 
 
 
@@ -61,6 +62,7 @@ const App: React.FC = () => {
             <Route path="/completeProfile" element={<CompleteProfilePage />} />
             <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
             <Route path="/profile/:tab" element={<ProfilePage />} />
+            <Route path="/admin" element={<AdminPage />} />
             <Route
               path="/weather"
               element={

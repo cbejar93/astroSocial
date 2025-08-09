@@ -7,7 +7,7 @@ export interface UserDto {
   username?:      string;
   avatarUrl?:     string;
   profileComplete: boolean;
-  // role:           string;
+  role:           string;
   name?:          string;
   followedLounges?: string[];
 }

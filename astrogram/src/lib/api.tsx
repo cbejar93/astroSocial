@@ -137,6 +137,28 @@ export async function fetchLounge<T = unknown>(name: string): Promise<T> {
   return res.json();
 }
 
+export async function createLounge(data: {
+  name: string;
+  description: string;
+  profile?: File;
+  banner?: File;
+}) {
+  const form = new FormData();
+  form.append('name', data.name);
+  form.append('description', data.description);
+  if (data.profile) form.append('profile', data.profile);
+  if (data.banner) form.append('banner', data.banner);
+
+  const res = await apiFetch(`${API_BASE}/lounges`, {
+    method: 'POST',
+    body: form,
+  }, false);
+  if (!res.ok) {
+    throw new Error(`Failed to create lounge (${res.status})`);
+  }
+  return res.json();
+}
+
 export async function followLounge(name: string) {
   await apiFetch(
     `${API_BASE}/lounges/${encodeURIComponent(name)}/follow`,

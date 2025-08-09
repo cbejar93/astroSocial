@@ -171,10 +171,19 @@ const Navbar = () => {
                 </li>
               </ul>
             )}
+            {user?.role === 'ADMIN' && (
+              <Link
+                to="/admin"
+                onClick={() => setSideMenuOpen(false)}
+                className="block mt-4 mb-1 text-lg font-semibold"
+              >
+                Admin
+              </Link>
+            )}
             <Link
               to="/saved"
               onClick={() => setSideMenuOpen(false)}
-              className="block mt-4 mb-1 text-lg font-semibold"
+              className={`block mb-1 text-lg font-semibold ${user?.role === 'ADMIN' ? '' : 'mt-4'}`}
             >
               Saved
             </Link>

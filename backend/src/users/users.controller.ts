@@ -34,6 +34,7 @@ export class UsersController {
         username:        user.username,
         avatarUrl:       user.avatarUrl,
         profileComplete: user.profileComplete,
+        role:            user.role,
       };
     } catch (error: any) {
       this.logger.error(
