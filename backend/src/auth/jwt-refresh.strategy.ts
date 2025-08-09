@@ -8,7 +8,7 @@ import { JwtPayload } from './jwt.strategy'; // or wherever you keep that interf
 import type { Request } from 'express';
 
 interface RequestWithCookies extends Request {
-  cookies?: Record<string, string>;
+  cookies: Record<string, string>;
 }
 
 @Injectable()
@@ -29,7 +29,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
 
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: RequestWithCookies): string | undefined => req.cookies?.['jid'],
+        (req: RequestWithCookies): string | null => req.cookies['jid'] ?? null,
       ]),
       ignoreExpiration: false,
       secretOrKey: secret,
