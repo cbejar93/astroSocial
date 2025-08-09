@@ -1,13 +1,24 @@
-import { Injectable, BadRequestException, NotFoundException, Inject, InternalServerErrorException,  Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Inject,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { StorageService } from 'src/storage/storage.service';
+import { StorageService } from '../storage/storage.service';
 import { decryptEmail } from '../utils/crypto';
 
 @Injectable()
 export class UsersService {
-  constructor( @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,private readonly storage: StorageService,private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,
+    private readonly storage: StorageService,
+    private readonly prisma: PrismaService,
+  ) {}
   private readonly logger = new Logger(UsersService.name);
   /**
    * Fetch a user by their ID.
