@@ -1,13 +1,11 @@
 // import { UserRole } from '@prisma/client';
 
-
 export interface UserDto {
-  id:             string;
-  email:          string;
-  username?:      string;
-  avatarUrl?:     string;
+  id: string;
+  username?: string;
+  avatarUrl?: string;
   profileComplete: boolean;
-  // role:           string;
-  name?:          string;
+  role: string;
+  name?: string;
   followedLounges?: string[];
 }

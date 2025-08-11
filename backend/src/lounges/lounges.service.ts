@@ -42,8 +42,8 @@ export class LoungesService {
           banner,
         );
       }
-    } catch (err: any) {
-      this.logger.error('Failed to upload lounge images', err.stack);
+    } catch (err: unknown) {
+      this.logger.error('Failed to upload lounge images', (err as Error).stack);
       throw new InternalServerErrorException('Could not upload lounge images');
     }
 
@@ -58,19 +58,22 @@ export class LoungesService {
       });
       this.logger.log(`Lounge created with id=${lounge.id}`);
       return lounge;
-    } catch (err: any) {
-      this.logger.error('Failed to create lounge record', err.stack);
+    } catch (err: unknown) {
+      this.logger.error('Failed to create lounge record', (err as Error).stack);
       throw new InternalServerErrorException('Could not create lounge');
     }
   }
 
   async findAll() {
-    console.log('is this not hit at all?')
     this.logger.log('Fetching all lounges');
     const lounges = await this.prisma.lounge.findMany({
       include: {
         _count: { select: { posts: true } },
-        posts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+        posts: {
+          select: { createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -93,7 +96,11 @@ export class LoungesService {
       where: { name },
       include: {
         _count: { select: { posts: true } },
-        posts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+        posts: {
+          select: { createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
