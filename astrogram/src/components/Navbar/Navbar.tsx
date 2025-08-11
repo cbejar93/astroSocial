@@ -187,7 +187,7 @@ const Navbar = () => {
             </Link>
             {user?.role === 'ADMIN' && (
               <Link
-                to="/admin"
+                to="/admin/lounge"
                 onClick={() => setSideMenuOpen(false)}
                 className="block mb-1 text-lg font-semibold"
               >

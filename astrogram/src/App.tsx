@@ -10,6 +10,7 @@ import SignupPage from './pages/SignupPage';
 import AuthSuccessPage from './pages/AuthSuccessPage';
 import CompleteProfilePage from './pages/CompleteProfilePage'
 import { RequireProfileCompletion } from "./components/auth/RequireProfileCompletion";
+import RequireAdmin from './components/auth/RequireAdmin';
 import PostPage from './pages/PostPage'
 import NotificationsPage from './pages/NotificationsPage'
 import ProfilePage from './pages/ProfilePage'
@@ -56,13 +57,16 @@ const App: React.FC = () => {
           <Route path="/lounge" element={<LoungesPage />} />
           <Route path="/lounge/:loungeName" element={<LoungePage />} />
           <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
-          <Route element={<RequireProfileCompletion />}>
+          <Route element={<RequireProfileCompletion />}> 
             <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
             <Route path="/upload" element={<UploadForm />} />
             <Route path="/completeProfile" element={<CompleteProfilePage />} />
             <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
             <Route path="/profile/:tab" element={<ProfilePage />} />
-            <Route path="/admin" element={<AdminPage />} />
+            <Route element={<RequireAdmin />}> 
+              <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
+              <Route path="/admin/:tab" element={<AdminPage />} />
+            </Route>
             <Route
               path="/weather"
               element={
