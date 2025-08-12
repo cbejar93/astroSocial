@@ -4,7 +4,8 @@ import React, {
   useContext,
   useEffect,
   useState,
-  
+  useCallback,
+
 } from "react";
 import type { ReactNode } from 'react';
 import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/api";
@@ -79,13 +80,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return me;
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     // drop everything
     setUser(null);
     setAccessToken("");
     localStorage.removeItem("ACCESS_TOKEN");
     // optionally call your backend /logout endpoint to clear the refresh cookie
-  };
+  }, []);
+
+  useEffect(() => {
+    const handleLogout = () => logout();
+    window.addEventListener('auth-logout', handleLogout);
+    return () => window.removeEventListener('auth-logout', handleLogout);
+  }, [logout]);
 
   const updateFollowedLounge = async (
     loungeId: string,

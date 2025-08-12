@@ -31,9 +31,23 @@ export async function apiFetch(
   
     const url = useBase ? `${API_BASE}${input}` : (input as string);
     const res = await fetch(url, init);
-  
-    // 2) on 401, we could try to refresh once. TODO: implement refresh logic
-  
+
+    // 2) handle unauthorized responses by clearing auth state and notifying listeners
+    if (res.status === 401) {
+      setAccessToken('');
+      localStorage.removeItem('ACCESS_TOKEN');
+      localStorage.removeItem('jwt');
+      window.dispatchEvent(new Event('auth-logout'));
+
+      let text: string;
+      try {
+        text = await res.text();
+      } catch {
+        text = res.statusText;
+      }
+      throw new Error(`API error ${res.status} ${res.statusText}: ${text}`);
+    }
+
     // 3) throw on any other non‑2xx
     if (!res.ok) {
       let text: string;
@@ -44,7 +58,7 @@ export async function apiFetch(
       }
       throw new Error(`API error ${res.status} ${res.statusText}: ${text}`);
     }
-  
+
     return res;
   }
 
