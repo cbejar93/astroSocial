@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Star, UploadCloud } from 'lucide-react';
+import { Star, UploadCloud, MoreVertical } from 'lucide-react';
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmModal from '../components/Modal/ConfirmModal';
@@ -11,6 +11,7 @@ import {
   updateAvatar,
   deleteProfile,
   toggleCommentLike,
+  apiFetch,
 } from '../lib/api';
 
 interface CommentItem {
@@ -24,13 +25,20 @@ interface CommentItem {
   likedByMe?: boolean;
 }
 
+interface MyPost extends PostCardProps {
+  loungeId?: string;
+  loungeName?: string;
+  title?: string;
+}
+
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { tab } = useParams<{ tab?: string }>();
   const active: 'posts' | 'comments' | 'profile' =
     tab === 'comments' ? 'comments' : tab === 'me' ? 'profile' : 'posts';
-  const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const [posts, setPosts] = useState<MyPost[]>([]);
+  const [menuPostId, setMenuPostId] = useState<string | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -39,7 +47,13 @@ const ProfilePage: React.FC = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    fetchMyPosts<PostCardProps>()
+    const handler = () => setMenuPostId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
+
+  useEffect(() => {
+    fetchMyPosts<MyPost>()
       .then(setPosts)
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -88,6 +102,17 @@ const ProfilePage: React.FC = () => {
     navigate('/signup');
   };
 
+  const handleLoungeDelete = async (id: string) => {
+    setMenuPostId(null);
+    try {
+      const res = await apiFetch(`/posts/delete/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete post');
+      setPosts((ps) => ps.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleLike = async (id: string) => {
     try {
       const { liked, count } = await toggleCommentLike(id);
@@ -100,6 +125,9 @@ const ProfilePage: React.FC = () => {
       console.error(err);
     }
   };
+
+  const generalPosts = posts.filter((p) => !p.loungeId);
+  const loungePosts = posts.filter((p) => p.loungeId);
 
   return (
     <div className="p-4 max-w-2xl mx-auto text-gray-200">
@@ -140,11 +168,96 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {active === 'posts' && (
-        <div className="space-y-4">
+        <div className="space-y-8">
           {loading ? (
             <div>Loading…</div>
           ) : (
-            posts.map((p) => <PostCard key={p.id} {...p} />)
+            <>
+              <div className="space-y-4">
+                <h3 className="font-semibold">Posts</h3>
+                {generalPosts.length === 0 && (
+                  <div className="text-center text-gray-400">No posts yet.</div>
+                )}
+                {generalPosts.map((p) => (
+                  <PostCard
+                    key={p.id}
+                    {...p}
+                    onDeleted={(id) =>
+                      setPosts((ps) => ps.filter((post) => post.id !== id))
+                    }
+                  />
+                ))}
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-semibold">Lounge Posts</h3>
+                {loungePosts.length === 0 && (
+                  <div className="text-center text-gray-400">
+                    No lounge posts yet.
+                  </div>
+                )}
+                {loungePosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="p-4 bg-white dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() =>
+                      navigate(
+                        `/lounge/${encodeURIComponent(post.loungeName ?? '')}/posts/${post.id}`,
+                      )
+                    }
+                  >
+                    <div className="flex items-center mb-1">
+                      <img
+                        src={post.avatarUrl}
+                        alt={`${post.username} avatar`}
+                        className="w-8 h-8 rounded-full object-cover mr-2"
+                      />
+                      <span className="font-medium">{post.username}</span>
+                      <span className="ml-2 text-sm text-gray-500">
+                        {formatDistanceToNow(new Date(post.timestamp), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                      <div className="ml-auto flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          {post.comments} replies
+                        </span>
+                        <div
+                          className="relative"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMenuPostId((id) =>
+                                id === post.id ? null : post.id,
+                              );
+                            }}
+                            className="p-1 text-gray-400 hover:text-gray-600"
+                          >
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                          {menuPostId === post.id && (
+                            <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLoungeDelete(post.id);
+                                }}
+                                className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                              >
+                                Delete Post
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <h2 className="text-lg font-semibold">{post.title}</h2>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
