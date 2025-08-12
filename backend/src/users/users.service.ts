@@ -111,7 +111,10 @@ export class UsersService {
     const posts = await this.prisma.post.findMany({
       where: { authorId: userId },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { comments: true } } },
+      include: {
+        _count: { select: { comments: true } },
+        lounge: { select: { name: true } },
+      },
     });
 
     const user = await this.prisma.user.findUnique({
@@ -126,6 +129,9 @@ export class UsersService {
       avatarUrl: user?.avatarUrl || '',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
       caption: p.body,
+      title: p.title,
+      loungeId: p.loungeId || undefined,
+      loungeName: p.lounge?.name,
       timestamp: p.createdAt.toISOString(),
       stars: p.likes,
       comments: p._count.comments,
@@ -184,7 +190,10 @@ export class UsersService {
     const posts = await this.prisma.post.findMany({
       where: { authorId: user.id },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { comments: true } } },
+      include: {
+        _count: { select: { comments: true } },
+        lounge: { select: { name: true } },
+      },
     });
 
     return posts.map((p) => ({
@@ -194,6 +203,9 @@ export class UsersService {
       avatarUrl: user.avatarUrl || '',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
       caption: p.body,
+      title: p.title,
+      loungeId: p.loungeId || undefined,
+      loungeName: p.lounge?.name,
       timestamp: p.createdAt.toISOString(),
       stars: p.likes,
       comments: p._count.comments,
