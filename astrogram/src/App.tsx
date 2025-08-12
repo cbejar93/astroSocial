@@ -20,7 +20,10 @@ import LoungesPage from './pages/LoungesPage'
 import LoungePostPage from './pages/LoungePostPage'
 import LoungePostDetailPage from './pages/LoungePostDetailPage'
 import AdminPage from './pages/AdminPage'
+
 import NotFoundPage from './pages/NotFoundPage'
+import SearchPage from './pages/SearchPage'
+
 
 
 
@@ -58,7 +61,8 @@ const App: React.FC = () => {
           <Route path="/lounge" element={<LoungesPage />} />
           <Route path="/lounge/:loungeName" element={<LoungePage />} />
           <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
-          <Route element={<RequireProfileCompletion />}> 
+          <Route path="/search" element={<SearchPage />} />
+          <Route element={<RequireProfileCompletion />}>
             <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
             <Route path="/upload" element={<UploadForm />} />
             <Route path="/completeProfile" element={<CompleteProfilePage />} />
