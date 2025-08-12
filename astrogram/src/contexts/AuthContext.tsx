@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import type { ReactNode } from 'react';
 import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/api";
-import SessionExpiredModal from "../components/SessionExpiredModal";
 
 export interface User {
   id: string;
@@ -37,7 +36,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sessionExpired, setSessionExpired] = useState(false);
 
   // on mount, rehydrate access token + fetch current user
   useEffect(() => {
@@ -90,15 +88,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // optionally call your backend /logout endpoint to clear the refresh cookie
   }, []);
 
-  useEffect(() => {
-    const handleSessionExpired = () => setSessionExpired(true);
-    window.addEventListener('auth-logout', handleSessionExpired);
-    return () => {
-      window.removeEventListener('auth-logout', handleSessionExpired);
-      setSessionExpired(false);
-    };
-  }, []);
-
   const updateFollowedLounge = async (
     loungeId: string,
     loungeName: string,
@@ -120,15 +109,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const handleSessionClose = useCallback(() => {
-    setSessionExpired(false);
-    logout();
-  }, [logout]);
-
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, updateFollowedLounge }}>
       {children}
-      {sessionExpired && <SessionExpiredModal onClose={handleSessionClose} />}
     </AuthContext.Provider>
   );
 };
