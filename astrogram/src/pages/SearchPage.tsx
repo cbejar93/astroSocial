@@ -5,7 +5,7 @@ const SearchPage: React.FC = () => {
     <div className="flex flex-col items-center justify-center h-full text-center">
       <img
         src="/under-construction.svg"
-        alt="Under construction"
+        alt="Building under construction with cranes"
         className="w-64 h-64 mb-4"
       />
       <h1 className="text-2xl font-semibold">Search is under construction</h1>
