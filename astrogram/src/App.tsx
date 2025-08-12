@@ -20,7 +20,10 @@ import LoungesPage from './pages/LoungesPage'
 import LoungePostPage from './pages/LoungePostPage'
 import LoungePostDetailPage from './pages/LoungePostDetailPage'
 import AdminPage from './pages/AdminPage'
+
+import NotFoundPage from './pages/NotFoundPage'
 import SearchPage from './pages/SearchPage'
+
 
 
 
@@ -82,6 +85,7 @@ const App: React.FC = () => {
               }
             />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 
