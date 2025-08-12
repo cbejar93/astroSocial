@@ -102,6 +102,7 @@ const ProfilePage: React.FC = () => {
     navigate('/signup');
   };
 
+
   const handleLoungeDelete = async (id: string) => {
     setMenuPostId(null);
     try {
@@ -111,6 +112,11 @@ const ProfilePage: React.FC = () => {
     } catch (err) {
       console.error(err);
     }
+
+  const handleLogout = () => {
+    logout();
+    navigate('/signup');
+
   };
 
   const handleLike = async (id: string) => {
@@ -298,55 +304,71 @@ const ProfilePage: React.FC = () => {
       )}
 
       {active === 'profile' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
-            <img
-              src={previewUrl || user.avatarUrl}
-              alt="avatar"
-              className="w-20 h-20 rounded-full object-cover"
-            />
-            <label
-              htmlFor="avatar-upload"
-              className="flex flex-col items-center justify-center border-2 border-dashed border-gray-600 hover:border-teal-400 p-4 rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition"
-            >
-              <UploadCloud className="w-6 h-6 text-gray-400 mb-2" />
-              <span className="text-sm text-gray-400">
-                {avatarFile ? 'Change' : 'Click to upload'} picture
-              </span>
-              {avatarFile && (
-                <span className="mt-2 text-xs text-gray-300 truncate">{avatarFile.name}</span>
-              )}
-              {previewUrl && (
-                <img
-                  src={previewUrl}
-                  alt="preview"
-                  className="mt-4 w-16 h-16 object-cover rounded-full"
-                />
-              )}
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={handleAvatarChange}
+        <div className="space-y-8">
+          <section className="space-y-4 p-4 border border-gray-700 rounded-lg">
+            <h2 className="text-lg font-semibold">Profile Picture</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
+              <img
+                src={previewUrl || user.avatarUrl}
+                alt="avatar"
+                className="w-20 h-20 rounded-full object-cover"
               />
-            </label>
-            {avatarError && (
-              <p className="text-red-500 text-sm mt-2">{avatarError}</p>
-            )}
-            <button
-              onClick={handleAvatarUpload}
-              className="px-3 py-1 bg-brand hover:bg-brand-dark rounded"
-            >
-              Save Avatar
-            </button>
-          </div>
-          <button
-            onClick={handleDelete}
-            className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-          >
-            Delete Profile
-          </button>
+              <label
+                htmlFor="avatar-upload"
+                className="flex flex-col items-center justify-center border-2 border-dashed border-gray-600 hover:border-teal-400 p-4 rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition"
+              >
+                <UploadCloud className="w-6 h-6 text-gray-400 mb-2" />
+                <span className="text-sm text-gray-400">
+                  {avatarFile ? 'Change' : 'Click to upload'} picture
+                </span>
+                {avatarFile && (
+                  <span className="mt-2 text-xs text-gray-300 truncate">
+                    {avatarFile.name}
+                  </span>
+                )}
+                {previewUrl && (
+                  <img
+                    src={previewUrl}
+                    alt="preview"
+                    className="mt-4 w-16 h-16 object-cover rounded-full"
+                  />
+                )}
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleAvatarChange}
+                />
+              </label>
+              {avatarError && (
+                <p className="text-red-500 text-sm mt-2">{avatarError}</p>
+              )}
+              <button
+                onClick={handleAvatarUpload}
+                className="px-3 py-1 bg-brand hover:bg-brand-dark rounded"
+              >
+                Save Avatar
+              </button>
+            </div>
+          </section>
+          <section className="space-y-4 p-4 border border-gray-700 rounded-lg">
+            <h2 className="text-lg font-semibold">Account</h2>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded"
+              >
+                Logout
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
+              >
+                Delete Profile
+              </button>
+            </div>
+          </section>
         </div>
       )}
       {showConfirm && (

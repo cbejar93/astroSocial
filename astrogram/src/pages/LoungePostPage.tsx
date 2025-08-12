@@ -97,15 +97,44 @@ const LoungePostPage: React.FC = () => {
       const div = document.createElement("div");
       div.innerHTML = html;
       div.querySelectorAll("[style]").forEach((el) => {
-        (el as HTMLElement).style.removeProperty("color");
+        const element = el as HTMLElement;
+        element.style.removeProperty("color");
+        element.style.removeProperty("background-color");
+        element.style.removeProperty("background");
       });
       div.querySelectorAll("[color]").forEach((el) => {
         el.removeAttribute("color");
+      });
+      div.querySelectorAll("[bgcolor]").forEach((el) => {
+        el.removeAttribute("bgcolor");
       });
       sanitized = div.innerHTML;
     }
 
     document.execCommand("insertHTML", false, sanitized);
+  };
+
+  const handleCopy = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    e.preventDefault();
+
+    const div = document.createElement("div");
+    for (let i = 0; i < selection.rangeCount; i++) {
+      div.appendChild(selection.getRangeAt(i).cloneContents());
+    }
+
+    div.querySelectorAll("[style]").forEach((el) => {
+      const element = el as HTMLElement;
+      element.style.removeProperty("background-color");
+      element.style.removeProperty("background");
+    });
+    div.querySelectorAll("[bgcolor]").forEach((el) => {
+      el.removeAttribute("bgcolor");
+    });
+
+    e.clipboardData.setData("text/html", div.innerHTML);
+    e.clipboardData.setData("text/plain", div.textContent || "");
   };
 
   return (
@@ -172,6 +201,7 @@ const LoungePostPage: React.FC = () => {
           className="w-full px-3 py-2 rounded bg-gray-800 min-h-[6rem]"
           onInput={() => setBody(editorRef.current?.innerHTML || "")}
           onPaste={handlePaste}
+          onCopy={handleCopy}
         />
       </div>
         <div>
