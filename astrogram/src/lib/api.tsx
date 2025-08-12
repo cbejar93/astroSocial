@@ -158,6 +158,7 @@ export async function createLounge(form: FormData) {
   return res.json();
 }
 
+
 export async function updateLounge(id: string, form: FormData) {
   const res = await apiFetch(
     `${API_BASE}/lounges/${id}`,

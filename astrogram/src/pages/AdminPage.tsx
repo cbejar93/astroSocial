@@ -12,6 +12,7 @@ interface LoungeState {
   };
 }
 
+
 const tabClasses =
   'whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200';
 
@@ -25,6 +26,7 @@ const AdminPage: React.FC = () => {
   const [profile, setProfile] = useState<File | null>(null);
   const [banner, setBanner] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const location = useLocation();
@@ -38,6 +40,7 @@ const AdminPage: React.FC = () => {
     }
   }, [editingLounge]);
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = new FormData();
@@ -46,6 +49,7 @@ const AdminPage: React.FC = () => {
     if (profile) form.append('profile', profile);
     if (banner) form.append('banner', banner);
     try {
+
       if (editingId) {
         await updateLounge(editingId, form);
         setMessage('Lounge updated successfully');
@@ -53,14 +57,24 @@ const AdminPage: React.FC = () => {
         await createLounge(form);
         setMessage('Lounge created successfully');
       }
+
+      await createLounge(form);
+      setMessage('Lounge created successfully');
+
       setName('');
       setDescription('');
       setProfile(null);
       setBanner(null);
+
       setEditingId(null);
     } catch (err) {
       console.error(err);
       setMessage('Failed to submit lounge');
+
+    } catch (err) {
+      console.error(err);
+      setMessage('Failed to create lounge');
+
     }
   };
 
@@ -143,7 +157,11 @@ const AdminPage: React.FC = () => {
             type="submit"
             className="px-4 py-2 bg-brand text-white rounded"
           >
+
             {editingId ? 'Update Lounge' : 'Create Lounge'}
+
+            Create Lounge
+
           </button>
         </form>
       )}
