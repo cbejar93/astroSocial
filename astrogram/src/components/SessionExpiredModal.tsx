@@ -6,20 +6,14 @@ interface SessionExpiredModalProps {
 
 const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({ onClose }) => {
   const handleRefresh = () => {
+    // Close the modal and redirect the user to sign in so they can
+    // re‑authenticate. Attempting to reload the page simply brought
+    // the modal back, so instead send them to the signup page.
     onClose();
 
-    try {
-      if (typeof window !== 'undefined' && typeof window.location.reload === 'function') {
-        window.location.reload();
-      } else {
-        window.location.href = '/signup';
-      }
-    } catch {
+    if (typeof window !== 'undefined') {
       window.location.href = '/signup';
     }
-
-    window.location.reload();
-
   };
 
   return (
