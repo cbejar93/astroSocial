@@ -1,7 +1,7 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { fetchLoungePosts, fetchLounge, apiFetch } from "../lib/api";
+import { fetchLoungePosts, fetchLounge, apiFetch, deleteLounge } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { MoreVertical } from "lucide-react";
 
@@ -21,6 +21,7 @@ interface LoungeInfo {
   name: string;
   bannerUrl: string;
   profileUrl: string;
+  description: string;
 }
 
 const LoungePage: React.FC = () => {
@@ -31,10 +32,14 @@ const LoungePage: React.FC = () => {
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [posts, setPosts] = useState<LoungePostSummary[]>([]);
   const [menuPostId, setMenuPostId] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handler = () => setMenuPostId(null);
+    const handler = () => {
+      setMenuPostId(null);
+      setShowMenu(false);
+    };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, []);
@@ -76,6 +81,17 @@ const LoungePage: React.FC = () => {
     }
   };
 
+  const handleDeleteLounge = async () => {
+    setShowMenu(false);
+    if (!lounge) return;
+    try {
+      await deleteLounge(lounge.id);
+      navigate('/lounge');
+    } catch (err) {
+      console.error('Delete lounge error:', err);
+    }
+  };
+
   if (loadingLounge) {
     return <div className="py-6">Loading...</div>;
   }
@@ -101,14 +117,49 @@ const LoungePage: React.FC = () => {
       </div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">{lounge.name}</h1>
-        {user && (
-          <Link
-            to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
-            className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-          >
-            Post
-          </Link>
-        )}
+        <div className="flex items-center gap-4">
+          {user && (
+            <Link
+              to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
+              className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+            >
+              Post
+            </Link>
+          )}
+          {user?.role === 'ADMIN' && (
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu((m) => !m);
+                }}
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      navigate('/admin/lounge', { state: { lounge } });
+                    }}
+                    className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Edit Lounge
+                  </button>
+                  <button
+                    onClick={handleDeleteLounge}
+                    className="block w-full px-4 py-2 text-sm text-red-500 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Delete Lounge
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       <div className="w-full max-w-3xl mx-auto space-y-4">
         {loadingPosts ? (

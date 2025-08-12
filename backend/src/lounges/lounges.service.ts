@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateLoungeDto } from './dto/create-lounge.dto';
+import { UpdateLoungeDto } from './dto/update-lounge.dto';
 import { Lounge } from '@prisma/client';
 
 @Injectable()
@@ -144,5 +145,68 @@ export class LoungesService {
         },
       },
     });
+  }
+
+  async update(
+    id: string,
+    dto: UpdateLoungeDto,
+    profile?: Express.Multer.File,
+    banner?: Express.Multer.File,
+  ): Promise<Lounge> {
+    this.logger.log(`Updating lounge ${id}`);
+
+    let profileUrl: string | undefined;
+    let bannerUrl: string | undefined;
+
+    try {
+      if (profile) {
+        profileUrl = await this.storage.uploadFile(
+          'avatars',
+          `lounges/${Date.now()}_${profile.originalname}`,
+          profile,
+        );
+      }
+      if (banner) {
+        bannerUrl = await this.storage.uploadFile(
+          'posts',
+          `lounges/${Date.now()}_${banner.originalname}`,
+          banner,
+        );
+      }
+    } catch (err: unknown) {
+      this.logger.error('Failed to upload lounge images', (err as Error).stack);
+      throw new InternalServerErrorException('Could not upload lounge images');
+    }
+
+    try {
+      const lounge = await this.prisma.lounge.update({
+        where: { id },
+        data: {
+          ...(dto.name !== undefined ? { name: dto.name } : {}),
+          ...(dto.description !== undefined
+            ? { description: dto.description }
+            : {}),
+          ...(bannerUrl ? { bannerUrl } : {}),
+          ...(profileUrl ? { profileUrl } : {}),
+        },
+      });
+      this.logger.log(`Lounge updated id=${id}`);
+      return lounge;
+    } catch (err: unknown) {
+      this.logger.error('Failed to update lounge', (err as Error).stack);
+      throw new InternalServerErrorException('Could not update lounge');
+    }
+  }
+
+  async remove(id: string) {
+    this.logger.log(`Deleting lounge ${id}`);
+    try {
+      await this.prisma.lounge.delete({ where: { id } });
+      this.logger.log(`Deleted lounge id=${id}`);
+      return { success: true };
+    } catch (err: unknown) {
+      this.logger.error('Failed to delete lounge', (err as Error).stack);
+      throw new InternalServerErrorException('Could not delete lounge');
+    }
   }
 }

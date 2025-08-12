@@ -11,11 +11,18 @@ import {
   UseGuards,
   Query,
   Delete,
+  Patch,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
-import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
+import type { Request } from 'express';
 import { LoungesService } from './lounges.service';
 import { CreateLoungeDto } from './dto/create-lounge.dto';
+import { UpdateLoungeDto } from './dto/update-lounge.dto';
 import { PostsService } from '../posts/post.service';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -70,7 +77,7 @@ export class LoungesController {
   @Get(':name/posts')
   async getLoungePosts(
     @Param('name') name: string,
-    @Req() req: any,
+    @Req() req: Request & { user?: { sub: string } },
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
@@ -96,19 +103,26 @@ export class LoungesController {
   )
   async createLoungePost(
     @Param('name') name: string,
-    @Req() req: any,
+    @Req() req: Request & { user: { sub: string } },
     @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: CreatePostDto,
   ) {
     const file = files?.[0];
     const lounge = await this.lounges.findByName(name);
     if (!lounge) throw new NotFoundException('Lounge not found');
-    return this.posts.create(req.user.sub, { ...dto, loungeId: lounge.id }, file);
+    return this.posts.create(
+      req.user.sub,
+      { ...dto, loungeId: lounge.id },
+      file,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':name/follow')
-  async followLounge(@Param('name') name: string, @Req() req: any) {
+  async followLounge(
+    @Param('name') name: string,
+    @Req() req: Request & { user: { sub: string; role: string } },
+  ) {
     const lounge = await this.lounges.findByName(name);
     if (!lounge) throw new NotFoundException('Lounge not found');
     await this.lounges.follow(lounge.id, req.user.sub);
@@ -117,10 +131,58 @@ export class LoungesController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':name/follow')
-  async unfollowLounge(@Param('name') name: string, @Req() req: any) {
+  async unfollowLounge(
+    @Param('name') name: string,
+    @Req() req: Request & { user: { sub: string; role: string } },
+  ) {
     const lounge = await this.lounges.findByName(name);
     if (!lounge) throw new NotFoundException('Lounge not found');
     await this.lounges.unfollow(lounge.id, req.user.sub);
+    return { success: true };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'profile', maxCount: 1 },
+        { name: 'banner', maxCount: 1 },
+      ],
+      {
+        fileFilter: (_req, file, cb) => {
+          const allowed = ['image/jpeg', 'image/png', 'image/gif'];
+          if (allowed.includes(file.mimetype)) cb(null, true);
+          else cb(new Error('Invalid file type'), false);
+        },
+        limits: { fileSize: 5 * 1024 * 1024 },
+      },
+    ),
+  )
+  async updateLounge(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { role: string } },
+    @Body() dto: UpdateLoungeDto,
+    @UploadedFiles()
+    files: {
+      profile?: Express.Multer.File[];
+      banner?: Express.Multer.File[];
+    },
+  ) {
+    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
+    const profile = files.profile?.[0];
+    const banner = files.banner?.[0];
+    return this.lounges.update(id, dto, profile, banner);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deleteLounge(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { role: string } },
+  ) {
+    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
+    await this.lounges.remove(id);
     return { success: true };
   }
 

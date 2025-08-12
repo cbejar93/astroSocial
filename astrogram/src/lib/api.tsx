@@ -159,6 +159,20 @@ export async function createLounge(form: FormData) {
 }
 
 
+export async function updateLounge(id: string, form: FormData) {
+  const res = await apiFetch(
+    `${API_BASE}/lounges/${id}`,
+    { method: 'PATCH', body: form },
+    false,
+  );
+  return res.json();
+}
+
+export async function deleteLounge(id: string) {
+  await apiFetch(`${API_BASE}/lounges/${id}`, { method: 'DELETE' }, false);
+}
+
+
 export type InteractionType = 'like' | 'share' | 'repost';
 
 export interface InteractionResult {
