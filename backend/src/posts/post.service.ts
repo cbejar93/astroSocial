@@ -11,7 +11,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service'
 import { InteractionType, Post, NotificationType } from '@prisma/client'
 import { CreatePostDto } from './dto/create-post.dto'
-import { StorageService } from 'src/storage/storage.service'
+import { StorageService } from '../storage/storage.service'
 import { NotificationsService } from '../notifications/notifications.service'
 
 

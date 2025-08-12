@@ -19,7 +19,7 @@ import { PostsService } from './post.service'
 import { InteractionType } from '@prisma/client'
 import { CreatePostDto } from './dto/create-post.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { OptionalAuthGuard } from 'src/auth/jwt-optional.guard'
+import { OptionalAuthGuard } from '../auth/jwt-optional.guard'
 
 @Controller('api/posts')
 export class PostsController {
