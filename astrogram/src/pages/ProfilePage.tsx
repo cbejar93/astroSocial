@@ -113,10 +113,11 @@ export default function ProfilePage(): JSX.Element {
       console.error(err);
     }
 
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/signup');
-
   };
 
   const handleLike = async (id: string) => {
