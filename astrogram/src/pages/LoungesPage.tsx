@@ -15,8 +15,6 @@ interface LoungeInfo {
 
 const LoungesPage: React.FC = () => {
   const { user, updateFollowedLounge } = useAuth();
-  const [sortBy, setSortBy] = useState<"name" | "lastPost">("name");
-
   const [lounges, setLounges] = useState<LoungeInfo[]>([]);
 
   useEffect(() => {
@@ -25,31 +23,12 @@ const LoungesPage: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  const sortedLounges = lounges.slice().sort((a, b) => {
-    if (sortBy === "lastPost") {
-      const aTime = a.lastPostAt ? new Date(a.lastPostAt).getTime() : 0;
-      const bTime = b.lastPostAt ? new Date(b.lastPostAt).getTime() : 0;
-      return bTime - aTime;
-    }
-    return a.name.localeCompare(b.name);
-  });
+  const sortedLounges = lounges
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
-        <label htmlFor="sort" className="mr-2 text-sm">
-          Sort by:
-        </label>
-        <select
-          id="sort"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as "name" | "lastPost")}
-          className="bg-neutral-800 border border-neutral-700 rounded p-1 text-sm"
-        >
-          <option value="name">Name</option>
-          <option value="lastPost">Last Post</option>
-        </select>
-      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {sortedLounges.map((lounge) => {
           const isFollowed = user?.followedLounges?.includes(lounge.id) ?? false;
