@@ -26,7 +26,7 @@ const SignupPage: React.FC = () => {
           onClick={handleGoogleSignIn}
           className="relative w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
         >
-          <FaGoogle className="absolute left-4 w-6 h-6" />
+          <FaGoogle className="absolute left-6 w-6 h-6" />
           <span className="w-full text-center text-gray-800 dark:text-gray-100 font-medium">
             Continue with Google
           </span>
@@ -36,7 +36,7 @@ const SignupPage: React.FC = () => {
           onClick={handleFacebookSignIn}
           className="relative w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
         >
-          <FaFacebook className="absolute left-4 w-6 h-6" />
+          <FaFacebook className="absolute left-6 w-6 h-6" />
           <span className="w-full text-center text-gray-800 dark:text-gray-100 font-medium">
             Continue with Facebook
           </span>
