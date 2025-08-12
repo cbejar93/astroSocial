@@ -49,7 +49,6 @@ const AdminPage: React.FC = () => {
     if (profile) form.append('profile', profile);
     if (banner) form.append('banner', banner);
     try {
-
       if (editingId) {
         await updateLounge(editingId, form);
         setMessage('Lounge updated successfully');
@@ -57,9 +56,6 @@ const AdminPage: React.FC = () => {
         await createLounge(form);
         setMessage('Lounge created successfully');
       }
-
-      await createLounge(form);
-      setMessage('Lounge created successfully');
 
       setName('');
       setDescription('');
@@ -70,11 +66,6 @@ const AdminPage: React.FC = () => {
     } catch (err) {
       console.error(err);
       setMessage('Failed to submit lounge');
-
-    } catch (err) {
-      console.error(err);
-      setMessage('Failed to create lounge');
-
     }
   };
 
@@ -159,8 +150,6 @@ const AdminPage: React.FC = () => {
           >
 
             {editingId ? 'Update Lounge' : 'Create Lounge'}
-
-            Create Lounge
 
           </button>
         </form>
