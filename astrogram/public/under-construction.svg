@@ -1,6 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <rect width="200" height="200" fill="#1f2937" />
-  <polygon points="100,20 190,180 10,180" fill="#FBBF24" />
-  <text x="100" y="135" font-size="24" text-anchor="middle" fill="#1f2937" font-family="Arial, sans-serif">Under</text>
-  <text x="100" y="165" font-size="24" text-anchor="middle" fill="#1f2937" font-family="Arial, sans-serif">Construction</text>
+  <!-- ground -->
+  <rect y="160" width="200" height="40" fill="#4B5563" />
+  <!-- building -->
+  <rect x="60" y="80" width="80" height="80" fill="#374151" />
+  <rect x="70" y="90" width="15" height="15" fill="#FBBF24" />
+  <rect x="95" y="90" width="15" height="15" fill="#FBBF24" />
+  <rect x="120" y="90" width="15" height="15" fill="#FBBF24" />
+  <rect x="70" y="115" width="15" height="15" fill="#FBBF24" />
+  <rect x="95" y="115" width="15" height="15" fill="#FBBF24" />
+  <rect x="120" y="115" width="15" height="15" fill="#FBBF24" />
+  <rect x="85" y="140" width="30" height="20" fill="#FBBF24" />
+  <!-- left crane -->
+  <line x1="30" y1="40" x2="30" y2="160" stroke="#FBBF24" stroke-width="4" />
+  <line x1="30" y1="40" x2="80" y2="60" stroke="#FBBF24" stroke-width="4" />
+  <line x1="80" y1="60" x2="80" y2="100" stroke="#FBBF24" stroke-width="4" />
+  <line x1="80" y1="100" x2="80" y2="120" stroke="#FBBF24" stroke-width="4" />
+  <rect x="76" y="120" width="8" height="12" fill="#FBBF24" />
+  <!-- right crane -->
+  <line x1="170" y1="20" x2="170" y2="160" stroke="#FBBF24" stroke-width="4" />
+  <line x1="170" y1="20" x2="120" y2="40" stroke="#FBBF24" stroke-width="4" />
+  <line x1="120" y1="40" x2="120" y2="80" stroke="#FBBF24" stroke-width="4" />
+  <line x1="120" y1="80" x2="120" y2="110" stroke="#FBBF24" stroke-width="4" />
+  <rect x="116" y="110" width="8" height="12" fill="#FBBF24" />
 </svg>
