@@ -33,6 +33,7 @@ model User {
   role              String            @default("USER")
   comments          Comment[]         @relation("UserComments")
   posts             Post[]            @relation("UserPosts")
+  originalPosts     Post[]            @relation("OriginalAuthor")
   interactions      PostInteraction[]
   commentLikes      CommentLike[]
   sentNotifications Notification[]    @relation("Actor") // created by this user
@@ -45,6 +46,7 @@ model User {
 model Post {
   id            String            @id @default(uuid())
   authorId      String
+  originalAuthorId String?
   title         String
   body          String
   imageUrl      String?
@@ -55,6 +57,7 @@ model Post {
   createdAt     DateTime          @default(now())
   comments      Comment[]         @relation("PostComments")
   author        User              @relation("UserPosts", fields: [authorId], references: [id])
+  originalAuthor User?            @relation("OriginalAuthor", fields: [originalAuthorId], references: [id])
   lounge        Lounge?           @relation(fields: [loungeId], references: [id])
   interactions  PostInteraction[]
   notifications Notification[]

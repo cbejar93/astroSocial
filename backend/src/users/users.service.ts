@@ -114,6 +114,7 @@ export class UsersService {
       include: {
         _count: { select: { comments: true } },
         lounge: { select: { name: true } },
+        originalAuthor: { select: { username: true, avatarUrl: true } },
       },
     });
 
@@ -125,8 +126,8 @@ export class UsersService {
     return posts.map((p) => ({
       id: p.id,
       authorId: userId,
-      username: user?.username || '',
-      avatarUrl: user?.avatarUrl || '',
+      username: p.originalAuthor?.username || user?.username || '',
+      avatarUrl: p.originalAuthor?.avatarUrl || user?.avatarUrl || '',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
       caption: p.body,
       title: p.title,
@@ -137,6 +138,7 @@ export class UsersService {
       comments: p._count.comments,
       shares: p.shares,
       likedByMe: false,
+      ...(p.originalAuthorId ? { repostedBy: user?.username || '' } : {}),
     }));
   }
 
@@ -193,14 +195,15 @@ export class UsersService {
       include: {
         _count: { select: { comments: true } },
         lounge: { select: { name: true } },
+        originalAuthor: { select: { username: true, avatarUrl: true } },
       },
     });
 
     return posts.map((p) => ({
       id: p.id,
       authorId: user.id,
-      username: user.username || '',
-      avatarUrl: user.avatarUrl || '',
+      username: p.originalAuthor?.username || user.username || '',
+      avatarUrl: p.originalAuthor?.avatarUrl || user.avatarUrl || '',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
       caption: p.body,
       title: p.title,
@@ -211,6 +214,7 @@ export class UsersService {
       comments: p._count.comments,
       shares: p.shares,
       likedByMe: false,
+      ...(p.originalAuthorId ? { repostedBy: user.username || '' } : {}),
     }));
   }
 
