@@ -65,7 +65,7 @@ const Navbar = () => {
             />
           </button>
 
-          {/* ColliMate Dropdown */}
+          {/* AstroLounge Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               className="btn-unstyled flex items-center gap-1"
@@ -74,7 +74,7 @@ const Navbar = () => {
               aria-haspopup="true"
               aria-expanded={dropdownOpen}
             >
-              <span className="text-lg font-semibold leading-none">ColliMate</span>
+              <span className="text-lg font-semibold leading-none">AstroLounge</span>
               {/* <ChevronDown className="w-4 h-4 align-middle" /> */}
             </button>
 
