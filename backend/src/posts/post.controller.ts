@@ -58,6 +58,27 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('saved')
+  async getSaved(
+    @Req() req: any,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ): Promise<FeedResponseDto> {
+    const p = parseInt(page, 10) || 1;
+    const l = parseInt(limit, 10) || 20;
+    const userId = req.user.sub as string;
+    this.logger.log(
+      `Fetching saved posts for ${userId} (page=${p}, limit=${l})`,
+    );
+    try {
+      return await this.posts.getSavedPosts(userId, p, l);
+    } catch (err: any) {
+      this.logger.error(`Failed to fetch saved posts`, err.stack);
+      throw new InternalServerErrorException('Could not fetch saved posts');
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('image', {
       fileFilter: (_req, file, cb) => {

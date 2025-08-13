@@ -23,6 +23,7 @@ import AdminPage from './pages/AdminPage'
 
 import NotFoundPage from './pages/NotFoundPage'
 import SearchPage from './pages/SearchPage'
+import SavedPage from './pages/SavedPage'
 
 
 
@@ -66,9 +67,10 @@ const App: React.FC = () => {
             <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
             <Route path="/upload" element={<UploadForm />} />
             <Route path="/completeProfile" element={<CompleteProfilePage />} />
+            <Route path="/saved" element={<SavedPage />} />
             <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
             <Route path="/profile/:tab" element={<ProfilePage />} />
-            <Route element={<RequireAdmin />}> 
+            <Route element={<RequireAdmin />}>
               <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
               <Route path="/admin/:tab" element={<AdminPage />} />
             </Route>

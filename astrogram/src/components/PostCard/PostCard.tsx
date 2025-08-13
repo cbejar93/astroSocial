@@ -24,6 +24,7 @@ export interface PostCardProps {
   repostedBy?: string;
   savedByMe?: boolean;
   onDeleted?: (id: string) => void;
+  onSavedChange?: (id: string, saved: boolean) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -118,6 +119,7 @@ const PostCard: React.FC<PostCardProps> = ({
     try {
       const res = await toggleSave(id);
       setSaved(res.saved);
+      onSavedChange?.(id, res.saved);
     } catch (err) {
       console.error(err);
     }

@@ -554,6 +554,83 @@ export class PostsService {
     }
   }
 
+  async getSavedPosts(
+    userId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<FeedResponseDto> {
+    this.logger.log(
+      `Fetching saved posts for user ${userId} (page=${page}, limit=${limit})`,
+    );
+    try {
+      const [total, saves] = await this.prisma.$transaction([
+        this.prisma.savedPost.count({ where: { userId } }),
+        this.prisma.savedPost.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          include: {
+            post: {
+              include: {
+                author: {
+                  select: { id: true, username: true, avatarUrl: true },
+                },
+                originalAuthor: {
+                  select: { username: true, avatarUrl: true },
+                },
+                _count: { select: { comments: true } },
+                interactions: {
+                  where: {
+                    userId,
+                    type: {
+                      in: [InteractionType.LIKE, InteractionType.REPOST],
+                    },
+                  },
+                  select: { type: true },
+                },
+                savedBy: { where: { userId }, select: { id: true } },
+              },
+            },
+          },
+        }),
+      ]);
+
+      const posts = saves.map((s) => {
+        const p = s.post;
+        return {
+          id: p.id,
+          authorId: p.author.id,
+          username: p.originalAuthor?.username || p.author.username!,
+          ...(p.title ? { title: p.title } : {}),
+          ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+          avatarUrl: p.originalAuthor?.avatarUrl || p.author.avatarUrl || '',
+          caption: p.body,
+          timestamp: p.createdAt.toISOString(),
+          stars: p.likes,
+          comments: p._count.comments,
+          shares: p.shares,
+          reposts: p.reposts,
+          likedByMe: p.interactions.some(
+            (i) => i.type === InteractionType.LIKE,
+          ),
+          repostedByMe: p.interactions.some(
+            (i) => i.type === InteractionType.REPOST,
+          ),
+          savedByMe: true,
+          ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
+            ? { repostedBy: p.author.username! }
+            : {}),
+        };
+      });
+
+      return { posts, total, page, limit };
+    } catch (err: any) {
+      this.logger.error(`Failed to fetch saved posts`, err.stack);
+      throw new InternalServerErrorException('Could not fetch saved posts');
+    }
+  }
+
   async deletePost(userId: string, postId: string) {
     this.logger.log(`User ${userId} → DELETE POST → ${postId}`);
     const [, , , , { count }] = await this.prisma.$transaction([

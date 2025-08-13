@@ -119,6 +119,17 @@ export interface FeedResponse<T> {
     return res.json();
   }
 
+export async function fetchSavedPosts<Item = unknown>(
+  page: number = 1,
+  limit: number = 20,
+): Promise<FeedResponse<Item>> {
+  const res = await apiFetch(`/posts/saved?page=${page}&limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch saved posts (status ${res.status})`);
+  }
+  return res.json();
+}
+
 export async function fetchLoungePosts<Item = unknown>(
   loungeName: string,
   page: number = 1,
