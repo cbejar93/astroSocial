@@ -19,6 +19,7 @@ export interface PostCardProps {
   shares?: number;
   avatarUrl: string;
   likedByMe?: boolean;
+  repostedBy?: { id: string; username: string; avatarUrl: string };
   onDeleted?: (id: string) => void;
 }
 
@@ -34,6 +35,7 @@ const PostCard: React.FC<PostCardProps> = ({
   shares = 0,
   likedByMe,
   authorId,
+  repostedBy,
   onDeleted
 }) => {
 
@@ -142,6 +144,21 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <div className="w-full py-0 sm:py-2 sm:px-2">
       <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden border border-gray-300 dark:border-gray-700 w-full sm:max-w-2xl sm:mx-auto">
+        {repostedBy && (
+          <div className="px-4 sm:px-6 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
+            <Repeat2 className="w-4 h-4" />
+            <span>
+              Reposted by{' '}
+              <Link
+                to={`/users/${repostedBy.username}/posts`}
+                onClick={(e) => e.stopPropagation()}
+                className="hover:underline"
+              >
+                @{repostedBy.username}
+              </Link>
+            </span>
+          </div>
+        )}
 
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
