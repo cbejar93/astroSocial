@@ -147,6 +147,35 @@ export class PostsService {
             throw new InternalServerErrorException('Could not update post counter')
         }
 
+        // 2b) if this is a repost, duplicate the post so it appears in feeds/profile
+        if (type === InteractionType.REPOST) {
+            try {
+                const original = await this.prisma.post.findUnique({
+                    where: { id: postId },
+                    select: { title: true, body: true, imageUrl: true, loungeId: true },
+                })
+
+                if (!original) {
+                    this.logger.error(`❌ original post ${postId} not found for repost copy`)
+                    throw new NotFoundException('Original post not found')
+                }
+
+                await this.prisma.post.create({
+                    data: {
+                        authorId: userId,
+                        title: original.title,
+                        body: original.body,
+                        loungeId: original.loungeId,
+                        ...(original.imageUrl ? { imageUrl: original.imageUrl } : {}),
+                    },
+                })
+                this.logger.verbose(`✅ repost copy created for user ${userId}`)
+            } catch (e: any) {
+                this.logger.error(`❌ failed to create repost copy`, e.stack)
+                throw new InternalServerErrorException('Could not create reposted post')
+            }
+        }
+
         // 3) fetch the fresh total
         try {
             const post = await this.prisma.post.findUnique({
