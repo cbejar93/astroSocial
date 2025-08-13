@@ -17,8 +17,10 @@ export interface PostCardProps {
   stars?: number;
   comments?: number;
   shares?: number;
+  reposts?: number;
   avatarUrl: string;
   likedByMe?: boolean;
+  repostedByMe?: boolean;
   onDeleted?: (id: string) => void;
 }
 
@@ -45,7 +47,8 @@ const PostCard: React.FC<PostCardProps> = ({
   const [starCount, setStarCount] = useState(stars);
   const [commentCount] = useState(comments);
   const [shareCount, setShareCount] = useState(shares);
-  const [reposted, setReposted] = useState(false);
+  const [reposted, setReposted] = useState(Boolean(repostedByMe));
+  const [repostCount, setRepostCount] = useState(reposts || 0);
   const [saved, setSaved] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -96,10 +99,10 @@ const PostCard: React.FC<PostCardProps> = ({
   const handleRepost = async () => {
     if (reposted) return;
       try {
-        await repostPost(id);
-        setShareCount(prev => prev); // leave shareCount alone
+        const { count } = await repostPost(id);
+        setRepostCount(count);
         setReposted(true);
-        // if you want to show repost count separately, add another state
+        setShareCount(prev => prev); // share count unaffected by repost
       } catch (err: unknown) {
         console.error("Failed to repost:", err);
       }
@@ -227,7 +230,7 @@ const PostCard: React.FC<PostCardProps> = ({
               className="btn-unstyled btn-action hover:text-green-400"
             >
               <Repeat2 className="w-5 h-5" />
-              <span>{reposted ? 1 : 0}</span>
+              <span>{repostCount}</span>
             </button>
 
             {/* Comment */}

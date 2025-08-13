@@ -20,6 +20,7 @@ import { InteractionType } from '@prisma/client'
 import { CreatePostDto } from './dto/create-post.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { OptionalAuthGuard } from '../auth/jwt-optional.guard'
+import { FeedResponseDto } from './dto/feed.dto'
 
 @Controller('api/posts')
 export class PostsController {
@@ -37,7 +38,7 @@ export class PostsController {
         @Req() req: any,
         @Query('page') page = '1',
         @Query('limit') limit = '20',
-    ) {
+    ): Promise<FeedResponseDto> {
         const p = parseInt(page, 10) || 1;
         const l = parseInt(limit, 10) || 20;
         this.logger.log(`Fetching public feed (page=${p}, limit=${l})`);

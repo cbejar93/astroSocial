@@ -50,8 +50,10 @@ const PostPage: React.FC = () => {
           stars:      data.stars,
           comments:   data.comments,
           shares:     data.shares,
-          likedByMe: data.likedByMe,
-          authorId: data.authorId
+          reposts:    data.reposts,
+          likedByMe:  data.likedByMe,
+          repostedByMe: data.repostedByMe,
+          authorId:   data.authorId
         }
         setPost(p)
       })
