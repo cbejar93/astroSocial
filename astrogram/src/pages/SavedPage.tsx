@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import PostSkeleton from '../components/PostCard/PostSkeleton';
-import PostCard, { PostCardProps } from '../components/PostCard/PostCard';
+import PostCard from '../components/PostCard/PostCard';
+import type { PostCardProps } from '../components/PostCard/PostCard';
 import { fetchSavedPosts } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 
