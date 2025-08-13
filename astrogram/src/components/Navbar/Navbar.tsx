@@ -1,6 +1,6 @@
 import { Menu, Bell, User, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationContext";
 
@@ -13,6 +13,8 @@ const Navbar = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { count } = useNotifications();
+  const location = useLocation();
+  const isProfilePage = location.pathname.startsWith('/profile');
 
 
   useEffect(() => {
@@ -106,17 +108,19 @@ const Navbar = () => {
               )}
             </div>
           </Link>
-          <Link to={user ? '/profile' : '/signup'} className="btn-unstyled" aria-label="Account">
-          {user?.avatarUrl ? (
-            <img
-              src={user.avatarUrl}
-              alt="Your avatar"
-              className="w-8 h-8 rounded-full object-cover"
-            />
-          ) : (
-            <User className="w-6 h-6 m-auto text-gray-400" />
+          {!isProfilePage && (
+            <Link to={user ? '/profile' : '/signup'} className="btn-unstyled" aria-label="Account">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt="Your avatar"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <User className="w-6 h-6 m-auto text-gray-400" />
+            )}
+            </Link>
           )}
-          </Link>
         </div>
       </div>
     </nav>
