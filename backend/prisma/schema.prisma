@@ -36,6 +36,7 @@ model User {
   originalPosts     Post[]            @relation("OriginalAuthor")
   interactions      PostInteraction[]
   commentLikes      CommentLike[]
+  savedPosts        SavedPost[]
   sentNotifications Notification[]    @relation("Actor") // created by this user
   notifications     Notification[] // received by this user
   followedLounges   Lounge[]          @relation("LoungeFollowers")
@@ -60,6 +61,7 @@ model Post {
   originalAuthor User?            @relation("OriginalAuthor", fields: [originalAuthorId], references: [id])
   lounge        Lounge?           @relation(fields: [loungeId], references: [id])
   interactions  PostInteraction[]
+  savedBy       SavedPost[]
   notifications Notification[]
 }
 
@@ -88,6 +90,17 @@ model CommentLike {
   createdAt DateTime @default(now())
 
   @@unique([commentId, userId], name: "one_like_per_user_per_comment")
+}
+
+model SavedPost {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId], name: "one_save_per_user_per_post")
 }
 
 model PostInteraction {

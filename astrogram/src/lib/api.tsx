@@ -221,6 +221,13 @@ export async function interactWithPost(
     return interactWithPost(postId, 'repost');
   }
 
+  export async function toggleSave(
+    postId: string,
+  ): Promise<{ saved: boolean }> {
+    const res = await apiFetch(`/posts/${postId}/save`, { method: 'POST' });
+    return res.json();
+  }
+
 // --------------------------------------------------
 // Comments API helpers
 

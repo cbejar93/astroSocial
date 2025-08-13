@@ -246,6 +246,10 @@ export class PostsService {
             },
             select: { id: true, type: true },
           },
+          savedBy: {
+            where: { userId: userId || undefined },
+            select: { id: true },
+          },
         },
       });
 
@@ -258,6 +262,7 @@ export class PostsService {
         repostedByMe: p.interactions.some(
           (i) => i.type === InteractionType.REPOST,
         ),
+        savedByMe: p.savedBy.length > 0,
         score: this.computeScore({
           createdAt: p.createdAt,
           commentsCount: p._count.comments,
@@ -289,6 +294,7 @@ export class PostsService {
         reposts: p.reposts,
         likedByMe: p.likedByMe,
         repostedByMe: p.repostedByMe,
+        savedByMe: p.savedByMe,
         ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
           ? { repostedBy: p.author.username! }
           : {}),
@@ -344,6 +350,10 @@ export class PostsService {
               },
               select: { id: true },
             },
+            savedBy: {
+              where: { userId: userId || undefined },
+              select: { id: true },
+            },
           },
         }),
       ]);
@@ -361,6 +371,7 @@ export class PostsService {
         comments: p._count.comments,
         shares: p.shares,
         likedByMe: p.interactions.length > 0,
+        savedByMe: p.savedBy.length > 0,
         ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
           ? { repostedBy: p.author.username! }
           : {}),
@@ -392,6 +403,7 @@ export class PostsService {
     shares: number;
     reposts: number;
     likedByMe: boolean;
+    savedByMe: boolean;
   }> {
     this.logger.log(
       `Fetching post ${postId}` +
@@ -405,6 +417,10 @@ export class PostsService {
         author: { select: { username: true, avatarUrl: true } },
         originalAuthor: { select: { username: true, avatarUrl: true } },
         _count: { select: { comments: true } },
+        savedBy: {
+          where: { userId: currentUserId || undefined },
+          select: { id: true },
+        },
       },
     });
     if (!post) {
@@ -413,6 +429,7 @@ export class PostsService {
     }
 
     let likedByMe = false;
+    const savedByMe = currentUserId ? post.savedBy.length > 0 : false;
 
     // 2) Check if this user has a LIKE interaction on it
     if (currentUserId) {
@@ -445,6 +462,7 @@ export class PostsService {
       shares: post.shares,
       reposts: post.reposts,
       likedByMe,
+      savedByMe,
       ...(post.originalAuthorId && post.originalAuthorId !== post.authorId
         ? { repostedBy: post.author.username! }
         : {}),
@@ -510,6 +528,30 @@ export class PostsService {
     );
     this.logger.log(`User ${userId} liked ${postId}, total=${updated.likes}`);
     return { liked: true, count: updated.likes };
+  }
+
+  async toggleSave(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean }> {
+    this.logger.log(`User ${userId} → TOGGLE SAVE (service) → post ${postId}`);
+    try {
+      await this.prisma.savedPost.create({ data: { userId, postId } });
+      this.logger.verbose(`Saved post ${postId} for user ${userId}`);
+      return { saved: true };
+    } catch (e: any) {
+      if (e.code === 'P2002') {
+        await this.prisma.savedPost.delete({
+          where: {
+            one_save_per_user_per_post: { postId, userId },
+          },
+        });
+        this.logger.verbose(`Removed saved post ${postId} for user ${userId}`);
+        return { saved: false };
+      }
+      this.logger.error(`Failed to toggle save`, e.stack);
+      throw new InternalServerErrorException('Could not toggle save');
+    }
   }
 
   async deletePost(userId: string, postId: string) {

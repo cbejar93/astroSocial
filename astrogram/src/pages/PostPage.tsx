@@ -53,6 +53,7 @@ const PostPage: React.FC = () => {
           reposts:    data.reposts,
           likedByMe:  data.likedByMe,
           repostedByMe: data.repostedByMe,
+          savedByMe:  data.savedByMe,
           authorId:   data.authorId,
           ...(data.repostedBy ? { repostedBy: data.repostedBy } : {}),
         }
