@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { InteractionType, Post, NotificationType } from '@prisma/client'
+import { FeedResponseDto } from './dto/feed-response.dto'
 import { CreatePostDto } from './dto/create-post.dto'
 import { StorageService } from '../storage/storage.service'
 import { NotificationsService } from '../notifications/notifications.service'
@@ -171,7 +172,7 @@ export class PostsService {
     /**
      * Fetch feed ordered by our custom score
      */
-    async getWeightedFeed(userId: string, page = 1, limit = 20) {
+    async getWeightedFeed(userId: string, page = 1, limit = 20): Promise<FeedResponseDto> {
         this.logger.log(`Fetching weighted feed (page=${page}, limit=${limit})`);
         try {
             // 1) fetch raw posts + counts
@@ -180,31 +181,65 @@ export class PostsService {
                 orderBy: { createdAt: 'desc' },
                 take: page * limit,
                 include: {
-                  author: {
-                    select: { id: true, username: true, avatarUrl: true },
-                  },
-                  _count: {
-                    select: { comments: true },
-                  },
-                  // always include an interactions array (it'll just be empty if userId is falsy)
-                  interactions: {
-                    where: {
-                      // if userId is undefined this just becomes `where: { userId: undefined, … }`
-                      // which yields an empty array rather than dropping the field entirely
-                      userId: userId || undefined,
-                      type:   InteractionType.LIKE,
+                    author: {
+                        select: { id: true, username: true, avatarUrl: true },
                     },
-                    select: { id: true },
-                  },
+                    _count: {
+                        select: { comments: true },
+                    },
+                    // always include an interactions array (it'll just be empty if userId is falsy)
+                    interactions: {
+                        where: {
+                            // if userId is undefined this just becomes `where: { userId: undefined, … }`
+                            // which yields an empty array rather than dropping the field entirely
+                            userId: userId || undefined,
+                            type: InteractionType.LIKE,
+                        },
+                        select: { id: true },
+                    },
                 },
-              });
-              
-            this.logger.verbose(`Fetched ${posts.length} posts from DB`);
+            });
 
-            // 2) score them
-            const scored = posts.map(p => ({
+            // 2) fetch repost interactions separately so they can surface as feed items
+            const reposts = await this.prisma.postInteraction.findMany({
+                where: { type: InteractionType.REPOST },
+                orderBy: { createdAt: 'desc' },
+                take: page * limit,
+                include: {
+                    user: { select: { id: true, username: true, avatarUrl: true } },
+                    post: {
+                        include: {
+                            author: {
+                                select: { id: true, username: true, avatarUrl: true },
+                            },
+                            _count: { select: { comments: true } },
+                            interactions: {
+                                where: {
+                                    userId: userId || undefined,
+                                    type: InteractionType.LIKE,
+                                },
+                                select: { id: true },
+                            },
+                        },
+                    },
+                },
+            });
+
+            this.logger.verbose(`Fetched ${posts.length} posts and ${reposts.length} reposts from DB`);
+
+            // 3) merge posts and reposts for scoring
+            const combined = [
+                ...posts.map((p) => ({ ...p, likedByMe: p.interactions.length > 0 })),
+                ...reposts.map((r) => ({
+                    ...r.post,
+                    likedByMe: r.post.interactions.length > 0,
+                    createdAt: r.createdAt, // use repost timestamp for scoring
+                    reposter: r.user,
+                })),
+            ] as any[];
+
+            const scored = combined.map((p) => ({
                 ...p,
-                likedByMe: p.interactions.length > 0,
                 score: this.computeScore({
                     createdAt: p.createdAt,
                     commentsCount: p._count.comments,
@@ -213,33 +248,42 @@ export class PostsService {
                     reposts: p.reposts,
                 }),
             }));
-            this.logger.verbose(`Computed scores for posts`);
+            this.logger.verbose(`Computed scores for feed items`);
 
-            // 3) sort by score descending
+            // 4) sort by score descending
             scored.sort((a, b) => b.score - a.score);
-            this.logger.verbose(`Sorted posts by score`);
+            this.logger.verbose(`Sorted feed items by score`);
 
-            // 4) paginate
+            // 5) paginate
             const start = (page - 1) * limit;
-            const pageItems = scored.slice(start, start + limit).map(p => ({
-                id:        p.id,
-                authorId:  p.author.id,
-                username:  p.author.username!,
+            const pageItems = scored.slice(start, start + limit).map((p) => ({
+                id: p.id,
+                authorId: p.author.id,
+                username: p.author.username!,
                 ...(p.title ? { title: p.title } : {}),
                 ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
                 avatarUrl: p.author.avatarUrl || '',
-                caption:   p.body,
+                caption: p.body,
                 timestamp: p.createdAt.toISOString(),
-                stars:     p.likes,
-                comments:  p._count.comments,
-                shares:    p.shares,
-                likedByMe: p.likedByMe
+                stars: p.likes,
+                comments: p._count.comments,
+                shares: p.shares,
+                likedByMe: p.likedByMe,
+                ...(p.reposter
+                    ? {
+                          repostedBy: {
+                              id: p.reposter.id,
+                              username: p.reposter.username!,
+                              avatarUrl: p.reposter.avatarUrl || '',
+                          },
+                      }
+                    : {}),
             }));
-            this.logger.log(`Returning ${pageItems.length} posts for page ${page}`);
+            this.logger.log(`Returning ${pageItems.length} items for page ${page}`);
 
             return {
                 posts: pageItems,
-                total: posts.length,
+                total: combined.length,
                 page,
                 limit,
             };
