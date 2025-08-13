@@ -11,6 +11,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service'
 import { InteractionType, Post, NotificationType } from '@prisma/client'
 import { CreatePostDto } from './dto/create-post.dto'
+import { FeedResponseDto } from './dto/feed.dto'
 import { StorageService } from '../storage/storage.service'
 import { NotificationsService } from '../notifications/notifications.service'
 
@@ -171,7 +172,7 @@ export class PostsService {
     /**
      * Fetch feed ordered by our custom score
      */
-    async getWeightedFeed(userId: string, page = 1, limit = 20) {
+    async getWeightedFeed(userId: string, page = 1, limit = 20): Promise<FeedResponseDto> {
         this.logger.log(`Fetching weighted feed (page=${page}, limit=${limit})`);
         try {
             // 1) fetch raw posts + counts
@@ -192,9 +193,9 @@ export class PostsService {
                       // if userId is undefined this just becomes `where: { userId: undefined, … }`
                       // which yields an empty array rather than dropping the field entirely
                       userId: userId || undefined,
-                      type:   InteractionType.LIKE,
+                      type: { in: [InteractionType.LIKE, InteractionType.REPOST] },
                     },
-                    select: { id: true },
+                    select: { id: true, type: true },
                   },
                 },
               });
@@ -204,7 +205,8 @@ export class PostsService {
             // 2) score them
             const scored = posts.map(p => ({
                 ...p,
-                likedByMe: p.interactions.length > 0,
+                likedByMe: p.interactions.some(i => i.type === InteractionType.LIKE),
+                repostedByMe: p.interactions.some(i => i.type === InteractionType.REPOST),
                 score: this.computeScore({
                     createdAt: p.createdAt,
                     commentsCount: p._count.comments,
@@ -233,7 +235,9 @@ export class PostsService {
                 stars:     p.likes,
                 comments:  p._count.comments,
                 shares:    p.shares,
-                likedByMe: p.likedByMe
+                reposts:   p.reposts,
+                likedByMe: p.likedByMe,
+                repostedByMe: p.repostedByMe,
             }));
             this.logger.log(`Returning ${pageItems.length} posts for page ${page}`);
 
