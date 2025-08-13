@@ -34,7 +34,9 @@ const PostCard: React.FC<PostCardProps> = ({
   stars = 0,
   comments = 0,
   shares = 0,
+  reposts = 0,
   likedByMe,
+  repostedByMe,
   authorId,
   onDeleted
 }) => {
@@ -48,7 +50,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const [commentCount] = useState(comments);
   const [shareCount, setShareCount] = useState(shares);
   const [reposted, setReposted] = useState(Boolean(repostedByMe));
-  const [repostCount, setRepostCount] = useState(reposts || 0);
+  const [repostCount, setRepostCount] = useState(reposts);
   const [saved, setSaved] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
