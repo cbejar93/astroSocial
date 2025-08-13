@@ -138,6 +138,25 @@ export default function ProfilePage(): JSX.Element {
 
   return (
     <div className="p-4 max-w-2xl mx-auto text-gray-200">
+      {/* Profile header */}
+      <div className="flex items-center mb-4">
+        {user.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt="avatar"
+            className="w-16 h-16 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-gray-700" />
+        )}
+        <div className="ml-4">
+          <div className="text-xl font-bold">{user.username}</div>
+          <div className="text-sm text-gray-400">
+            <span className="mr-4"><span className="font-semibold text-white">Trackers</span> 0</span>
+            <span><span className="font-semibold text-white">Tracking</span> 0</span>
+          </div>
+        </div>
+      </div>
       {/* Tabs */}
       <div className="border-b border-gray-700 mb-4 pt-4">
         <nav className="-mb-px flex justify-center space-x-8" aria-label="Profile tabs">
