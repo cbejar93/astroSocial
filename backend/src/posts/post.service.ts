@@ -289,7 +289,9 @@ export class PostsService {
         reposts: p.reposts,
         likedByMe: p.likedByMe,
         repostedByMe: p.repostedByMe,
-        ...(p.originalAuthorId ? { repostedBy: p.author.username! } : {}),
+        ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
+          ? { repostedBy: p.author.username! }
+          : {}),
       }));
       this.logger.log(`Returning ${pageItems.length} posts for page ${page}`);
 
@@ -359,7 +361,9 @@ export class PostsService {
         comments: p._count.comments,
         shares: p.shares,
         likedByMe: p.interactions.length > 0,
-        ...(p.originalAuthorId ? { repostedBy: p.author.username! } : {}),
+        ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
+          ? { repostedBy: p.author.username! }
+          : {}),
         lastReplyUsername: p.comments[0]?.author.username,
         lastReplyTimestamp: p.comments[0]?.createdAt.toISOString(),
       }));
