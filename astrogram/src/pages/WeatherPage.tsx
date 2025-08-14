@@ -5,6 +5,7 @@ import WeatherCard from "../components/Weather/WeatherCard";
 import MoonPhaseCard from "../components/Weather/MoonPhaseCard";
 import WeatherSkeleton from "../components/Weather/WeatherSkeleton";
 import WindCard from "../components/Weather/WindCard";
+import DewTempChart from "../components/Weather/DewTempChart";
 
 interface WeatherConditions {
   temperature?: Record<string, number>;
@@ -163,6 +164,13 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
             />
           </div>
         </div>
+      )}
+
+      {todayData && (
+        <DewTempChart
+          temps={todayData.conditions.temperature ?? {}}
+          dews={todayData.conditions.dewpoint ?? {}}
+        />
       )}
     </div>
   );
