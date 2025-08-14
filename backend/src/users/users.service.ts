@@ -138,6 +138,7 @@ export class UsersService {
       comments: p._count.comments,
       shares: p.shares,
       likedByMe: false,
+      savedByMe: false,
       ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
         ? { repostedBy: user?.username || '' }
         : {}),
@@ -216,6 +217,7 @@ export class UsersService {
       comments: p._count.comments,
       shares: p.shares,
       likedByMe: false,
+      savedByMe: false,
       ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
         ? { repostedBy: user.username || '' }
         : {}),

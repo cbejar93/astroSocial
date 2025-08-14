@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from 'react-router-dom';
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
-import { sharePost, repostPost, apiFetch } from '../../lib/api';
+import { sharePost, repostPost, apiFetch, toggleSave } from '../../lib/api';
 import { useAuth } from "../../contexts/AuthContext";
 
 
@@ -22,7 +22,9 @@ export interface PostCardProps {
   likedByMe?: boolean;
   repostedByMe?: boolean;
   repostedBy?: string;
+  savedByMe?: boolean;
   onDeleted?: (id: string) => void;
+  onSavedChange?: (id: string, saved: boolean) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -40,6 +42,7 @@ const PostCard: React.FC<PostCardProps> = ({
   repostedByMe,
   repostedBy,
   authorId,
+  savedByMe,
   onDeleted
 }) => {
 
@@ -53,7 +56,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const [shareCount, setShareCount] = useState(shares);
   const [reposted, setReposted] = useState(Boolean(repostedByMe));
   const [repostCount, setRepostCount] = useState(reposts);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(Boolean(savedByMe));
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +113,16 @@ const PostCard: React.FC<PostCardProps> = ({
       } catch (err: unknown) {
         console.error("Failed to repost:", err);
       }
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await toggleSave(id);
+      setSaved(res.saved);
+      onSavedChange?.(id, res.saved);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // close menu on outside click
@@ -255,11 +268,10 @@ const PostCard: React.FC<PostCardProps> = ({
             {/* Save */}
             <button
               type="button"
-              onClick={() => setSaved(s => !s)}
+              onClick={handleSave}
               className="btn-unstyled btn-action hover:text-blue-400"
             >
               <Bookmark className="w-5 h-5" fill={saved ? "currentColor" : "none"} />
-              <span>{saved ? 1 : 0}</span>
             </button>
 
             {/* Share */}
