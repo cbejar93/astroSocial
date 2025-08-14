@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Star, UploadCloud, MoreVertical } from 'lucide-react';
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import ConfirmModal from '../components/Modal/ConfirmModal';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import {

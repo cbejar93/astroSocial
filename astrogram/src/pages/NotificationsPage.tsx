@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { fetchNotifications, type NotificationItem } from '../lib/api';
 
-import { useNotifications } from '../contexts/NotificationContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 const NotificationsPage: React.FC = () => {
   const { refresh } = useNotifications();

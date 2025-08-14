@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard'
 import PostSkeleton                     from '../components/PostCard/PostSkeleton'

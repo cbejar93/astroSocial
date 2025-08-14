@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { fetchUnreadCount } from '../lib/api';
 
@@ -7,7 +8,7 @@ interface Ctx {
   refresh: () => void;
 }
 
-const NotificationContext = createContext<Ctx | undefined>(undefined);
+export const NotificationContext = createContext<Ctx | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [count, setCount] = useState(0);
@@ -29,9 +30,3 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function useNotifications() {
-  const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error('useNotifications must be inside NotificationProvider');
-  return ctx;
-}

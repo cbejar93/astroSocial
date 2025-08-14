@@ -2,7 +2,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fetchLoungePosts, fetchLounge, apiFetch, deleteLounge } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { MoreVertical } from "lucide-react";
 
 interface LoungePostSummary {
