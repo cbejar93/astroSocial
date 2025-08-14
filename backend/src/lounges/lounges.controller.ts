@@ -50,7 +50,7 @@ export class LoungesController {
           if (allowed.includes(file.mimetype)) cb(null, true);
           else cb(new Error('Invalid file type'), false);
         },
-        limits: { fileSize: 5 * 1024 * 1024 },
+        limits: { fileSize: 10 * 1024 * 1024 },
       },
     ),
   )
@@ -98,7 +98,7 @@ export class LoungesController {
         if (allowed.includes(file.mimetype)) cb(null, true);
         else cb(new Error('Invalid file type'), false);
       },
-      limits: { fileSize: 5 * 1024 * 1024 },
+      limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )
   async createLoungePost(
@@ -155,7 +155,7 @@ export class LoungesController {
           if (allowed.includes(file.mimetype)) cb(null, true);
           else cb(new Error('Invalid file type'), false);
         },
-        limits: { fileSize: 5 * 1024 * 1024 },
+        limits: { fileSize: 10 * 1024 * 1024 },
       },
     ),
   )
