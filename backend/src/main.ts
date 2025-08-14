@@ -8,13 +8,10 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 
-
 const logger = new Logger('Main');
 
 async function bootstrap() {
   logger.log('📦 Bootstrap starting');
-
-
 
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
@@ -25,8 +22,8 @@ async function bootstrap() {
   logger.log(`🔧 NODE_ENV = ${process.env.NODE_ENV || 'undefined'}`);
   logger.log(`🚀 Production mode? ${isProduction}`);
 
-    // Static assets
-    const clientDistPath = isProduction
+  // Static assets
+  const clientDistPath = isProduction
     ? resolve(__dirname, '../public')
     : resolve(__dirname, '../../astrogram/dist');
   logger.log(`📂 Serving static files from: ${clientDistPath}`);
@@ -39,47 +36,51 @@ async function bootstrap() {
   });
 
   // CORS
-  const corsOrigin = process.env.FRONTEND_URL || true;
+  const envOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
+    : [];
+  if (process.env.NODE_ENV !== 'production') {
+    envOrigins.push('http://localhost:5173');
+  }
   app.enableCors({
-    origin: corsOrigin,
+    origin: envOrigins.length ? envOrigins : true,
     credentials: true,
   });
   logger.log(
-    `🌐 CORS enabled for ${corsOrigin === true ? 'all origins' : corsOrigin}`,
+    `🌐 CORS enabled for ${
+      envOrigins.length ? envOrigins.join(', ') : 'all origins'
+    }`,
   );
 
-    // Catch-all to serve index.html
-  
+  // Catch-all to serve index.html
+
   // everything *not* under /api should be served your React app
   server.use((req, res, next) => {
     // if this is an API call, let Nest handle it (404, etc)
     if (req.path.startsWith('/api')) {
-      return next()
+      return next();
     }
     // otherwise send back index.html – React Router will take over in the browser
-    const indexPath = path.join(clientDistPath, 'index.html')
-    logger.log(`🗂️  GET ${req.originalUrl} → serving index.html`)
-    res.sendFile(indexPath, err => {
+    const indexPath = path.join(clientDistPath, 'index.html');
+    logger.log(`🗂️  GET ${req.originalUrl} → serving index.html`);
+    res.sendFile(indexPath, (err) => {
       if (err) {
-        logger.error(`❌ Failed to send index.html: ${err.message}`, err.stack)
-        res.status(500).send('Internal Server Error')
+        logger.error(`❌ Failed to send index.html: ${err.message}`, err.stack);
+        res.status(500).send('Internal Server Error');
       }
-    })
-  })
-
-
+    });
+  });
 
   // Initialize Nest
   await app.init();
   logger.log('✅ Nest application initialized T');
-
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   logger.log(`🚀 App started and listening on port ${port}`);
 }
 
-bootstrap().catch(err => {
-  logger.error('Bootstrap failed', err.stack);
+bootstrap().catch((err: unknown) => {
+  logger.error('Bootstrap failed', err instanceof Error ? err.stack : err);
   process.exit(1);
 });
