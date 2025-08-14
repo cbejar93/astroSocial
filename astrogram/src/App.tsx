@@ -52,23 +52,23 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/auth/success" element={<AuthSuccessPage />} />
-          <Route path="/" element={<Feed />} />
-          {/* single-post detail view */}
-          <Route path="/posts/:id" element={<PostPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/users/:username" element={<UserPage />} />
-          <Route path="/users/:username/:tab" element={<UserPage />} />
-          <Route path="/lounge" element={<LoungesPage />} />
-          <Route path="/lounge/:loungeName" element={<LoungePage />} />
-          <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
-          <Route path="/search" element={<SearchPage />} />
           <Route element={<RequireProfileCompletion />}>
+            <Route path="/" element={<Feed />} />
+            {/* single-post detail view */}
+            <Route path="/posts/:id" element={<PostPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/users/:username" element={<UserPage />} />
+            <Route path="/users/:username/:tab" element={<UserPage />} />
+            <Route path="/lounge" element={<LoungesPage />} />
+            <Route path="/lounge/:loungeName" element={<LoungePage />} />
+            <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
             <Route path="/upload" element={<UploadForm />} />
             <Route path="/completeProfile" element={<CompleteProfilePage />} />
             <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
             <Route path="/profile/:tab" element={<ProfilePage />} />
-            <Route element={<RequireAdmin />}> 
+            <Route element={<RequireAdmin />}>
               <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
               <Route path="/admin/:tab" element={<AdminPage />} />
             </Route>
@@ -84,8 +84,8 @@ const App: React.FC = () => {
                 />
               }
             />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 

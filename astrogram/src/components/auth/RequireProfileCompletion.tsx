@@ -22,6 +22,11 @@ export const RequireProfileCompletion: React.FC = () => {
     // else: logged in but not complete → allow
   }
 
+  // redirect users with incomplete profiles to complete their profile
+  if (pathname !== "/completeProfile" && user && !user.profileComplete) {
+    return <Navigate to="/completeProfile" replace />;
+  }
+
   // send unauthenticated users trying to upload to sign in
   if (pathname === "/upload" && !user) {
     return <Navigate to="/signup" replace />;
