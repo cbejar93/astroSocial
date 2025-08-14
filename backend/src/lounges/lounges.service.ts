@@ -201,7 +201,27 @@ export class LoungesService {
   async remove(id: string) {
     this.logger.log(`Deleting lounge ${id}`);
     try {
-      await this.prisma.lounge.delete({ where: { id } });
+      await this.prisma.$transaction([
+        this.prisma.commentLike.deleteMany({
+          where: { comment: { post: { loungeId: id } } },
+        }),
+        this.prisma.postInteraction.deleteMany({
+          where: { post: { loungeId: id } },
+        }),
+        this.prisma.notification.deleteMany({
+          where: {
+            OR: [
+              { post: { loungeId: id } },
+              { comment: { post: { loungeId: id } } },
+            ],
+          },
+        }),
+        this.prisma.comment.deleteMany({
+          where: { post: { loungeId: id } },
+        }),
+        this.prisma.post.deleteMany({ where: { loungeId: id } }),
+        this.prisma.lounge.delete({ where: { id } }),
+      ]);
       this.logger.log(`Deleted lounge id=${id}`);
       return { success: true };
     } catch (err: unknown) {
