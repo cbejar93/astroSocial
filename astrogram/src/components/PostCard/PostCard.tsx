@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
 import { sharePost, repostPost, apiFetch } from '../../lib/api';
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 
 
 export interface PostCardProps {

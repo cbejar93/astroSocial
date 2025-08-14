@@ -1,6 +1,6 @@
 import React, { useEffect }            from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth }                      from '../contexts/AuthContext';
+import { useAuth }                      from '../hooks/useAuth';
 
 const AuthSuccessPage: React.FC = () => {
   const [qs]     = useSearchParams();

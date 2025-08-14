@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.tsx
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
-  useContext,
   useEffect,
   useState,
   useCallback,
@@ -19,7 +19,7 @@ export interface User {
   followedLounges?: string[];
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (accessToken: string) => Promise<User>;
@@ -31,7 +31,7 @@ interface AuthContextType {
   ) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser]       = useState<User | null>(null);
@@ -116,24 +116,3 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    return {
-      user: null,
-      loading: false,
-      // provide stubs that warn when used without provider
-      login: async () => {
-        throw new Error('AuthProvider is missing');
-      },
-      logout: () => {
-        throw new Error('AuthProvider is missing');
-      },
-      updateFollowedLounge: async () => {
-        throw new Error('AuthProvider is missing');
-      },
-    };
-  }
-  return ctx;
-}

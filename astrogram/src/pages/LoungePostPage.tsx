@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { apiFetch } from "../lib/api";
 import { UploadCloud } from "lucide-react";
 
