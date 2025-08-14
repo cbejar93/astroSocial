@@ -39,11 +39,14 @@ async function bootstrap() {
   });
 
   // CORS
+  const corsOrigin = process.env.FRONTEND_URL || true;
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: corsOrigin,
     credentials: true,
   });
-  logger.log('🌐 CORS enabled for http://localhost:5173');
+  logger.log(
+    `🌐 CORS enabled for ${corsOrigin === true ? 'all origins' : corsOrigin}`,
+  );
 
     // Catch-all to serve index.html
   
