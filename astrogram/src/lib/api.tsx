@@ -14,7 +14,7 @@ export function setAccessToken(token: string) {
 export async function handleLogin(token: string) {
   setAccessToken(token);
   // optionally persist in localStorage
-  localStorage.setItem('jwt', token);
+  localStorage.setItem('ACCESS_TOKEN', token);
 }
 
 let refreshPromise: Promise<string> | null = null;
