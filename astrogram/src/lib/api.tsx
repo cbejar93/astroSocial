@@ -17,6 +17,39 @@ export async function handleLogin(token: string) {
   localStorage.setItem('jwt', token);
 }
 
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`Refresh failed (${res.status})`);
+        }
+        const { accessToken: newToken } = await res.json();
+        setAccessToken(newToken);
+        localStorage.setItem('ACCESS_TOKEN', newToken);
+        localStorage.setItem('jwt', newToken);
+        return newToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+async function getErrorText(res: Response): Promise<string> {
+  try {
+    return await res.text();
+  } catch {
+    return res.statusText;
+  }
+}
+
 export async function apiFetch(
     input: RequestInfo,
     init: RequestInit = {},
@@ -28,70 +61,35 @@ export async function apiFetch(
       Authorization: `Bearer ${accessToken}`,
     };
     init.credentials = 'include';
-  
+
     const url = useBase ? `${API_BASE}${input}` : (input as string);
-    const res = await fetch(url, init);
+    let res = await fetch(url, init);
 
-    // 2) handle unauthorized responses by clearing auth state and notifying listeners
     if (res.status === 401) {
-      setAccessToken('');
-      localStorage.removeItem('ACCESS_TOKEN');
-      localStorage.removeItem('jwt');
-      window.dispatchEvent(new Event('auth-logout'));
-
-      let text: string;
       try {
-        text = await res.text();
+        const newToken = await refreshToken();
+        init.headers = {
+          ...(init.headers as Record<string, string>),
+          Authorization: `Bearer ${newToken}`,
+        };
+        res = await fetch(url, init);
       } catch {
-        text = res.statusText;
+        setAccessToken('');
+        localStorage.removeItem('ACCESS_TOKEN');
+        localStorage.removeItem('jwt');
+        window.dispatchEvent(new Event('auth-logout'));
+        const text = await getErrorText(res);
+        throw new Error(`API error ${res.status} ${res.statusText}: ${text}`);
       }
-      throw new Error(`API error ${res.status} ${res.statusText}: ${text}`);
     }
 
-    // 3) throw on any other non‑2xx
     if (!res.ok) {
-      let text: string;
-      try {
-        text = await res.text();
-      } catch {
-        text = res.statusText;
-      }
+      const text = await getErrorText(res);
       throw new Error(`API error ${res.status} ${res.statusText}: ${text}`);
     }
 
     return res;
   }
-
-// // the wrapper you use everywhere instead of bare fetch:
-// export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
-//   // 1) attach Authorization header
-//   init.headers = {
-//     ...(init.headers || {}),
-//     Authorization: `Bearer ${accessToken}`,
-//   };
-//   init.credentials = 'include';
-
-//   let res = await fetch(API_BASE + input, init);
-
-//   // 2) if access token expired → try a refresh + retry
-//   if (res.status === 401) {
-//     try {
-//       const newToken = await refreshToken();
-//       // retry original request with new token
-//       init.headers = {
-//         ...(init.headers as Record<string,string>),
-//         Authorization: `Bearer ${newToken}`,
-//       };
-//       res = await fetch(API_BASE + input, init);
-//     } catch {
-//       // refresh failed → redirect to login
-//       window.location.href = '/signup';
-//       throw new Error('Not authenticated');
-//     }
-//   }
-
-//   return res;
-// }
 
 // ----------------------------------------------------------------------------------
 // NEW: helper to fetch our weighted, paginated feed.
