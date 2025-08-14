@@ -28,7 +28,7 @@ const LoungesPage: React.FC = () => {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div>
+    <div className="mt-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {sortedLounges.map((lounge) => {
           const isFollowed = user?.followedLounges?.includes(lounge.id) ?? false;
