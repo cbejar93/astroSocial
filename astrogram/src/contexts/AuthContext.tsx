@@ -10,6 +10,8 @@ import React, {
 import type { ReactNode } from 'react';
 import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/api";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
+
 export interface User {
   id: string;
   username?: string;
@@ -37,23 +39,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // on mount, rehydrate access token + fetch current user
+  // on mount, rehydrate access token + user snapshot then validate
   useEffect(() => {
-    const saved = localStorage.getItem("ACCESS_TOKEN");
-    if (saved) {
-      setAccessToken(saved);
-      apiFetch("/users/me")
-        .then((res) => {
+    const savedToken = localStorage.getItem("ACCESS_TOKEN");
+    const savedUser = localStorage.getItem("USER_SNAPSHOT");
+    if (savedToken) {
+      setAccessToken(savedToken);
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch {
+          localStorage.removeItem("USER_SNAPSHOT");
+        }
+      }
+      (async () => {
+        try {
+          const res = await fetch(`${API_BASE}/users/me`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
+            credentials: "include",
+          });
           if (!res.ok) throw new Error("Not authenticated");
-          return res.json();
-        })
-        .then(setUser)
-        .catch(() => {
-          setUser(null);
-          setAccessToken("");
-          localStorage.removeItem("ACCESS_TOKEN");
-        })
-        .finally(() => setLoading(false));
+          const me = await res.json();
+          setUser(me);
+          localStorage.setItem("USER_SNAPSHOT", JSON.stringify(me));
+        } catch {
+          try {
+            const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+              method: "POST",
+              credentials: "include",
+            });
+            if (!refreshRes.ok) throw new Error("Refresh failed");
+            const { accessToken: newToken } = await refreshRes.json();
+            setAccessToken(newToken);
+            localStorage.setItem("ACCESS_TOKEN", newToken);
+            const userRes = await fetch(`${API_BASE}/users/me`, {
+              headers: { Authorization: `Bearer ${newToken}` },
+              credentials: "include",
+            });
+            if (!userRes.ok) throw new Error("Not authenticated");
+            const me = await userRes.json();
+            setUser(me);
+            localStorage.setItem("USER_SNAPSHOT", JSON.stringify(me));
+          } catch {
+            setUser(null);
+            setAccessToken("");
+            localStorage.removeItem("ACCESS_TOKEN");
+            localStorage.removeItem("USER_SNAPSHOT");
+          }
+        } finally {
+          setLoading(false);
+        }
+      })();
     } else {
       setLoading(false);
     }
@@ -76,6 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     const me: User = await res.json();
     setUser(me);
+    localStorage.setItem("USER_SNAPSHOT", JSON.stringify(me));
     setLoading(false);
     return me;
   };
@@ -85,6 +122,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     setAccessToken("");
     localStorage.removeItem("ACCESS_TOKEN");
+    localStorage.removeItem("USER_SNAPSHOT");
     // optionally call your backend /logout endpoint to clear the refresh cookie
   }, []);
 
@@ -102,7 +140,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const followedLounges = follow
           ? [...current, loungeId]
           : current.filter((id) => id !== loungeId);
-        return { ...prev, followedLounges };
+        const updated = { ...prev, followedLounges };
+        localStorage.setItem("USER_SNAPSHOT", JSON.stringify(updated));
+        return updated;
       });
     } catch {
       // silently ignore for now
