@@ -76,7 +76,7 @@ const LoungePostDetailPage: React.FC = () => {
         <div>
           <Link
             to={`/users/${post.username}/posts`}
-            className="font-medium text-teal-400 hover:underline"
+            className="font-semibold text-teal-400 text-sm hover:underline"
           >
             @{post.username}
           </Link>

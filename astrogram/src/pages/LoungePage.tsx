@@ -186,7 +186,7 @@ const LoungePage: React.FC = () => {
                   <Link
                     to={`/users/${post.username}/posts`}
                     onClick={(e) => e.stopPropagation()}
-                    className="font-medium text-teal-400 hover:underline"
+                    className="font-semibold text-teal-400 text-sm hover:underline"
                   >
                     @{post.username}
                   </Link>
