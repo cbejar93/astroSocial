@@ -9,7 +9,7 @@ interface LoungeInfo {
   bannerUrl: string;
   profileUrl: string;
   threads?: number;
-  views?: number;
+  followers?: number;
   lastPostAt?: string | null;
 }
 
@@ -55,7 +55,7 @@ const LoungesPage: React.FC = () => {
                   <div className="text-lg font-semibold">{lounge.name}</div>
                   <div className="text-sm text-neutral-400 flex items-center gap-2">
                     <span>
-                      {lounge.threads ?? 0} Threads · {lounge.views ?? 0} Views
+                      {lounge.threads ?? 0} Threads · {lounge.followers ?? 0} Trackers
                     </span>
                     {user && (
                       <button

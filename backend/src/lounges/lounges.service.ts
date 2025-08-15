@@ -69,7 +69,7 @@ export class LoungesService {
     this.logger.log('Fetching all lounges');
     const lounges = await this.prisma.lounge.findMany({
       include: {
-        _count: { select: { posts: true } },
+        _count: { select: { posts: true, followers: true } },
         posts: {
           select: { createdAt: true },
           orderBy: { createdAt: 'desc' },
@@ -86,7 +86,7 @@ export class LoungesService {
       bannerUrl: l.bannerUrl,
       profileUrl: l.profileUrl,
       threads: l._count.posts,
-      views: 0,
+      followers: l._count.followers,
       lastPostAt: l.posts[0]?.createdAt ?? null,
     }));
   }
@@ -96,7 +96,7 @@ export class LoungesService {
     const lounge = await this.prisma.lounge.findUnique({
       where: { name },
       include: {
-        _count: { select: { posts: true } },
+        _count: { select: { posts: true, followers: true } },
         posts: {
           select: { createdAt: true },
           orderBy: { createdAt: 'desc' },
@@ -118,7 +118,7 @@ export class LoungesService {
       bannerUrl: lounge.bannerUrl,
       profileUrl: lounge.profileUrl,
       threads: lounge._count.posts,
-      views: 0,
+      followers: lounge._count.followers,
       lastPostAt: lounge.posts[0]?.createdAt ?? null,
     };
   }

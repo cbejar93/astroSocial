@@ -40,14 +40,10 @@ export class UsersController {
       this.logger.log(
         `Returning user: id=${user.id}, username=${user.username}, profileComplete=${user.profileComplete}`,
       );
-
-      return {
-        id: user.id,
-        username: user.username,
-        avatarUrl: user.avatarUrl,
-        profileComplete: user.profileComplete,
-        role: user.role,
-      };
+      // Include followed lounge IDs so the client knows which lounges
+      // the user is already tracking without having to fetch them
+      // separately.
+      return user;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       const stack = error instanceof Error ? error.stack : undefined;
