@@ -27,7 +27,10 @@ const LoungesPage: React.FC = () => {
 
   useEffect(() => {
     fetchLounges<LoungeInfo>()
-      .then((data) => setLounges(data))
+      .then((data) => {
+        console.log("Fetched lounges:", data);
+        setLounges(data);
+      })
       .catch(() => {});
   }, []);
 
