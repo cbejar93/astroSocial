@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
 import Comments from "../components/Comments/Comments";
@@ -74,7 +74,12 @@ const LoungePostDetailPage: React.FC = () => {
           className="w-10 h-10 rounded-full object-cover mr-3"
         />
         <div>
-          <div className="font-medium">{post.username}</div>
+          <Link
+            to={`/users/${post.username}/posts`}
+            className="font-semibold text-teal-400 text-sm hover:underline"
+          >
+            @{post.username}
+          </Link>
           <div className="text-sm text-gray-500">
             {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
           </div>

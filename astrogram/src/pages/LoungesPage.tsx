@@ -19,13 +19,20 @@ const LoungesPage: React.FC = () => {
 
   useEffect(() => {
     fetchLounges<LoungeInfo>()
-      .then((data) => setLounges(data))
+      .then((data) => {
+        console.log("Fetched lounges:", data);
+        setLounges(data);
+      })
       .catch(() => {});
   }, []);
 
-  const sortedLounges = lounges
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const sortByLastPost = (a: LoungeInfo, b: LoungeInfo) => {
+    const aTime = a.lastPostAt ? new Date(a.lastPostAt).getTime() : 0;
+    const bTime = b.lastPostAt ? new Date(b.lastPostAt).getTime() : 0;
+    return bTime - aTime;
+  };
+
+  const sortedLounges = [...lounges].sort(sortByLastPost);
 
   return (
     <div className="mt-8">
