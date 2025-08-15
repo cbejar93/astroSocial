@@ -16,6 +16,14 @@ interface LoungeInfo {
 const LoungesPage: React.FC = () => {
   const { user, updateFollowedLounge } = useAuth();
   const [lounges, setLounges] = useState<LoungeInfo[]>([]);
+  const pinnedLounges = [
+    "LuniSolar",
+    "Planetary",
+    "DSO",
+    "Equipment",
+    "AstroAdjacent",
+    "AskAstro",
+  ];
 
   useEffect(() => {
     fetchLounges<LoungeInfo>()
@@ -23,9 +31,20 @@ const LoungesPage: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  const sortedLounges = lounges
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const sortedLounges = (() => {
+    const pinned: LoungeInfo[] = [];
+    const others: LoungeInfo[] = [];
+    lounges.forEach((lounge) => {
+      if (pinnedLounges.includes(lounge.name)) pinned.push(lounge);
+      else others.push(lounge);
+    });
+    const sortByLastPost = (a: LoungeInfo, b: LoungeInfo) => {
+      const aTime = a.lastPostAt ? new Date(a.lastPostAt).getTime() : 0;
+      const bTime = b.lastPostAt ? new Date(b.lastPostAt).getTime() : 0;
+      return bTime - aTime;
+    };
+    return [...pinned.sort(sortByLastPost), ...others.sort(sortByLastPost)];
+  })();
 
   return (
     <div className="mt-8">
