@@ -183,7 +183,13 @@ const LoungePage: React.FC = () => {
                     alt={`${post.username} avatar`}
                     className="w-8 h-8 rounded-full object-cover mr-2"
                   />
-                  <span className="font-medium">{post.username}</span>
+                  <Link
+                    to={`/users/${post.username}/posts`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-medium text-teal-400 hover:underline"
+                  >
+                    @{post.username}
+                  </Link>
                   <span className="ml-2 text-sm text-gray-500">
                     {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
                   </span>
