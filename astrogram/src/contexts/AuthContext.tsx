@@ -10,6 +10,8 @@ import React, {
 import type { ReactNode } from 'react';
 import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/api";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
+
 export interface User {
   id: string;
   username?: string;
@@ -52,19 +54,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       (async () => {
         try {
-          const res = await apiFetch("/users/me");
+          const res = await fetch(`${API_BASE}/users/me`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
+            credentials: "include",
+          });
           if (!res.ok) throw new Error("Not authenticated");
           const me = await res.json();
           setUser(me);
           localStorage.setItem("USER_SNAPSHOT", JSON.stringify(me));
         } catch {
           try {
-            const refreshRes = await apiFetch("/auth/refresh", { method: "POST" });
+            const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+              method: "POST",
+              credentials: "include",
+            });
             if (!refreshRes.ok) throw new Error("Refresh failed");
             const { accessToken: newToken } = await refreshRes.json();
             setAccessToken(newToken);
             localStorage.setItem("ACCESS_TOKEN", newToken);
-            const userRes = await apiFetch("/users/me");
+            const userRes = await fetch(`${API_BASE}/users/me`, {
+              headers: { Authorization: `Bearer ${newToken}` },
+              credentials: "include",
+            });
             if (!userRes.ok) throw new Error("Not authenticated");
             const me = await userRes.json();
             setUser(me);
