@@ -152,8 +152,8 @@ export default function ProfilePage(): JSX.Element {
         <div className="ml-4">
           <div className="text-xl font-bold">{user.username}</div>
           <div className="text-sm text-gray-400">
-            <span className="mr-4"><span className="font-semibold text-white">Trackers</span> 0</span>
-            <span><span className="font-semibold text-white">Tracking</span> 0</span>
+            <span className="mr-4"><span className="font-semibold text-white">Trackers</span> {user.followers?.length ?? 0}</span>
+            <span><span className="font-semibold text-white">Tracking</span> {user.following?.length ?? 0}</span>
           </div>
         </div>
       </div>

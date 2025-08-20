@@ -17,6 +17,9 @@ export function useAuth() {
       updateFollowedLounge: async () => {
         throw new Error('AuthProvider is missing');
       },
+      updateFollowingUser: async () => {
+        throw new Error('AuthProvider is missing');
+      },
     };
   }
   return ctx;

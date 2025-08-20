@@ -31,6 +31,8 @@ export class UsersService {
         profileComplete: true, // ← add this
         role: true,
         followedLounges: { select: { id: true } },
+        followers: { select: { id: true } },
+        following: { select: { id: true } },
       },
     });
 
@@ -61,7 +63,11 @@ export class UsersService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data,
-      include: { followedLounges: { select: { id: true } } },
+      include: {
+        followedLounges: { select: { id: true } },
+        followers: { select: { id: true } },
+        following: { select: { id: true } },
+      },
     });
     return this.toDto(user);
   }
@@ -178,6 +184,8 @@ export class UsersService {
         profileComplete: true,
         role: true,
         followedLounges: { select: { id: true } },
+        followers: { select: { id: true } },
+        following: { select: { id: true } },
       },
     });
     if (!user) throw new NotFoundException('User not found');
@@ -246,6 +254,70 @@ export class UsersService {
     }));
   }
 
+  async followUser(targetUserId: string, followerId: string) {
+    this.logger.log(`User ${followerId} following user ${targetUserId}`);
+    return this.prisma.user.update({
+      where: { id: followerId },
+      data: {
+        following: {
+          connect: { id: targetUserId },
+        },
+      },
+    });
+  }
+
+  async unfollowUser(targetUserId: string, followerId: string) {
+    this.logger.log(`User ${followerId} unfollowing user ${targetUserId}`);
+    return this.prisma.user.update({
+      where: { id: followerId },
+      data: {
+        following: {
+          disconnect: { id: targetUserId },
+        },
+      },
+    });
+  }
+
+  async getFollowers(userId: string): Promise<UserDto[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        followers: {
+          select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+            profileComplete: true,
+            role: true,
+            followedLounges: { select: { id: true } },
+          },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return user.followers.map((u) => this.toDto(u));
+  }
+
+  async getFollowing(userId: string): Promise<UserDto[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        following: {
+          select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+            profileComplete: true,
+            role: true,
+            followedLounges: { select: { id: true } },
+          },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return user.following.map((u) => this.toDto(u));
+  }
+
   async deleteUser(userId: string) {
     await this.prisma.$transaction([
       this.prisma.commentLike.deleteMany({
@@ -270,6 +342,8 @@ export class UsersService {
     profileComplete: boolean;
     role: string;
     followedLounges?: { id: string }[];
+    followers?: { id: string }[];
+    following?: { id: string }[];
   }): UserDto {
     return {
       id: user.id,
@@ -278,6 +352,8 @@ export class UsersService {
       profileComplete: user.profileComplete,
       role: user.role,
       followedLounges: user.followedLounges?.map((l) => l.id),
+      followers: user.followers?.map((u) => u.id),
+      following: user.following?.map((u) => u.id),
     };
   }
 }

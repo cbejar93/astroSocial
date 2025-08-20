@@ -8,7 +8,7 @@ import React, {
 
 } from "react";
 import type { ReactNode } from 'react';
-import { apiFetch, setAccessToken, followLounge, unfollowLounge } from "../lib/api";
+import { apiFetch, setAccessToken, followLounge, unfollowLounge, followUser, unfollowUser } from "../lib/api";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -19,6 +19,8 @@ export interface User {
   profileComplete: boolean;
   role: string;
   followedLounges?: string[];
+  followers?: string[];
+  following?: string[];
 }
 
 export interface AuthContextType {
@@ -29,6 +31,11 @@ export interface AuthContextType {
   updateFollowedLounge: (
     loungeId: string,
     loungeName: string,
+    follow: boolean,
+  ) => Promise<void>;
+  updateFollowingUser: (
+    userId: string,
+    username: string,
     follow: boolean,
   ) => Promise<void>;
 }
@@ -149,8 +156,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateFollowingUser = async (
+    userId: string,
+    username: string,
+    follow: boolean,
+  ) => {
+    try {
+      if (follow) await followUser(username);
+      else await unfollowUser(username);
+      setUser((prev) => {
+        if (!prev) return prev;
+        const current = prev.following ?? [];
+        const following = follow
+          ? [...current, userId]
+          : current.filter((id) => id !== userId);
+        const updated = { ...prev, following };
+        localStorage.setItem("USER_SNAPSHOT", JSON.stringify(updated));
+        return updated;
+      });
+    } catch {
+      // silently ignore for now
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateFollowedLounge }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateFollowedLounge, updateFollowingUser }}>
       {children}
     </AuthContext.Provider>
   );

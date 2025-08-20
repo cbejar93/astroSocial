@@ -39,44 +39,46 @@ model User {
   sentNotifications Notification[]    @relation("Actor") // created by this user
   notifications     Notification[] // received by this user
   followedLounges   Lounge[]          @relation("LoungeFollowers")
+  followers         User[]            @relation("UserFollows")
+  following         User[]            @relation("UserFollows")
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
 
 model Post {
-  id            String            @id @default(uuid())
-  authorId      String
+  id               String            @id @default(uuid())
+  authorId         String
   originalAuthorId String?
-  title         String
-  body          String
-  imageUrl      String?
-  loungeId      String?
-  likes         Int               @default(0)
-  shares        Int               @default(0)
-  reposts       Int               @default(0)
-  createdAt     DateTime          @default(now())
-  comments      Comment[]         @relation("PostComments")
-  author        User              @relation("UserPosts", fields: [authorId], references: [id])
-  originalAuthor User?            @relation("OriginalAuthor", fields: [originalAuthorId], references: [id])
-  lounge        Lounge?           @relation(fields: [loungeId], references: [id])
-  interactions  PostInteraction[]
-  notifications Notification[]
+  title            String
+  body             String
+  imageUrl         String?
+  loungeId         String?
+  likes            Int               @default(0)
+  shares           Int               @default(0)
+  reposts          Int               @default(0)
+  createdAt        DateTime          @default(now())
+  comments         Comment[]         @relation("PostComments")
+  author           User              @relation("UserPosts", fields: [authorId], references: [id])
+  originalAuthor   User?             @relation("OriginalAuthor", fields: [originalAuthorId], references: [id])
+  lounge           Lounge?           @relation(fields: [loungeId], references: [id])
+  interactions     PostInteraction[]
+  notifications    Notification[]
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  postId    String
-  authorId  String
-  text      String
-  likes     Int      @default(0)
-  createdAt DateTime @default(now())
-  parentId  String?
-  author    User     @relation("UserComments", fields: [authorId], references: [id])
-  post      Post     @relation("PostComments", fields: [postId], references: [id])
-  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
-  replies   Comment[] @relation("CommentReplies")
-  likedBy   CommentLike[]
-  notifications        Notification[]
+  id            String         @id @default(uuid())
+  postId        String
+  authorId      String
+  text          String
+  likes         Int            @default(0)
+  createdAt     DateTime       @default(now())
+  parentId      String?
+  author        User           @relation("UserComments", fields: [authorId], references: [id])
+  post          Post           @relation("PostComments", fields: [postId], references: [id])
+  parent        Comment?       @relation("CommentReplies", fields: [parentId], references: [id])
+  replies       Comment[]      @relation("CommentReplies")
+  likedBy       CommentLike[]
+  notifications Notification[]
 }
 
 model CommentLike {
@@ -124,5 +126,5 @@ model Lounge {
   bannerUrl   String
   profileUrl  String
   posts       Post[]
-  followers   User[]  @relation("LoungeFollowers")
+  followers   User[] @relation("LoungeFollowers")
 }

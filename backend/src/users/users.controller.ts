@@ -6,6 +6,7 @@ import {
   UseGuards,
   Logger,
   Put,
+  Post,
   UseInterceptors,
   UploadedFile,
   InternalServerErrorException,
@@ -124,6 +125,40 @@ export class UsersController {
   @Get(':username/comments')
   getUserComments(@Param('username') username: string) {
     return this.usersService.getCommentsByUsername(username);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':username/follow')
+  async followUser(
+    @Param('username') username: string,
+    @Req() req: Request & { user: { sub: string } },
+  ) {
+    const user = await this.usersService.findByUsername(username);
+    await this.usersService.followUser(user.id, req.user.sub);
+    return { success: true };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':username/follow')
+  async unfollowUser(
+    @Param('username') username: string,
+    @Req() req: Request & { user: { sub: string } },
+  ) {
+    const user = await this.usersService.findByUsername(username);
+    await this.usersService.unfollowUser(user.id, req.user.sub);
+    return { success: true };
+  }
+
+  @Get(':username/followers')
+  async getFollowers(@Param('username') username: string) {
+    const user = await this.usersService.findByUsername(username);
+    return this.usersService.getFollowers(user.id);
+  }
+
+  @Get(':username/following')
+  async getFollowing(@Param('username') username: string) {
+    const user = await this.usersService.findByUsername(username);
+    return this.usersService.getFollowing(user.id);
   }
 
   @Get(':username')
