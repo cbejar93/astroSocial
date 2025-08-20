@@ -8,4 +8,6 @@ export interface UserDto {
   role: string;
   name?: string;
   followedLounges?: string[];
+  followers?: string[];
+  following?: string[];
 }
