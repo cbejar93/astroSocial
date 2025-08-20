@@ -121,7 +121,7 @@ const LoungePage: React.FC = () => {
           {user && (
             <Link
               to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
-              className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 rounded text-white hover:text-gray-200 transition-colors"
             >
               Post
             </Link>
