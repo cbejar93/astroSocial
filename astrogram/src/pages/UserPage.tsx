@@ -23,22 +23,26 @@ interface CommentItem {
 }
 
 interface UserInfo {
+  id: string;
   username: string;
   avatarUrl?: string;
+  followers?: string[];
+  following?: string[];
 }
 
 const UserPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateFollowingUser } = useAuth();
   const { username = '', tab } = useParams<{ username: string; tab?: string }>();
   const active: 'posts' | 'comments' = tab === 'comments' ? 'comments' : 'posts';
   const [info, setInfo] = useState<UserInfo | null>(null);
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const isFollowing = user?.following?.includes(info?.id ?? '') ?? false;
 
   useEffect(() => {
     if (!username) return;
-    fetchUser(username).then(setInfo).catch(() => {});
+    fetchUser<UserInfo>(username).then(setInfo).catch(() => {});
     fetchUserPosts<PostCardProps>(username)
       .then(setPosts)
       .catch(() => {})
@@ -59,17 +63,45 @@ const UserPage: React.FC = () => {
     }
   };
 
+  const handleFollow = async () => {
+    if (!info || !user) return;
+    await updateFollowingUser(info.id, info.username, !isFollowing);
+    setInfo((prev) => {
+      if (!prev) return prev;
+      const current = prev.followers ?? [];
+      const followers = !isFollowing
+        ? [...current, user.id]
+        : current.filter((id) => id !== user.id);
+      return { ...prev, followers };
+    });
+  };
+
   return (
     <div className="p-4 max-w-2xl mx-auto text-gray-200">
       {info && (
-        <div className="flex items-center space-x-2 mb-4">
-          <img
-            src={info.avatarUrl}
-            alt="avatar"
-            className="w-12 h-12 rounded-full object-cover"
-          />
-          <h2 className="text-lg font-bold">@{info.username}</h2>
-        </div>
+        <>
+          <div className="flex items-center space-x-2 mb-2">
+            <img
+              src={info.avatarUrl}
+              alt="avatar"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <h2 className="text-lg font-bold">@{info.username}</h2>
+            {user && user.id !== info.id && (
+              <button
+                type="button"
+                onClick={handleFollow}
+                className="ml-auto px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
+              >
+                {isFollowing ? 'Unfollow' : 'Follow'}
+              </button>
+            )}
+          </div>
+          <div className="text-sm text-gray-400 mb-4">
+            <span className="mr-4"><span className="font-semibold text-white">Trackers</span> {info.followers?.length ?? 0}</span>
+            <span><span className="font-semibold text-white">Tracking</span> {info.following?.length ?? 0}</span>
+          </div>
+        </>
       )}
       <div className="border-b border-gray-700 mb-4 pt-4">
         <nav className="-mb-px flex justify-center space-x-8" aria-label="User tabs">
