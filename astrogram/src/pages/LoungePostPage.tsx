@@ -55,6 +55,7 @@ const LoungePostPage: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError(null);
     const plain = body.replace(/<[^>]*>/g, "").trim();
     if (!title.trim() || !plain) {

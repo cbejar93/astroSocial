@@ -38,6 +38,7 @@ const UploadForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (loading) return
     setError(null)
     if (!caption.trim()) {
       setCaptionError('Caption is required')
