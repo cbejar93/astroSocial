@@ -338,3 +338,18 @@ export async function deleteProfile() {
   const res = await apiFetch('/users/me', { method: 'DELETE' });
   return res.json();
 }
+
+export interface SearchResults {
+  users: { id: string; username: string; avatarUrl: string | null }[];
+  lounges: {
+    id: string;
+    name: string;
+    profileUrl: string | null;
+    bannerUrl: string | null;
+  }[];
+}
+
+export async function searchAll(query: string): Promise<SearchResults> {
+  const res = await apiFetch(`/search?q=${encodeURIComponent(query)}`);
+  return res.json();
+}
