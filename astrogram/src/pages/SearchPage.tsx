@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { searchAll, SearchResults } from '../lib/api';
+import { searchAll } from '../lib/api';
+import type { SearchResults } from '../lib/api';
 
 const SearchPage: React.FC = () => {
   const [query, setQuery] = useState('');
