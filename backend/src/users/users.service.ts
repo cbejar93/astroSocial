@@ -278,6 +278,41 @@ export class UsersService {
     });
   }
 
+  async searchUsers(
+    query: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    results: { id: string; username: string | null; avatarUrl: string | null }[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const skip = (page - 1) * limit;
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where: { username: { contains: query, mode: 'insensitive' } },
+        select: { id: true, username: true, avatarUrl: true },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count({
+        where: { username: { contains: query, mode: 'insensitive' } },
+      }),
+    ]);
+
+    return {
+      results: items.map((u) => ({
+        id: u.id,
+        username: u.username,
+        avatarUrl: u.avatarUrl,
+      })),
+      total,
+      page,
+      limit,
+    };
+  }
+
   async getFollowers(userId: string): Promise<UserDto[]> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
