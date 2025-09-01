@@ -338,3 +338,41 @@ export async function deleteProfile() {
   const res = await apiFetch('/users/me', { method: 'DELETE' });
   return res.json();
 }
+
+// --------------------------------------------------
+// Search API helpers
+
+export interface SearchUser {
+  id: string;
+  username: string | null;
+  avatarUrl: string | null;
+}
+
+export interface SearchLounge {
+  id: string;
+  name: string;
+  bannerUrl: string;
+}
+
+export interface PaginatedResults<T> {
+  results: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface SearchResponse {
+  users?: PaginatedResults<SearchUser>;
+  lounges?: PaginatedResults<SearchLounge>;
+}
+
+export async function search(
+  query: string,
+  page: number = 1,
+  limit: number = 20,
+): Promise<SearchResponse> {
+  const res = await apiFetch(
+    `/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
+  );
+  return res.json();
+}

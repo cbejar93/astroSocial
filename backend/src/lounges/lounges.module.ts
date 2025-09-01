@@ -10,5 +10,6 @@ import { PostsModule } from '../posts/post.module';
   imports: [PrismaModule, SupabaseModule.forRoot(), PostsModule],
   providers: [LoungesService, StorageService],
   controllers: [LoungesController],
+  exports: [LoungesService],
 })
 export class LoungesModule {}
