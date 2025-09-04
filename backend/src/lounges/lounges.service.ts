@@ -147,6 +147,32 @@ export class LoungesService {
     });
   }
 
+  async searchLounges(
+    query: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    results: { id: string; name: string; bannerUrl: string }[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const skip = (page - 1) * limit;
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.lounge.findMany({
+        where: { name: { contains: query, mode: 'insensitive' } },
+        select: { id: true, name: true, bannerUrl: true },
+        skip,
+        take: limit,
+      }),
+      this.prisma.lounge.count({
+        where: { name: { contains: query, mode: 'insensitive' } },
+      }),
+    ]);
+
+    return { results: items, total, page, limit };
+  }
+
   async update(
     id: string,
     dto: UpdateLoungeDto,
