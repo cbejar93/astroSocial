@@ -46,7 +46,8 @@ const SearchPage: React.FC = () => {
   );
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-xl mx-auto mt-8">
+      <h1 className="text-2xl font-semibold mb-4">Search</h1>
       <form onSubmit={onSubmit} className="mb-4 flex gap-2">
         <input
           type="text"
