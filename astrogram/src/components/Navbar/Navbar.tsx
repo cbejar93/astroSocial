@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
+import { lounges } from "../../data/lounges";
 
 
 
@@ -143,36 +144,16 @@ const Navbar = () => {
                     All Lounges
                   </Link>
                 </li>
-                <li>
-                  <Link to="/lounge/LuniSolar" onClick={() => setSideMenuOpen(false)}>
-                    LuniSolar
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/lounge/Planetary" onClick={() => setSideMenuOpen(false)}>
-                    Planetary
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/lounge/DSO" onClick={() => setSideMenuOpen(false)}>
-                    DSO
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/lounge/Equipment" onClick={() => setSideMenuOpen(false)}>
-                    Equipment
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/lounge/AstroAdjacent" onClick={() => setSideMenuOpen(false)}>
-                    AstroAdjacent
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/lounge/AskAstro" onClick={() => setSideMenuOpen(false)}>
-                    AskAstro
-                  </Link>
-                </li>
+                {Object.values(lounges).map((lounge) => (
+                  <li key={lounge.name}>
+                    <Link
+                      to={`/lounge/${encodeURIComponent(lounge.name)}`}
+                      onClick={() => setSideMenuOpen(false)}
+                    >
+                      {lounge.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             )}
             <Link
