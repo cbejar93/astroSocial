@@ -7,6 +7,11 @@ type Coordinates = {
   longitude: number;
 };
 
+const DEFAULT_LOCATION: Coordinates = {
+  latitude: 37.8044,
+  longitude: -122.2712,
+};
+
 export const useWeatherService = () => {
   const [location, setLocation] = useState<Coordinates | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -31,6 +36,12 @@ export const useWeatherService = () => {
       },
       (err) => {
         console.error(err);
+
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocation(DEFAULT_LOCATION);
+          return;
+        }
+
         setError('Failed to retrieve location.');
         setLoading(false);
       }
