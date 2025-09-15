@@ -67,8 +67,8 @@ const PostPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full py-4 flex justify-center min-h-screen bg-gray-900 px-2">
-        <div className="w-full max-w-3xl px-0 sm:px-2 space-y-4">
+      <div className="w-full py-8 lg:pl-64 flex justify-center">
+        <div className="w-full max-w-3xl px-0 sm:px-4 space-y-4">
           <PostSkeleton />
           <CommentsSkeleton />
         </div>
@@ -76,15 +76,23 @@ const PostPage: React.FC = () => {
     )
   }
   if (error) {
-    return <div className="p-8 text-center text-red-500">{error}</div>
+    return (
+      <div className="w-full py-8 lg:pl-64 flex justify-center">
+        <div className="w-full max-w-3xl px-0 sm:px-4 text-red-500 text-center">{error}</div>
+      </div>
+    )
   }
   if (!post) {
-    return <div className="p-8 text-center">Post not found.</div>
+    return (
+      <div className="w-full py-8 lg:pl-64 flex justify-center">
+        <div className="w-full max-w-3xl px-0 sm:px-4 text-center">Post not found.</div>
+      </div>
+    )
   }
 
   return (
-    <div className="w-full py-4 flex justify-center min-h-screen bg-gray-900 px-2">
-      <div className="w-full max-w-3xl px-0 sm:px-2">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4">
         <PostCard {...post} />
         <Comments postId={post.id} />
       </div>

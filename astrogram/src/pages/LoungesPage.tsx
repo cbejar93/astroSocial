@@ -35,8 +35,9 @@ const LoungesPage: React.FC = () => {
   const sortedLounges = [...lounges].sort(sortByLastPost);
 
   return (
-    <div className="mt-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="w-full py-8 lg:pt-6 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {sortedLounges.map((lounge) => {
           const isFollowed = user?.followedLounges?.includes(lounge.id) ?? false;
           return (
@@ -86,6 +87,7 @@ const LoungesPage: React.FC = () => {
             </Link>
           );
         })}
+        </div>
       </div>
     </div>
   );

@@ -69,7 +69,12 @@ export default function ProfilePage(): JSX.Element {
     };
   }, [previewUrl]);
 
-  if (!user) return <div className="p-4">Please sign in.</div>;
+  if (!user)
+    return (
+      <div className="w-full py-8 lg:pl-64 flex justify-center">
+        <div className="w-full max-w-3xl px-0 sm:px-4">Please sign in.</div>
+      </div>
+    );
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -137,7 +142,8 @@ export default function ProfilePage(): JSX.Element {
   const loungePosts = posts.filter((p) => p.loungeId);
 
   return (
-    <div className="p-4 max-w-2xl mx-auto text-gray-200">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4 text-gray-200">
       {/* Profile header */}
       <div className="flex items-center mb-4">
         {user.avatarUrl ? (
@@ -398,6 +404,7 @@ export default function ProfilePage(): JSX.Element {
           onConfirm={confirmDelete}
         />
       )}
+      </div>
     </div>
   );
 };

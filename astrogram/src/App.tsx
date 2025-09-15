@@ -49,7 +49,7 @@ const App: React.FC = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-grow w-full mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8 pt-6 pb-24 md:grid md:grid-cols-[auto,1fr,auto] md:gap-8">
+      <main className="flex-grow w-full mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8 pt-6 pb-24 md:grid md:grid-cols-[16rem,1fr,auto] md:gap-8">
         <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
           <DesktopNav />
         </aside>

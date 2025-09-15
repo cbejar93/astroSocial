@@ -77,7 +77,8 @@ const UserPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto text-gray-200">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4 text-gray-200">
       {info && (
         <>
           <div className="flex items-center space-x-2 mb-2">
@@ -183,6 +184,7 @@ const UserPage: React.FC = () => {
           ))}
         </ul>
       )}
+    </div>
     </div>
   );
 };

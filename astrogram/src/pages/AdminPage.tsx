@@ -70,7 +70,8 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto text-gray-200">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4 text-gray-200">
       <div className="border-b border-gray-700 mb-4 pt-4">
         <nav className="-mb-px flex justify-center space-x-8" aria-label="Admin tabs">
           <Link
@@ -157,6 +158,7 @@ const AdminPage: React.FC = () => {
 
       {active === 'users' && <div>User management coming soon.</div>}
       {active === 'posts' && <div>Post moderation coming soon.</div>}
+      </div>
     </div>
   );
 };

@@ -100,7 +100,8 @@ const LoungePage: React.FC = () => {
   }
 
   return (
-    <div className="py-6">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4">
       <div className="relative mb-12">
         <div className="w-full h-40 overflow-hidden">
           <img
@@ -161,7 +162,14 @@ const LoungePage: React.FC = () => {
           )}
         </div>
       </div>
-      <div className="w-full max-w-3xl mx-auto space-y-4">
+      {lounge.description && (
+        <div className="mb-6">
+          <p className="text-sm text-neutral-300 whitespace-pre-line">
+            {lounge.description}
+          </p>
+        </div>
+      )}
+      <div className="w-full space-y-4">
         {loadingPosts ? (
           <div>Loading posts...</div>
         ) : (
@@ -242,6 +250,7 @@ const LoungePage: React.FC = () => {
             );
           })
         )}
+      </div>
       </div>
     </div>
   );

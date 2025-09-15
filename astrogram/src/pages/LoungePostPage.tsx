@@ -139,7 +139,8 @@ const LoungePostPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-6">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4">
       <h1 className="text-xl font-semibold mb-4">New Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -259,6 +260,7 @@ const LoungePostPage: React.FC = () => {
           {loading ? "Posting..." : "Post"}
         </button>
       </form>
+      </div>
     </div>
   );
 };
