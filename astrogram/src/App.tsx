@@ -3,6 +3,7 @@ import Feed from './pages/Feed';
 import UploadForm from './components/UploadForm/UploadForm';
 import Navbar from './components/Navbar/Navbar';
 import BottomNavbar from './components/BottomNavbar/BottomNavbar';
+import DesktopNav from './components/Sidebar/DesktopNav';
 import WeatherPage from './pages/WeatherPage';
 import { useWeatherService } from './hooks/useWeatherService';
 import { useEffect } from "react";
@@ -48,9 +49,9 @@ const App: React.FC = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-grow w-full mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8 pt-6 pb-24 lg:grid lg:grid-cols-[auto,1fr,auto] lg:gap-8">
-        <aside className="hidden lg:block lg:w-64" aria-hidden="true">
-          {/* Left sidebar placeholder */}
+      <main className="flex-grow w-full mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8 pt-6 pb-24 md:grid md:grid-cols-[auto,1fr,auto] md:gap-8">
+        <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
+          <DesktopNav />
         </aside>
         <section className="w-full">
           <Routes>
@@ -98,7 +99,9 @@ const App: React.FC = () => {
       </main>
 
       {/* Bottom Navbar */}
-      <BottomNavbar />
+      <div className="md:hidden">
+        <BottomNavbar />
+      </div>
     </div>
   );
 };
