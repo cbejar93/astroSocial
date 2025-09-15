@@ -3,7 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
-import { lounges } from "../../data/lounges";
+import { fetchLounges } from "../../lib/api";
+
+interface LoungeInfo {
+  id: string;
+  name: string;
+  description: string | null;
+  bannerUrl: string;
+  profileUrl: string;
+  threads: number;
+  followers: number;
+  lastPostAt: string | null;
+}
 
 
 
@@ -11,6 +22,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [loungesOpen, setLoungesOpen] = useState(false);
+  const [loungesList, setLoungesList] = useState<LoungeInfo[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { count } = useNotifications();
@@ -36,6 +48,12 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEsc);
     };
+  }, []);
+
+  useEffect(() => {
+    fetchLounges<LoungeInfo>()
+      .then(setLoungesList)
+      .catch(() => {});
   }, []);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -144,16 +162,20 @@ const Navbar = () => {
                     All Lounges
                   </Link>
                 </li>
-                {Object.values(lounges).map((lounge) => (
-                  <li key={lounge.name}>
-                    <Link
-                      to={`/lounge/${encodeURIComponent(lounge.name)}`}
-                      onClick={() => setSideMenuOpen(false)}
-                    >
-                      {lounge.name}
-                    </Link>
-                  </li>
-                ))}
+                {loungesList.length === 0 ? (
+                  <li className="text-neutral-500">No lounges available</li>
+                ) : (
+                  loungesList.map((lounge) => (
+                    <li key={lounge.id}>
+                      <Link
+                        to={`/lounge/${encodeURIComponent(lounge.name)}`}
+                        onClick={() => setSideMenuOpen(false)}
+                      >
+                        {lounge.name}
+                      </Link>
+                    </li>
+                  ))
+                )}
               </ul>
             )}
             <Link
