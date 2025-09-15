@@ -46,7 +46,9 @@ const SearchPage: React.FC = () => {
   );
 
   return (
-    <div className="max-w-xl mx-auto mt-8">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4">
+        <div className="max-w-xl mx-auto">
       <h1 className="text-2xl font-semibold mb-4">Search</h1>
       <form onSubmit={onSubmit} className="mb-4 flex gap-2">
         <input
@@ -132,6 +134,8 @@ const SearchPage: React.FC = () => {
           </button>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

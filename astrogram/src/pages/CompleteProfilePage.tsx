@@ -67,10 +67,11 @@ const CompleteProfilePage: React.FC = () => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-md mx-auto bg-gray-800 p-6 rounded-xl space-y-6"
-    >
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md bg-gray-800 p-6 rounded-xl space-y-6"
+      >
       <h2 className="text-xl font-semibold text-center">Complete Your Profile</h2>
 
       {/* Username */}
@@ -152,7 +153,8 @@ const CompleteProfilePage: React.FC = () => {
           "Save Profile"
         )}
       </button>
-    </form>
+      </form>
+    </div>
   );
 };
 

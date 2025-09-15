@@ -59,14 +59,30 @@ const LoungePostDetailPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="py-6">Loading...</div>;
-  if (error) return <div className="py-6">{error}</div>;
-  if (!post) return <div className="py-6">Post not found.</div>;
+  if (loading)
+    return (
+      <div className="w-full py-8 lg:pl-64 flex justify-center">
+        <div className="w-full max-w-3xl px-0 sm:px-4">Loading...</div>
+      </div>
+    );
+  if (error)
+    return (
+      <div className="w-full py-8 lg:pl-64 flex justify-center">
+        <div className="w-full max-w-3xl px-0 sm:px-4">{error}</div>
+      </div>
+    );
+  if (!post)
+    return (
+      <div className="w-full py-8 lg:pl-64 flex justify-center">
+        <div className="w-full max-w-3xl px-0 sm:px-4">Post not found.</div>
+      </div>
+    );
 
   const isOwn = user?.username === post.username;
 
   return (
-    <div className="py-6">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4">
       <div className="flex items-center mb-4">
         <img
           src={post.avatarUrl}
@@ -110,6 +126,7 @@ const LoungePostDetailPage: React.FC = () => {
       <div dangerouslySetInnerHTML={{ __html: post.caption }} />
       <hr className="my-4 border-t border-white/20" />
       <Comments postId={post.id} />
+    </div>
     </div>
   );
 };

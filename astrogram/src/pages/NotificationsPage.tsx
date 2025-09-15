@@ -19,11 +19,12 @@ const NotificationsPage: React.FC = () => {
   }, [refresh]);
 
   return (
-    <div className="p-4 max-w-xl mx-auto text-gray-200">
+    <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full max-w-3xl px-0 sm:px-4 text-gray-200">
       <h1 className="text-xl mb-4">Notifications</h1>
-      {loading ? (
-        <div>Loading…</div>
-      ) : (
+        {loading ? (
+          <div>Loading…</div>
+        ) : (
         <ul className="space-y-4">
           {items.map((n) => (
             <li key={n.id} className="flex gap-2 border-b border-white/20 pb-2">
@@ -55,6 +56,7 @@ const NotificationsPage: React.FC = () => {
           ))}
         </ul>
       )}
+      </div>
     </div>
   );
 };
