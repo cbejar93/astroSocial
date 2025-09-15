@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { search, SearchResponse } from '../lib/api';
+import { search, type SearchResponse } from '../lib/api';
 
 const SearchPage: React.FC = () => {
   const [query, setQuery] = useState('');
