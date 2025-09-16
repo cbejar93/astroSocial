@@ -16,7 +16,10 @@ import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'development' ? '.env.dev' : '.env',
+    }),
     HttpModule,
     WeatherModule,
     SupabaseModule.forRoot(),
