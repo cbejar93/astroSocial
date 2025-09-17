@@ -18,7 +18,7 @@ import { SearchModule } from './search/search.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'development' ? '.env.dev' : '.env',
+      envFilePath: process.env.NODE_ENV ? '.env' : '.env.dev',
     }),
     HttpModule,
     WeatherModule,

@@ -20,6 +20,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private configService: ConfigService,
   ) {
     const clientID = configService.get<string>('GOOGLE_CLIENT_ID');
+    console.log('hello ======');
+    console.log(clientID);
     if (!clientID) {
       throw new Error('GOOGLE_CLIENT_ID is not configured');
     }
