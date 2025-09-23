@@ -153,14 +153,91 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
+    const sanitizeHtml = (value: string) => {
+      if (typeof window === 'undefined' || !value) {
+        return '';
+      }
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(value, 'text/html');
+      const body = doc.body;
+      if (!body) {
+        return '';
+      }
+      const allowedTags = new Set([
+        'a',
+        'blockquote',
+        'br',
+        'code',
+        'em',
+        'i',
+        'li',
+        'ol',
+        'p',
+        'pre',
+        'strong',
+        'ul',
+      ]);
+      const allowedAttrs = new Set(['href', 'title', 'rel', 'target']);
+
+      const walker = doc.createTreeWalker(
+        body,
+        NodeFilter.SHOW_ELEMENT,
+        null,
+      );
+
+      const nodesToRemove: Element[] = [];
+      const nodesToUnwrap: Element[] = [];
+
+      while (walker.nextNode()) {
+        const node = walker.currentNode as Element;
+        const tag = node.tagName.toLowerCase();
+
+        if (!allowedTags.has(tag)) {
+          if (tag === 'script' || tag === 'style') {
+            nodesToRemove.push(node);
+            continue;
+          }
+          nodesToUnwrap.push(node);
+          continue;
+        }
+
+        [...node.attributes].forEach((attr) => {
+          if (!allowedAttrs.has(attr.name.toLowerCase())) {
+            node.removeAttribute(attr.name);
+          }
+        });
+
+        if (tag === 'a') {
+          if (!node.hasAttribute('rel')) {
+            node.setAttribute('rel', 'noopener noreferrer');
+          }
+          if (!node.hasAttribute('target')) {
+            node.setAttribute('target', '_blank');
+          }
+        }
+      }
+
+      nodesToRemove.forEach((node) => node.remove());
+      nodesToUnwrap.forEach((node) => {
+        const fragment = document.createDocumentFragment();
+        while (node.firstChild) {
+          fragment.appendChild(node.firstChild);
+        }
+        node.replaceWith(fragment);
+      });
+
+      return body.innerHTML;
+    };
+
     const insertQuote = (source: QuoteSource) => {
       focusEditor();
       const editor = editorRef.current;
       if (!editor) return;
       const parentId = source.parentId ?? source.id ?? null;
+      const sanitizedBody = sanitizeHtml(source.text);
       const quoteHtml =
         `<blockquote><p><strong>@${escapeHtml(source.username)}</strong> wrote:</p>` +
-        `<div>${source.text}</div></blockquote><p><br></p>`;
+        `<div>${sanitizedBody}</div></blockquote><p><br></p>`;
       try {
         if (document.queryCommandSupported('insertHTML')) {
           document.execCommand('insertHTML', false, quoteHtml);
