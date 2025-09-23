@@ -160,7 +160,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       const parentId = source.parentId ?? source.id ?? null;
       const quoteHtml =
         `<blockquote><p><strong>@${escapeHtml(source.username)}</strong> wrote:</p>` +
-        `<p>${escapeHtml(source.text)}</p></blockquote><p><br></p>`;
+        `<div>${source.text}</div></blockquote><p><br></p>`;
       try {
         if (document.queryCommandSupported('insertHTML')) {
           document.execCommand('insertHTML', false, quoteHtml);
