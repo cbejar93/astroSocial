@@ -31,6 +31,15 @@
 $ npm install
 ```
 
+## Environment variables
+
+- `REFRESH_COOKIE_DOMAIN` (optional): Override the domain used when setting the `jid`
+  refresh-token cookie after a successful OAuth redirect. If not provided, the
+  backend falls back to `astrosocial.fly.dev` in production and `localhost` in
+  development. Set this value in your deployment configuration (for example,
+  `fly.toml`) so each environment issues refresh-token cookies for the correct
+  domain.
+
 ## Compile and run the project
 
 ```bash
