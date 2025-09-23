@@ -73,38 +73,34 @@ export class UsersService {
   }
 
   async uploadAvatar(userId: string, file: Express.Multer.File) {
-    // const filePath = `${userId}/${file.originalname}`;
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatarUrl: true },
+    });
 
-    // // 1) Upload
-    // const { data: uploadData, error: uploadError } = await this.supabase
-    //   .storage
-    //   .from('avatars')
-    //   .upload(filePath, file.buffer, {
-    //     cacheControl: '3600',
-    //     upsert: true,
-    //     contentType: file.mimetype,
-    //   });
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
 
-    const publicUrl = await this.storage.uploadFile(
-      'avatars',
-      `${userId}/${file.originalname}`,
-      file,
-    );
+    const existingAvatarPath = this.getAvatarStoragePath(currentUser.avatarUrl);
 
-    // if (uploadError || !uploadData) {
-    //   this.logger.error(`Supabase upload error: ${uploadError?.message}`);
-    //   throw new InternalServerErrorException('Failed to upload avatar');
-    // }
+    if (existingAvatarPath) {
+      try {
+        await this.storage.deleteFile('avatars', existingAvatarPath);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : JSON.stringify(error);
+        this.logger.error(
+          `Failed to delete existing avatar for user ${userId}`,
+          message,
+        );
+        throw error;
+      }
+    }
 
-    // 2) Get the public URL (no error to check here)
-    // const { data: urlData } = this.supabase
-    //   .storage
-    //   .from('avatars')
-    //   .getPublicUrl(uploadData.path);
+    const uploadPath = `${userId}/${file.originalname}`;
+    const publicUrl = await this.storage.uploadFile('avatars', uploadPath, file);
 
-    // const publicUrl = urlData.publicUrl;
-
-    // 3) Save to your database
     await this.prisma.user.update({
       where: { id: userId },
       data: { avatarUrl: publicUrl, profileComplete: true },
@@ -390,5 +386,31 @@ export class UsersService {
       followers: user.followers?.map((u) => u.id),
       following: user.following?.map((u) => u.id),
     };
+  }
+
+  private getAvatarStoragePath(avatarUrl?: string | null): string | null {
+    if (!avatarUrl) return null;
+
+    try {
+      const parsedUrl = new URL(avatarUrl);
+      const decodedPath = decodeURIComponent(parsedUrl.pathname);
+      const match = decodedPath.match(/\/avatars\/(.+)$/);
+      if (match?.[1]) {
+        return match[1];
+      }
+    } catch (error) {
+      // Ignore parsing errors and fall through to the string checks below.
+    }
+
+    const stringMatch = avatarUrl.match(/(?:^|\/)avatars\/(.+)$/);
+    if (stringMatch?.[1]) {
+      return stringMatch[1];
+    }
+
+    if (!avatarUrl.includes('://')) {
+      return avatarUrl.replace(/^avatars\//, '').replace(/^\/+/, '') || null;
+    }
+
+    return null;
   }
 }
