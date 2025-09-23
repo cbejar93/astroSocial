@@ -35,58 +35,58 @@ const LoungesPage: React.FC = () => {
   const sortedLounges = [...lounges].sort(sortByLastPost);
 
   return (
-    <div className="w-full py-8 lg:pt-6 lg:pl-64 flex justify-center">
+    <div className="w-full py-8 flex justify-center">
       <div className="w-full max-w-3xl px-0 sm:px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {sortedLounges.map((lounge) => {
-          const isFollowed = user?.followedLounges?.includes(lounge.id) ?? false;
-          return (
-            <Link
-              key={lounge.id}
-              to={`/lounge/${encodeURIComponent(lounge.name)}`}
-              className="bg-neutral-800 rounded-lg overflow-hidden hover:bg-neutral-700 transition-colors"
-            >
-              <div className="w-full h-32 overflow-hidden">
-                <img
-                  src={lounge.bannerUrl}
-                  alt={`${lounge.name} banner`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-4 flex items-center gap-4">
-                <img
-                  src={lounge.profileUrl}
-                  alt={`${lounge.name} icon`}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div>
-                  <div className="text-lg font-semibold">{lounge.name}</div>
-                  <div className="text-sm text-neutral-400 flex items-center gap-2">
-                    <span>
-                      {lounge.threads ?? 0} Threads · {lounge.followers ?? 0} Trackers
-                    </span>
-                    {user && (
-                      <button
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          await updateFollowedLounge(
-                            lounge.id,
-                            lounge.name,
-                            !isFollowed,
-                          );
-                        }}
-                        className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
-                      >
-                        {isFollowed ? "Unfollow" : "Follow"}
-                      </button>
-                    )}
+          {sortedLounges.map((lounge) => {
+            const isFollowed = user?.followedLounges?.includes(lounge.id) ?? false;
+            return (
+              <Link
+                key={lounge.id}
+                to={`/lounge/${encodeURIComponent(lounge.name)}`}
+                className="bg-neutral-800 rounded-lg overflow-hidden hover:bg-neutral-700 transition-colors"
+              >
+                <div className="w-full h-32 overflow-hidden">
+                  <img
+                    src={lounge.bannerUrl}
+                    alt={`${lounge.name} banner`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4 flex items-center gap-4">
+                  <img
+                    src={lounge.profileUrl}
+                    alt={`${lounge.name} icon`}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div>
+                    <div className="text-lg font-semibold">{lounge.name}</div>
+                    <div className="text-sm text-neutral-400 flex items-center gap-2">
+                      <span>
+                        {lounge.threads ?? 0} Threads · {lounge.followers ?? 0} Trackers
+                      </span>
+                      {user && (
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            await updateFollowedLounge(
+                              lounge.id,
+                              lounge.name,
+                              !isFollowed,
+                            );
+                          }}
+                          className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
+                        >
+                          {isFollowed ? "Unfollow" : "Follow"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>
