@@ -1,6 +1,9 @@
 app = 'astrolounge-dev'
 primary_region = 'sjc'
 
+[env]
+  REFRESH_COOKIE_DOMAIN = 'astrolounge-dev.fly.dev'
+
 [build]
   dockerfile = "Dockerfile"
 

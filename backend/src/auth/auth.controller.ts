@@ -44,6 +44,11 @@ export class AuthController {
     private readonly jwtService: JwtService,
   ) {}
 
+  private getRefreshCookieDomain(isProd: boolean): string {
+    const fallbackDomain = isProd ? 'astrosocial.fly.dev' : 'localhost';
+    return process.env.REFRESH_COOKIE_DOMAIN?.trim() || fallbackDomain;
+  }
+
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth() {
@@ -87,7 +92,7 @@ export class AuthController {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'lax' : 'none',
-      domain: isProd ? 'astrosocial.fly.dev' : 'localhost',
+      domain: this.getRefreshCookieDomain(isProd),
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
@@ -129,7 +134,7 @@ export class AuthController {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'lax' : 'none',
-      ...(isProd && { domain: 'astrosocial.fly.dev' }),
+      domain: this.getRefreshCookieDomain(isProd),
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
