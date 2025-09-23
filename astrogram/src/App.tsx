@@ -54,7 +54,7 @@ const App: React.FC = () => {
           <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
             <DesktopNav />
           </aside>
-          <section className="w-full">
+          <section className="w-full min-w-0">
             <Routes>
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/auth/success" element={<AuthSuccessPage />} />

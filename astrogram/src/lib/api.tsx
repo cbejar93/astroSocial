@@ -222,15 +222,51 @@ export async function interactWithPost(
 // --------------------------------------------------
 // Comments API helpers
 
-export async function fetchComments<T = unknown>(postId: string): Promise<T[]> {
-  const res = await apiFetch(`/posts/${postId}/comments`);
+export interface CommentResponse {
+  id: string;
+  text: string;
+  authorId: string;
+  username: string;
+  avatarUrl: string;
+  timestamp: string;
+  likes: number;
+  likedByMe?: boolean;
+  parentId?: string | null;
+}
+
+export interface PaginatedCommentsResponse<T = CommentResponse> {
+  comments: T[];
+  replies: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export async function fetchCommentPage<T = CommentResponse>(
+  postId: string,
+  page: number = 1,
+  limit: number = 20,
+): Promise<PaginatedCommentsResponse<T>> {
+  const res = await apiFetch(`/posts/${postId}/comments?page=${page}&limit=${limit}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch comments (${res.status})`);
   }
   return res.json();
 }
 
-export async function createComment<T = unknown>(postId: string, text: string, parentId?: string): Promise<T> {
+export async function fetchCommentById<T = CommentResponse>(commentId: string): Promise<T> {
+  const res = await apiFetch(`/comments/${commentId}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch comment (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function createComment<T = CommentResponse>(
+  postId: string,
+  text: string,
+  parentId?: string,
+): Promise<T> {
   const res = await apiFetch(`/posts/${postId}/comments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
