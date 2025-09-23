@@ -101,7 +101,7 @@ const LoungePostDetailPage: React.FC = () => {
 
   return (
     <div className="w-full py-8 flex justify-center">
-      <div className="w-full max-w-full px-0 sm:px-4 space-y-8">
+      <div className="w-full max-w-3xl px-0 sm:px-4 space-y-8">
         <article className="rounded-2xl border border-white/10 bg-gray-950/80 shadow-2xl backdrop-blur">
           <div className="flex flex-col md:flex-row">
             <aside className="md:w-60 border-b md:border-b-0 md:border-r border-white/10 bg-gray-950/60 p-5 text-center">
