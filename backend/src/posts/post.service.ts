@@ -32,14 +32,24 @@ export class PostsService {
         `shares=${post.shares}, reposts=${post.reposts})`,
     );
     const ageHours = (Date.now() - post.createdAt.getTime()) / 1000 / 60 / 60;
-    const recencyScore = Math.exp(-0.1 * ageHours); // decays over ~10h
+    const halfLifeHours = 6; // every 6 hours the recency influence halves
+    const recencyWeight = Math.pow(2, -ageHours / halfLifeHours);
+
     const engagementScore =
       post.commentsCount * 3 +
       post.likes * 1 +
       post.shares * 2 +
       post.reposts * 2;
-    const score = recencyScore + engagementScore;
-    this.logger.verbose(`Score computed: ${score.toFixed(2)}`);
+
+    const freshnessBoost = recencyWeight * 10; // give new posts a big initial push
+    const weightedEngagement = engagementScore * (1 + recencyWeight);
+    const score = weightedEngagement + freshnessBoost;
+
+    this.logger.verbose(
+      `Score computed: ${score.toFixed(2)} (ageHours=${ageHours.toFixed(
+        2,
+      )}, recencyWeight=${recencyWeight.toFixed(2)})`,
+    );
     return score;
   }
 
