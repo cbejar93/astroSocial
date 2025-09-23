@@ -7,7 +7,7 @@ app = 'astrosocial'
 primary_region = 'sjc'
 
 [env]
-  REFRESH_COOKIE_DOMAIN = 'astrosocial.fly.dev'
+  REFRESH_COOKIE_DOMAIN = 'astrolounge.net'
 
 [build]
   dockerfile = "Dockerfile"
