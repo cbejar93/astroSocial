@@ -402,8 +402,22 @@ export class PostsService {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
       include: {
-        author: { select: { username: true, avatarUrl: true } },
-        originalAuthor: { select: { username: true, avatarUrl: true } },
+        author: {
+          select: {
+            username: true,
+            avatarUrl: true,
+            createdAt: true,
+            _count: { select: { posts: true } },
+          },
+        },
+        originalAuthor: {
+          select: {
+            username: true,
+            avatarUrl: true,
+            createdAt: true,
+            _count: { select: { posts: true } },
+          },
+        },
         _count: { select: { comments: true } },
       },
     });
@@ -430,6 +444,8 @@ export class PostsService {
     }
 
     // 3) Shape and return
+    const displayAuthor = post.originalAuthor ?? post.author;
+
     const result = {
       id: post.id,
       username: post.originalAuthor?.username || post.author.username!,
@@ -445,6 +461,10 @@ export class PostsService {
       shares: post.shares,
       reposts: post.reposts,
       likedByMe,
+      ...(displayAuthor?.createdAt
+        ? { authorJoinedAt: displayAuthor.createdAt.toISOString() }
+        : {}),
+      authorPostCount: displayAuthor?._count?.posts ?? 0,
       ...(post.originalAuthorId && post.originalAuthorId !== post.authorId
         ? { repostedBy: post.author.username! }
         : {}),

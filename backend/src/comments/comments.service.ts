@@ -1,4 +1,10 @@
-import { Injectable, Logger, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ForbiddenException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -7,7 +13,6 @@ import { NotificationType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class CommentsService {
-
   private readonly logger = new Logger(CommentsService.name);
   constructor(
     private readonly prisma: PrismaService,
@@ -30,16 +35,36 @@ export class CommentsService {
     }
 
     const comment = await this.prisma.comment.create({
-      data: { text: dto.text, authorId: userId, postId, parentId: dto.parentId },
+      data: {
+        text: dto.text,
+        authorId: userId,
+        postId,
+        parentId: dto.parentId,
+      },
       include: { author: { select: { username: true, avatarUrl: true } } },
     });
 
-    const post = await this.prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
     if (post) {
-      await this.notifications.create(post.authorId, userId, NotificationType.COMMENT, postId, comment.id);
+      await this.notifications.create(
+        post.authorId,
+        userId,
+        NotificationType.COMMENT,
+        postId,
+        comment.id,
+      );
     }
     if (parentAuthorId) {
-      await this.notifications.create(parentAuthorId, userId, NotificationType.COMMENT, postId, comment.id);
+      await this.notifications.create(
+        parentAuthorId,
+        userId,
+        NotificationType.COMMENT,
+        postId,
+        comment.id,
+      );
     }
 
     return {
@@ -55,51 +80,105 @@ export class CommentsService {
     };
   }
 
-  async getCommentsForPost(postId: string, currentUserId?: string) {
+  async getCommentsForPost(
+    postId: string,
+    page: number,
+    limit: number,
+    currentUserId?: string,
+  ) {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.max(1, Math.min(limit, 100));
 
-    this.logger.log(`Fetching comments for post ${postId}`);
+    this.logger.log(
+      `Fetching comments for post ${postId} (page=${safePage}, limit=${safeLimit})`,
+    );
 
-    const list = await this.prisma.comment.findMany({
-      where: { postId, parentId: null },
-      orderBy: { createdAt: 'asc' },
+    const skip = (safePage - 1) * safeLimit;
+
+    const [total, list] = await Promise.all([
+      this.prisma.comment.count({ where: { postId, parentId: null } }),
+      this.prisma.comment.findMany({
+        where: { postId, parentId: null },
+        orderBy: { createdAt: 'asc' },
+        skip,
+        take: safeLimit,
+        include: {
+          author: { select: { username: true, avatarUrl: true } },
+          likedBy: currentUserId
+            ? { where: { userId: currentUserId }, select: { id: true } }
+            : false,
+          replies: {
+            orderBy: { createdAt: 'asc' },
+            include: {
+              author: { select: { username: true, avatarUrl: true } },
+              likedBy: currentUserId
+                ? { where: { userId: currentUserId }, select: { id: true } }
+                : false,
+            },
+          },
+        },
+      }),
+    ]);
+
+    const formatComment = (comment: {
+      id: string;
+      text: string;
+      authorId: string;
+      createdAt: Date;
+      likes: number;
+      parentId: string | null;
+      author: { username: string | null; avatarUrl: string | null };
+      likedBy?: { id: string }[];
+    }) => ({
+      id: comment.id,
+      text: comment.text,
+      authorId: comment.authorId,
+      username: comment.author.username ?? '',
+      avatarUrl: comment.author.avatarUrl ?? '',
+      timestamp: comment.createdAt.toISOString(),
+      likes: comment.likes,
+      likedByMe: currentUserId ? (comment.likedBy?.length ?? 0) > 0 : false,
+      parentId: comment.parentId,
+    });
+
+    const comments = list.map((c) => formatComment(c));
+    const replies = list.flatMap((c) => c.replies.map((r) => formatComment(r)));
+
+    return {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      comments,
+      replies,
+    };
+  }
+
+  async getCommentById(commentId: string, currentUserId?: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
       include: {
         author: { select: { username: true, avatarUrl: true } },
         likedBy: currentUserId
           ? { where: { userId: currentUserId }, select: { id: true } }
           : false,
-        replies: {
-          orderBy: { createdAt: 'asc' },
-          include: {
-            author: { select: { username: true, avatarUrl: true } },
-            likedBy: currentUserId
-              ? { where: { userId: currentUserId }, select: { id: true } }
-              : false,
-          },
-        },
       },
     });
-    return list.map(c => ({
-      id: c.id,
-      text: c.text,
-      authorId: c.authorId,
-      username: c.author.username!,
-      avatarUrl: c.author.avatarUrl ?? '',
-      timestamp: c.createdAt.toISOString(),
-      likes: c.likes,
-      likedByMe: currentUserId ? c.likedBy.length > 0 : false,
-      parentId: c.parentId,
-      replies: c.replies.map(r => ({
-        id: r.id,
-        text: r.text,
-        authorId: r.authorId,
-        username: r.author.username!,
-        avatarUrl: r.author.avatarUrl ?? '',
-        timestamp: r.createdAt.toISOString(),
-        likes: r.likes,
-        likedByMe: currentUserId ? r.likedBy.length > 0 : false,
-        parentId: r.parentId,
-      })),
-    }));
+
+    if (!comment) {
+      throw new NotFoundException(`Comment ${commentId} not found`);
+    }
+
+    return {
+      id: comment.id,
+      text: comment.text,
+      authorId: comment.authorId,
+      username: comment.author.username ?? '',
+      avatarUrl: comment.author.avatarUrl ?? '',
+      timestamp: comment.createdAt.toISOString(),
+      likes: comment.likes,
+      likedByMe: currentUserId ? comment.likedBy.length > 0 : false,
+      parentId: comment.parentId,
+    };
   }
 
   async toggleLike(userId: string, commentId: string) {
@@ -121,7 +200,10 @@ export class CommentsService {
       );
       return { liked: true, count: updated.likes };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
         await this.prisma.commentLike.delete({
           where: {
             one_like_per_user_per_comment: { commentId, userId },
@@ -147,10 +229,7 @@ export class CommentsService {
   async deleteComment(userId: string, commentId: string) {
     await this.prisma.commentLike.deleteMany({
       where: {
-        OR: [
-          { commentId },
-          { comment: { parentId: commentId } },
-        ],
+        OR: [{ commentId }, { comment: { parentId: commentId } }],
       },
     });
 
