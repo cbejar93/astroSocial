@@ -61,19 +61,19 @@ const LoungePostDetailPage: React.FC = () => {
 
   if (loading)
     return (
-      <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full py-8 flex justify-center">
         <div className="w-full max-w-3xl px-0 sm:px-4">Loading...</div>
       </div>
     );
   if (error)
     return (
-      <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full py-8 flex justify-center">
         <div className="w-full max-w-3xl px-0 sm:px-4">{error}</div>
       </div>
     );
   if (!post)
     return (
-      <div className="w-full py-8 lg:pl-64 flex justify-center">
+      <div className="w-full py-8 flex justify-center">
         <div className="w-full max-w-3xl px-0 sm:px-4">Post not found.</div>
       </div>
     );
@@ -81,52 +81,52 @@ const LoungePostDetailPage: React.FC = () => {
   const isOwn = user?.username === post.username;
 
   return (
-    <div className="w-full py-8 lg:pl-64 flex justify-center">
+    <div className="w-full py-8 flex justify-center">
       <div className="w-full max-w-3xl px-0 sm:px-4">
-      <div className="flex items-center mb-4">
-        <img
-          src={post.avatarUrl}
-          alt={`${post.username} avatar`}
-          className="w-10 h-10 rounded-full object-cover mr-3"
-        />
-        <div>
-          <Link
-            to={`/users/${post.username}/posts`}
-            className="font-semibold text-teal-400 text-sm hover:underline"
-          >
-            @{post.username}
-          </Link>
-          <div className="text-sm text-gray-500">
-            {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
-          </div>
-        </div>
-        {isOwn && (
-          <div ref={menuRef} className="relative ml-auto">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(o => !o)}
-              className="p-1 text-gray-400 hover:text-gray-600"
+        <div className="flex items-center mb-4">
+          <img
+            src={post.avatarUrl}
+            alt={`${post.username} avatar`}
+            className="w-10 h-10 rounded-full object-cover mr-3"
+          />
+          <div>
+            <Link
+              to={`/users/${post.username}/posts`}
+              className="font-semibold text-teal-400 text-sm hover:underline"
             >
-              <MoreVertical className="w-5 h-5" />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
-                <button
-                  onClick={handleDelete}
-                  className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                >
-                  Delete Post
-                </button>
-              </div>
-            )}
+              @{post.username}
+            </Link>
+            <div className="text-sm text-gray-500">
+              {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+            </div>
           </div>
-        )}
+          {isOwn && (
+            <div ref={menuRef} className="relative ml-auto">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
+                  <button
+                    onClick={handleDelete}
+                    className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                  >
+                    Delete Post
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
+        <div dangerouslySetInnerHTML={{ __html: post.caption }} />
+        <hr className="my-4 border-t border-white/20" />
+        <Comments postId={post.id} />
       </div>
-      <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
-      <div dangerouslySetInnerHTML={{ __html: post.caption }} />
-      <hr className="my-4 border-t border-white/20" />
-      <Comments postId={post.id} />
-    </div>
     </div>
   );
 };
