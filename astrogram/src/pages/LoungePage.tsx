@@ -100,9 +100,9 @@ const LoungePage: React.FC = () => {
   }
 
   return (
-    <div className="w-full py-8 lg:pl-64 flex justify-center">
+    <div className="w-full py-8 flex justify-center">
       <div className="w-full max-w-3xl px-0 sm:px-4">
-      <div className="relative mb-12">
+        <div className="relative mb-12">
         <div className="w-full h-40 overflow-hidden">
           <img
             src={lounge.bannerUrl}
@@ -162,18 +162,18 @@ const LoungePage: React.FC = () => {
           )}
         </div>
       </div>
-      {lounge.description && (
-        <div className="mb-6">
-          <p className="text-sm text-neutral-300 whitespace-pre-line">
-            {lounge.description}
-          </p>
-        </div>
-      )}
-      <div className="w-full space-y-4">
-        {loadingPosts ? (
-          <div>Loading posts...</div>
-        ) : (
-          posts.map((post) => {
+        {lounge.description && (
+          <div className="mb-6">
+            <p className="text-sm text-neutral-300 whitespace-pre-line">
+              {lounge.description}
+            </p>
+          </div>
+        )}
+        <div className="w-full space-y-4">
+          {loadingPosts ? (
+            <div>Loading posts...</div>
+          ) : (
+            posts.map((post) => {
             const isOwn = user?.username === post.username;
             return (
               <div
@@ -248,9 +248,9 @@ const LoungePage: React.FC = () => {
                 )}
               </div>
             );
-          })
-        )}
-      </div>
+            })
+          )}
+        </div>
       </div>
     </div>
   );
