@@ -42,4 +42,18 @@ export class StorageService {
     this.logger.log(`Public URL = ${urlData.publicUrl}`)
     return urlData.publicUrl
   }
+
+  /**
+   * Removes a file from the given bucket.
+   */
+  async deleteFile(bucket: string, filePath: string): Promise<void> {
+    this.logger.log(`Deleting from bucket="${bucket}" path="${filePath}"`)
+
+    const { error } = await this.supabase.storage.from(bucket).remove([filePath])
+
+    if (error) {
+      this.logger.error(`Delete failed`, error?.message)
+      throw new InternalServerErrorException('Storage delete failed')
+    }
+  }
 }
