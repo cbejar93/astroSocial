@@ -114,7 +114,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   const icon = getWeatherIcon(currentCondition, isDaytime);
 
   return (
-    <div className="w-full py-8 lg:pl-64 flex justify-center">
+    <div className="w-full py-8 flex justify-center">
       <div className="w-full max-w-3xl px-0 sm:px-4">
       <WeatherHeader
         location={weather.coordinates}
