@@ -49,53 +49,55 @@ const App: React.FC = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-grow w-full mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8 pt-6 pb-24 md:grid md:grid-cols-[16rem,1fr,auto] md:gap-8">
-        <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
-          <DesktopNav />
-        </aside>
-        <section className="w-full">
-          <Routes>
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/auth/success" element={<AuthSuccessPage />} />
-            <Route element={<RequireProfileCompletion />}>
-              <Route path="/" element={<Feed />} />
-              {/* single-post detail view */}
-              <Route path="/posts/:id" element={<PostPage />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/users/:username" element={<UserPage />} />
-              <Route path="/users/:username/:tab" element={<UserPage />} />
-              <Route path="/lounge" element={<LoungesPage />} />
-              <Route path="/lounge/:loungeName" element={<LoungePage />} />
-              <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
-              <Route path="/upload" element={<UploadForm />} />
-              <Route path="/completeProfile" element={<CompleteProfilePage />} />
-              <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
-              <Route path="/profile/:tab" element={<ProfilePage />} />
-              <Route element={<RequireAdmin />}>
-                <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
-                <Route path="/admin/:tab" element={<AdminPage />} />
+      <main className="flex-grow bg-gray-900">
+        <div className="mx-auto w-full max-w-7xl px-6 lg:px-8 pt-6 pb-24 md:grid md:grid-cols-[18rem,minmax(0,1fr),16rem] md:gap-8">
+          <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
+            <DesktopNav />
+          </aside>
+          <section className="w-full">
+            <Routes>
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/auth/success" element={<AuthSuccessPage />} />
+              <Route element={<RequireProfileCompletion />}>
+                <Route path="/" element={<Feed />} />
+                {/* single-post detail view */}
+                <Route path="/posts/:id" element={<PostPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/users/:username" element={<UserPage />} />
+                <Route path="/users/:username/:tab" element={<UserPage />} />
+                <Route path="/lounge" element={<LoungesPage />} />
+                <Route path="/lounge/:loungeName" element={<LoungePage />} />
+                <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
+                <Route path="/upload" element={<UploadForm />} />
+                <Route path="/completeProfile" element={<CompleteProfilePage />} />
+                <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
+                <Route path="/profile/:tab" element={<ProfilePage />} />
+                <Route element={<RequireAdmin />}>
+                  <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
+                  <Route path="/admin/:tab" element={<AdminPage />} />
+                </Route>
+                <Route
+                  path="/weather"
+                  element={
+                    <WeatherPage
+                      weather={weather}
+                      loading={loading}
+                      error={error}
+                      unit={unit}
+                      setUnit={setUnit}
+                    />
+                  }
+                />
+                <Route path="*" element={<NotFoundPage />} />
               </Route>
-              <Route
-                path="/weather"
-                element={
-                  <WeatherPage
-                    weather={weather}
-                    loading={loading}
-                    error={error}
-                    unit={unit}
-                    setUnit={setUnit}
-                  />
-                }
-              />
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
-          </Routes>
-        </section>
-        <aside className="hidden lg:block lg:w-64" aria-hidden="true">
-          {/* Right sidebar placeholder */}
-        </aside>
+            </Routes>
+          </section>
+          <aside className="hidden lg:block lg:w-64" aria-hidden="true">
+            {/* Right sidebar placeholder */}
+          </aside>
+        </div>
       </main>
 
       {/* Bottom Navbar */}
