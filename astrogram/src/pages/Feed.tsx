@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import PostCard from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
 import { fetchFeed } from "../lib/api";
@@ -141,29 +141,80 @@ import { useNavigate } from "react-router-dom";
 // ];
 
 
+const PAGE_SIZE = 20;
+
 const Feed: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingNext, setIsFetchingNext] = useState(false);
   const navigate = useNavigate();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
+  const loadPage = useCallback(async (nextPage: number) => {
+    if (nextPage === 1) {
+      setLoading(true);
+    }
+
+    setIsFetchingNext(true);
+
+    try {
+      const response = await fetchFeed<PostCardProps>(nextPage, PAGE_SIZE);
+
+      setPosts((prev) => {
+        if (nextPage === 1) {
+          return response.posts;
+        }
+
+        const existingIds = new Set(prev.map((post) => post.id));
+        const appendedPosts = response.posts.filter(
+          (post) => !existingIds.has(post.id)
+        );
+
+        return [...prev, ...appendedPosts];
+      });
+
+      setPage(nextPage);
+      setHasMore(
+        response.posts.length > 0 && nextPage * PAGE_SIZE < response.total
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      if (nextPage === 1) {
+        setLoading(false);
+      }
+
+      setIsFetchingNext(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      // setPosts(dummyPosts);
-      // setLoading(false);
-      fetchFeed<PostCardProps>(1, 20)
-    .then(data => {
-      setPosts(data.posts);
-      setLoading(false);
-    })
-    .catch(err => {
-      console.error(err);
-      setLoading(false);
-    });
-    }, 10);
+    loadPage(1);
+  }, [loadPage]);
 
-    return () => clearTimeout(timeout);
-  }, []);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+
+    if (!sentinel) {
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+
+      if (entry.isIntersecting && hasMore && !isFetchingNext) {
+        loadPage(page + 1);
+      }
+    });
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isFetchingNext, loadPage, page]);
 
   return (
     <div className="w-full py-8 flex justify-center">
@@ -173,26 +224,30 @@ const Feed: React.FC = () => {
             ? Array.from({ length: 4 }).map((_, i) => (
                 <PostSkeleton key={i} />
               ))
-            : posts
-                .sort(
-                  (a, b) =>
-                    new Date(b.timestamp).getTime() -
-                    new Date(a.timestamp).getTime()
-                )
-                .map((post) => (
-                  <div
-                    key={post.id}
-                    className=" animate-fadeIn cursor-pointer"
-                    onClick={() => navigate(`/posts/${post.id}`)}
-                  >
-                    <PostCard
-                      {...post}
-                      onDeleted={(id) =>
-                        setPosts((ps) => ps.filter((p) => p.id !== id))
-                      }
-                    />
-                  </div>
-                ))}
+            : (
+                <>
+                  {posts.map((post) => (
+                    <div
+                      key={post.id}
+                      className=" animate-fadeIn cursor-pointer"
+                      onClick={() => navigate(`/posts/${post.id}`)}
+                    >
+                      <PostCard
+                        {...post}
+                        onDeleted={(id) =>
+                          setPosts((ps) => ps.filter((p) => p.id !== id))
+                        }
+                      />
+                    </div>
+                  ))}
+                  <div ref={sentinelRef} />
+                  {isFetchingNext && (
+                    <div className="py-4 text-center text-sm text-gray-500">
+                      Loading more...
+                    </div>
+                  )}
+                </>
+              )}
         </div>
       </div>
     </div>
