@@ -21,40 +21,35 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@v1
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to Fly registry
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: flyctl auth docker
 
       - name: Build image
-        run: |
-          docker build \
-            --file Dockerfile \
-            --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL \
-            --tag $FLY_REGISTRY:${{ github.sha }} \
-            .
-
-      - name: Push image
-        if: github.event_name == 'push'
-        run: docker push $FLY_REGISTRY:${{ github.sha }}
+        id: build-image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          build-args: |
+            VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+          tags: ${{ env.FLY_REGISTRY }}:${{ github.sha }}
+          push: ${{ github.event_name == 'push' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Export image metadata
         id: meta
         env:
           IMAGE: ${{ env.FLY_REGISTRY }}:${{ github.sha }}
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          DIGEST: ${{ steps.build-image.outputs.digest }}
         run: |
-          image="$IMAGE"
-          echo "image=$image" >> "$GITHUB_OUTPUT"
-
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            digest="$(docker inspect --format='{{ index .RepoDigests 0 }}' "$image")"
-
-          else
-            digest="$image"
-          fi
-
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
 
   deploy-dev:
