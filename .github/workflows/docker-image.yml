@@ -1,0 +1,93 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FLY_REGISTRY: registry.fly.io/astrosocial
+  VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      digest: ${{ steps.meta.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@v1
+
+      - name: Log in to Fly registry
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl auth docker
+
+      - name: Build image
+        run: |
+          docker build \
+            --file Dockerfile \
+            --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL \
+            --tag $FLY_REGISTRY:${{ github.sha }} \
+            .
+
+      - name: Push image
+        if: github.event_name == 'push'
+        run: docker push $FLY_REGISTRY:${{ github.sha }}
+
+      - name: Export image metadata
+        id: meta
+        env:
+          IMAGE: ${{ env.FLY_REGISTRY }}:${{ github.sha }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          image="$IMAGE"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            digest="$(docker inspect --format='{{ index .RepoDigests 0 }}' "$image")"
+
+          else
+            digest="$image"
+          fi
+
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@v1
+
+      - name: Deploy to development
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+        run: flyctl deploy --config fly.dev.toml --image ${{ needs.build.outputs.digest }}
+
+
+  promote-production:
+    runs-on: ubuntu-latest
+    environment: prod
+    needs:
+      - build
+      - deploy-dev
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@v1
+
+      - name: Deploy to production
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+        run: flyctl deploy --config fly.toml --image ${{ needs.build.outputs.digest }}
+
