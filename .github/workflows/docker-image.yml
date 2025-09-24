@@ -75,6 +75,7 @@ jobs:
 
   promote-production:
     runs-on: ubuntu-latest
+    environment: prod
     needs:
       - build
       - deploy-dev
