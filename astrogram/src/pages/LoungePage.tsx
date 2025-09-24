@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fetchLoungePosts, fetchLounge, apiFetch, deleteLounge } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, PlusCircle } from "lucide-react";
 
 interface LoungePostSummary {
   id: string;
@@ -122,8 +122,9 @@ const LoungePage: React.FC = () => {
           {user && (
             <Link
               to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
-              className="px-4 py-2 rounded text-white hover:text-gray-200 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-brand text-white hover:bg-brand-dark transition"
             >
+              <PlusCircle className="w-4 h-4" />
               Post
             </Link>
           )}
