@@ -93,7 +93,7 @@ const Navbar = () => {
               aria-haspopup="true"
               aria-expanded={dropdownOpen}
             >
-              <span className="text-lg font-semibold leading-none">AstroLounge</span>
+              <span className="text-lg font-semibold leading-none">AstroLounge-dev</span>
               {/* <ChevronDown className="w-4 h-4 align-middle" /> */}
             </button>
 
