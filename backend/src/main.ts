@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { resolve } from 'path';
 import * as express from 'express';
 import * as path from 'path';
+import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
@@ -14,6 +15,15 @@ async function bootstrap() {
   logger.log('📦 Bootstrap starting');
 
   const server = express();
+
+  // Set up rate limiter: max 100 requests per 15 minutes per IP
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  });
+
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.use(cookieParser());
@@ -28,6 +38,9 @@ async function bootstrap() {
     : resolve(__dirname, '../../astrogram/dist');
   logger.log(`📂 Serving static files from: ${clientDistPath}`);
   server.use(express.static(clientDistPath));
+
+  // Apply rate limiter before other middlewares that do file system access
+  server.use(limiter);
 
   // Log every incoming HTTP request
   server.use((req: Request, _res: Response, next) => {
