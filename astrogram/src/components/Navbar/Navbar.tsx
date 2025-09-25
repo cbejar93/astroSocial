@@ -111,34 +111,56 @@ const Navbar = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-5">
-          <Link
-            to={user ? '/notifications' : '/signup'}
-            className="btn-unstyled"
-            aria-label="Notifications"
-          >
-            <div className="relative">
-              <Bell className="w-6 h-6" />
-              {count > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center"
-                >
-                  {count}
-                </span>
+          {user ? (
+            <>
+              <Link
+                to="/notifications"
+                className="btn-unstyled"
+                aria-label="Notifications"
+              >
+                <div className="relative">
+                  <Bell className="w-6 h-6" />
+                  {count > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center"
+                    >
+                      {count}
+                    </span>
+                  )}
+                </div>
+              </Link>
+              {!isProfilePage && (
+                <Link to="/profile" className="btn-unstyled" aria-label="Account">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt="Your avatar"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-6 h-6 m-auto text-gray-400" />
+                  )}
+                </Link>
               )}
+            </>
+          ) : (
+            <div className="flex items-center">
+              <div className="flex items-center h-10 rounded-full border border-neutral-700 bg-neutral-900/60 overflow-hidden">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
+                >
+                  Log in
+                </Link>
+                <span className="h-6 w-px bg-neutral-700/80" aria-hidden="true" />
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-fuchsia-500 transition-colors hover:bg-fuchsia-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
+                >
+                  Sign up
+                </Link>
+              </div>
             </div>
-          </Link>
-          {!isProfilePage && (
-            <Link to={user ? '/profile' : '/signup'} className="btn-unstyled" aria-label="Account">
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt="Your avatar"
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <User className="w-6 h-6 m-auto text-gray-400" />
-            )}
-            </Link>
           )}
         </div>
       </div>
