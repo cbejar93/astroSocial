@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fetchLoungePosts, fetchLounge, apiFetch, deleteLounge } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, PencilLine } from "lucide-react";
 
 interface LoungePostSummary {
   id: string;
@@ -120,12 +120,16 @@ const LoungePage: React.FC = () => {
         <h1 className="text-2xl font-bold">{lounge.name}</h1>
         <div className="flex items-center gap-4">
           {user && (
-            <Link
-              to={`/lounge/${encodeURIComponent(lounge.name)}/post`}
-              className="px-4 py-2 rounded text-white hover:text-gray-200 transition-colors"
+            <button
+              type="button"
+              onClick={() =>
+                navigate(`/lounge/${encodeURIComponent(lounge.name)}/post`)
+              }
+              className="inline-flex items-center gap-2 rounded bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-neutral-900"
             >
+              <PencilLine className="h-4 w-4" />
               Post
-            </Link>
+            </button>
           )}
           {user?.role === 'ADMIN' && (
             <div className="relative" onClick={(e) => e.stopPropagation()}>
