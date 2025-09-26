@@ -28,6 +28,7 @@ export interface AuthContextType {
   loading: boolean;
   login: (accessToken: string) => Promise<User>;
   logout: () => void;
+  refreshUser: () => Promise<User>;
   updateFollowedLounge: (
     loungeId: string,
     loungeName: string,
@@ -45,6 +46,14 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshUser = useCallback(async (): Promise<User> => {
+    const res = await apiFetch('/users/me');
+    const me: User = await res.json();
+    setUser(me);
+    localStorage.setItem('USER_SNAPSHOT', JSON.stringify(me));
+    return me;
+  }, []);
 
   // on mount, rehydrate access token + user snapshot then validate
   useEffect(() => {
@@ -113,15 +122,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // 2) fetch the user profile
     setLoading(true);
-    const res = await apiFetch("/users/me");
-    if (!res.ok) {
-      throw new Error("Login failed");
+    try {
+      const me = await refreshUser();
+      return me;
+    } finally {
+      setLoading(false);
     }
-    const me: User = await res.json();
-    setUser(me);
-    localStorage.setItem("USER_SNAPSHOT", JSON.stringify(me));
-    setLoading(false);
-    return me;
   };
 
   const logout = useCallback(() => {
@@ -180,7 +186,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateFollowedLounge, updateFollowingUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        refreshUser,
+        updateFollowedLounge,
+        updateFollowingUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

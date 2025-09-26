@@ -4,11 +4,13 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UploadCloud }             from "lucide-react";
 import { apiFetch } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
 
 
 
 const CompleteProfilePage: React.FC = () => {
   const navigate        = useNavigate();
+  const { refreshUser } = useAuth();
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError]         = useState<string | null>(null);
@@ -57,6 +59,7 @@ const CompleteProfilePage: React.FC = () => {
       });
 
       if (!res.ok) throw new Error('Failed to update profile');
+      await refreshUser();
       navigate('/', { replace: true });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong';
