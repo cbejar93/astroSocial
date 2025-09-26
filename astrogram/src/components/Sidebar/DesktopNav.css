@@ -1,0 +1,80 @@
+.desktop-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: calc(100vh - 4rem);
+  overflow: auto;
+  padding-right: 0.5rem;
+}
+
+.desktop-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 1rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #e6edff;
+  background-color: transparent;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.desktop-nav__link:hover,
+.desktop-nav__link:focus-visible {
+  background-color: rgba(30, 41, 59, 0.6);
+  color: #f8fbff;
+  text-decoration: none;
+}
+
+.desktop-nav__link--active {
+  background-color: #1e293b;
+  color: #f8fbff;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.4);
+  text-decoration: none;
+}
+
+.desktop-nav__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: #7fd2ff;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.desktop-nav__link:hover .desktop-nav__icon,
+.desktop-nav__link:focus-visible .desktop-nav__icon {
+  transform: scale(1.05);
+  color: #b3e5ff;
+}
+
+.desktop-nav__link--active .desktop-nav__icon {
+  color: #daf2ff;
+}
+
+.desktop-nav__label {
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .desktop-nav__label {
+    color: transparent;
+    background: linear-gradient(
+      90deg,
+      #3f7dff 0%,
+      #4f8dff 30%,
+      #7665f4 65%,
+      #9a5cff 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+
+  .desktop-nav__link:hover .desktop-nav__label,
+  .desktop-nav__link:focus-visible .desktop-nav__label,
+  .desktop-nav__link--active .desktop-nav__label {
+    color: transparent;
+  }
+}
