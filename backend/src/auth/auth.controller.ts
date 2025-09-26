@@ -62,6 +62,7 @@ export class AuthController {
     @Req() req: AuthRequest,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
+    console.log('what is this');
     let url = '';
     this.logger.log('🔷 Google OAuth callback received');
 
@@ -86,6 +87,9 @@ export class AuthController {
     } else {
       url += `${process.env.FRONTEND_URL_DEV}/auth/success?token=${accessToken}`;
     }
+
+    console.log('hello');
+    console.log('==========')
 
     // 2) Set the refresh token as an HttpOnly cookie
     res.cookie('jid', refreshToken, {
