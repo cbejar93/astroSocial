@@ -225,7 +225,7 @@ export class PostsService {
    * Fetch feed ordered by our custom score
    */
   async getWeightedFeed(
-    userId: string,
+    userId: string | null,
     page = 1,
     limit = 20,
   ): Promise<FeedResponseDto> {
@@ -244,7 +244,7 @@ export class PostsService {
             select: { id: true, username: true, avatarUrl: true },
           },
           _count: {
-            select: { comments: true },
+            select: { comments: true, savedBy: true },
           },
           // always include an interactions array (it'll just be empty if userId is falsy)
           interactions: {
@@ -256,6 +256,14 @@ export class PostsService {
             },
             select: { id: true, type: true },
           },
+          ...(userId
+            ? {
+                savedBy: {
+                  where: { userId },
+                  select: { id: true },
+                },
+              }
+            : {}),
         },
       });
 
@@ -268,6 +276,7 @@ export class PostsService {
         repostedByMe: p.interactions.some(
           (i) => i.type === InteractionType.REPOST,
         ),
+        savedByMe: Boolean((p as any).savedBy?.length),
         score: this.computeScore({
           createdAt: p.createdAt,
           commentsCount: p._count.comments,
@@ -301,6 +310,8 @@ export class PostsService {
         shares: p.shares,
         reposts: p.reposts,
         likedByMe: p.likedByMe,
+        savedByMe: p.savedByMe,
+        saves: p._count.savedBy,
         repostedByMe: p.repostedByMe,
         ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
           ? { repostedBy: p.author.username! }
@@ -349,7 +360,7 @@ export class PostsService {
                 author: { select: { username: true } },
               },
             },
-            _count: { select: { comments: true } },
+            _count: { select: { comments: true, savedBy: true } },
             interactions: {
               where: {
                 userId: userId || undefined,
@@ -357,6 +368,14 @@ export class PostsService {
               },
               select: { id: true },
             },
+            ...(userId
+              ? {
+                  savedBy: {
+                    where: { userId },
+                    select: { id: true },
+                  },
+                }
+              : {}),
           },
         }),
       ]);
@@ -377,6 +396,8 @@ export class PostsService {
         comments: p._count.comments,
         shares: p.shares,
         likedByMe: p.interactions.length > 0,
+        savedByMe: Boolean((p as any).savedBy?.length),
+        saves: p._count.savedBy,
         ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
           ? { repostedBy: p.author.username! }
           : {}),
@@ -408,6 +429,8 @@ export class PostsService {
     shares: number;
     reposts: number;
     likedByMe: boolean;
+    savedByMe: boolean;
+    saves: number;
   }> {
     this.logger.log(
       `Fetching post ${postId}` +
@@ -434,15 +457,24 @@ export class PostsService {
             _count: { select: { posts: true } },
           },
         },
-        _count: { select: { comments: true } },
-      },
-    });
+    _count: { select: { comments: true, savedBy: true } },
+    ...(currentUserId
+      ? {
+          savedBy: {
+            where: { userId: currentUserId },
+            select: { id: true },
+          },
+        }
+      : {}),
+  },
+});
     if (!post) {
       this.logger.warn(`Post ${postId} not found`);
       throw new NotFoundException(`Post ${postId} not found`);
     }
 
     let likedByMe = false;
+    let savedByMe = false;
 
     // 2) Check if this user has a LIKE interaction on it
     if (currentUserId) {
@@ -458,6 +490,8 @@ export class PostsService {
       });
       likedByMe = Boolean(like);
     }
+
+    savedByMe = Boolean((post as any).savedBy?.length);
 
     // 3) Shape and return
     const displayAuthor = post.originalAuthor ?? post.author;
@@ -480,6 +514,8 @@ export class PostsService {
       shares: post.shares,
       reposts: post.reposts,
       likedByMe,
+      savedByMe,
+      saves: post._count.savedBy,
       ...(displayAuthor?.createdAt
         ? { authorJoinedAt: displayAuthor.createdAt.toISOString() }
         : {}),
@@ -498,7 +534,6 @@ export class PostsService {
   ): Promise<{ liked: boolean; count: number }> {
     this.logger.log(`User ${userId} → TOGGLE LIKE (service) → post ${postId}`);
     const LIKE = InteractionType.LIKE;
-    const compound = { postId_userId_type: { postId, userId, type: LIKE } };
     const counterOp = { likes: {} as any };
 
     try {
@@ -551,9 +586,150 @@ export class PostsService {
     return { liked: true, count: updated.likes };
   }
 
+  async savePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; count: number }> {
+    this.logger.log(`User ${userId} → SAVE POST (service) → ${postId}`);
+
+    try {
+      await this.prisma.savedPost.create({ data: { userId, postId } });
+    } catch (e: any) {
+      if (e.code !== 'P2002') {
+        this.logger.error(
+          `Failed to save post ${postId} for ${userId}: ${e?.message ?? e}`,
+          e?.stack,
+        );
+        throw new InternalServerErrorException('Could not save post');
+      }
+      this.logger.verbose(`Post ${postId} already saved by ${userId}`);
+    }
+
+    const count = await this.prisma.savedPost.count({ where: { postId } });
+    this.logger.log(`Post ${postId} saved by ${userId}, total=${count}`);
+    return { saved: true, count };
+  }
+
+  async unsavePost(
+    userId: string,
+    postId: string,
+  ): Promise<{ saved: boolean; count: number }> {
+    this.logger.log(`User ${userId} → UNSAVE POST (service) → ${postId}`);
+
+    try {
+      await this.prisma.savedPost.delete({
+        where: {
+          one_save_per_user_per_post: { userId, postId },
+        },
+      });
+    } catch (e: any) {
+      if (e.code !== 'P2025') {
+        this.logger.error(
+          `Failed to unsave post ${postId} for ${userId}: ${e?.message ?? e}`,
+          e?.stack,
+        );
+        throw new InternalServerErrorException('Could not unsave post');
+      }
+      this.logger.verbose(`Post ${postId} was not saved by ${userId}`);
+    }
+
+    const count = await this.prisma.savedPost.count({ where: { postId } });
+    this.logger.log(`Post ${postId} unsaved by ${userId}, total=${count}`);
+    return { saved: false, count };
+  }
+
+  async getSavedPosts(
+    userId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<FeedResponseDto> {
+    this.logger.log(`Fetching saved posts for ${userId} (page=${page}, limit=${limit})`);
+
+    try {
+      const [total, saves] = await this.prisma.$transaction([
+        this.prisma.savedPost.count({ where: { userId } }),
+        this.prisma.savedPost.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          include: {
+            post: {
+              include: {
+                author: { select: { id: true, username: true, avatarUrl: true } },
+                originalAuthor: {
+                  select: { id: true, username: true, avatarUrl: true },
+                },
+                _count: { select: { comments: true, savedBy: true } },
+                interactions: {
+                  where: {
+                    userId,
+                    type: { in: [InteractionType.LIKE, InteractionType.REPOST] },
+                  },
+                  select: { type: true },
+                },
+              },
+            },
+          },
+        }),
+      ]);
+
+      const posts = saves
+        .filter((entry) => entry.post)
+        .map((entry) => {
+          const post = entry.post!;
+          const likedByMe = post.interactions.some(
+            (interaction) => interaction.type === InteractionType.LIKE,
+          );
+          const repostedByMe = post.interactions.some(
+            (interaction) => interaction.type === InteractionType.REPOST,
+          );
+
+          return {
+            id: post.id,
+            authorId: post.author.id,
+            username: post.originalAuthor?.username || post.author.username!,
+            ...(post.title ? { title: post.title } : {}),
+            ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
+            avatarUrl:
+              post.originalAuthor?.avatarUrl ||
+              post.author.avatarUrl ||
+              '/defaultPfp.png',
+            caption: post.body,
+            timestamp: post.createdAt.toISOString(),
+            stars: post.likes,
+            comments: post._count.comments,
+            shares: post.shares,
+            reposts: post.reposts,
+            likedByMe,
+            savedByMe: true,
+            saves: post._count.savedBy,
+            repostedByMe,
+            ...(post.originalAuthorId && post.originalAuthorId !== post.authorId
+              ? { repostedBy: post.author.username! }
+              : {}),
+          };
+        });
+
+      return {
+        posts,
+        total,
+        page,
+        limit,
+      };
+    } catch (err: any) {
+      this.logger.error(
+        `Failed to fetch saved posts for ${userId}: ${err?.message ?? err}`,
+        err?.stack,
+      );
+      throw new InternalServerErrorException('Could not fetch saved posts');
+    }
+  }
+
   async deletePost(userId: string, postId: string) {
     this.logger.log(`User ${userId} → DELETE POST → ${postId}`);
-    const [, , , , { count }] = await this.prisma.$transaction([
+    const [, , , , , { count }] = await this.prisma.$transaction([
+      this.prisma.savedPost.deleteMany({ where: { postId } }),
       this.prisma.commentLike.deleteMany({ where: { comment: { postId } } }),
       this.prisma.postInteraction.deleteMany({ where: { postId } }),
       this.prisma.notification.deleteMany({

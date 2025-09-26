@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from 'react-router-dom';
 import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
-import { sharePost, repostPost, apiFetch } from '../../lib/api';
+import { sharePost, repostPost, apiFetch, savePost as savePostRequest, unsavePost } from '../../lib/api';
 import { useAuth } from "../../hooks/useAuth";
 
 
@@ -22,6 +22,8 @@ export interface PostCardProps {
   likedByMe?: boolean;
   repostedByMe?: boolean;
   repostedBy?: string;
+  savedByMe?: boolean;
+  saves?: number;
   onDeleted?: (id: string) => void;
 }
 
@@ -39,6 +41,8 @@ const PostCard: React.FC<PostCardProps> = ({
   likedByMe,
   repostedByMe,
   repostedBy,
+  savedByMe,
+  saves = 0,
   authorId,
   onDeleted
 }) => {
@@ -53,12 +57,15 @@ const PostCard: React.FC<PostCardProps> = ({
   const [shareCount, setShareCount] = useState(shares);
   const [reposted, setReposted] = useState(Boolean(repostedByMe));
   const [repostCount, setRepostCount] = useState(reposts);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(Boolean(savedByMe));
+  const [saveCount, setSaveCount] = useState(saves);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const encodedUsername = encodeURIComponent(username);
 
   useEffect(() => {
+    setSaveCount(saves ?? 0);
+
     if (!user) {
       setLiked(false);
       setReposted(false);
@@ -68,7 +75,8 @@ const PostCard: React.FC<PostCardProps> = ({
 
     setLiked(Boolean(likedByMe));
     setReposted(Boolean(repostedByMe));
-  }, [user, likedByMe, repostedByMe]);
+    setSaved(Boolean(savedByMe));
+  }, [user, likedByMe, repostedByMe, savedByMe, saves]);
 
   const handleLike = async () => {
     if (!user) return;
@@ -127,9 +135,22 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  const toggleSave = () => {
+  const toggleSave = async () => {
     if (!user) return;
-    setSaved((s) => !s);
+
+    try {
+      if (saved) {
+        const { saved: isSaved, count } = await unsavePost(id);
+        setSaved(isSaved);
+        setSaveCount(count);
+      } else {
+        const { saved: isSaved, count } = await savePostRequest(id);
+        setSaved(isSaved);
+        setSaveCount(count);
+      }
+    } catch (err) {
+      console.error('Failed to toggle save:', err);
+    }
   };
 
   // close menu on outside click
@@ -279,7 +300,7 @@ const PostCard: React.FC<PostCardProps> = ({
               className="btn-unstyled btn-action hover:text-blue-400"
             >
               <Bookmark className="w-5 h-5" fill={user && saved ? "currentColor" : "none"} />
-              <span>{user && saved ? 1 : 0}</span>
+              <span>{saveCount}</span>
             </button>
 
             {/* Share */}

@@ -215,9 +215,36 @@ export async function interactWithPost(
     return interactWithPost(postId, 'share');
   }
   
-  export function repostPost(postId: string) {
-    return interactWithPost(postId, 'repost');
+export function repostPost(postId: string) {
+  return interactWithPost(postId, 'repost');
+}
+
+export async function savePost(postId: string) {
+  const res = await apiFetch(`/posts/${postId}/save`, { method: 'POST' });
+  if (!res.ok) {
+    throw new Error(`Failed to save post (${res.status})`);
   }
+  return res.json();
+}
+
+export async function unsavePost(postId: string) {
+  const res = await apiFetch(`/posts/${postId}/save`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(`Failed to unsave post (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function fetchSavedPosts<Item = unknown>(
+  page: number = 1,
+  limit: number = 20,
+): Promise<FeedResponse<Item>> {
+  const res = await apiFetch(`/posts/saved?page=${page}&limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch saved posts (${res.status})`);
+  }
+  return res.json();
+}
 
 // --------------------------------------------------
 // Comments API helpers
