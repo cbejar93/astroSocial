@@ -58,7 +58,20 @@ const PostCard: React.FC<PostCardProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const encodedUsername = encodeURIComponent(username);
 
+  useEffect(() => {
+    if (!user) {
+      setLiked(false);
+      setReposted(false);
+      setSaved(false);
+      return;
+    }
+
+    setLiked(Boolean(likedByMe));
+    setReposted(Boolean(repostedByMe));
+  }, [user, likedByMe, repostedByMe]);
+
   const handleLike = async () => {
+    if (!user) return;
     try {
       const res = await apiFetch(`/posts/${id}/like`, { method: 'POST' });
       if (!res.ok) throw new Error('Like toggle failed');
@@ -102,15 +115,21 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const handleRepost = async () => {
+    if (!user) return;
     if (reposted) return;
-      try {
-        const { count } = await repostPost(id);
-        setRepostCount(count);
-        setReposted(true);
-        setShareCount(prev => prev); // share count unaffected by repost
-      } catch (err: unknown) {
-        console.error("Failed to repost:", err);
-      }
+    try {
+      const { count } = await repostPost(id);
+      setRepostCount(count);
+      setReposted(true);
+      setShareCount((prev) => prev); // share count unaffected by repost
+    } catch (err: unknown) {
+      console.error("Failed to repost:", err);
+    }
+  };
+
+  const toggleSave = () => {
+    if (!user) return;
+    setSaved((s) => !s);
   };
 
   // close menu on outside click
@@ -229,7 +248,7 @@ const PostCard: React.FC<PostCardProps> = ({
               onClick={handleLike}
               className="btn-unstyled btn-action text-white hover:text-gray-300"
             >
-              <Star className="w-5 h-5" fill={liked ? "currentColor" : "none"} />
+              <Star className="w-5 h-5" fill={user && liked ? "currentColor" : "none"} />
               <span className="ml-1">{starCount}</span>
             </button>
 
@@ -256,11 +275,11 @@ const PostCard: React.FC<PostCardProps> = ({
             {/* Save */}
             <button
               type="button"
-              onClick={() => setSaved(s => !s)}
+              onClick={toggleSave}
               className="btn-unstyled btn-action hover:text-blue-400"
             >
-              <Bookmark className="w-5 h-5" fill={saved ? "currentColor" : "none"} />
-              <span>{saved ? 1 : 0}</span>
+              <Bookmark className="w-5 h-5" fill={user && saved ? "currentColor" : "none"} />
+              <span>{user && saved ? 1 : 0}</span>
             </button>
 
             {/* Share */}
