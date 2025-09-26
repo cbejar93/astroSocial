@@ -117,7 +117,7 @@ const LoungePostDetailPage: React.FC = () => {
           <div className="flex flex-col md:flex-row">
             <aside className="md:w-60 border-b md:border-b-0 md:border-r border-white/10 bg-gray-950/60 p-5 text-center">
               <img
-                src={post.avatarUrl}
+                src={post.avatarUrl ?? '/defaultPfp.png'}
                 alt={`${post.username} avatar`}
                 className="mx-auto h-20 w-20 rounded-full object-cover"
               />

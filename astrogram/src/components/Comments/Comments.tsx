@@ -430,7 +430,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
         <div key={comment.id} className={containerClasses.join(' ')}>
           <div className="flex items-start gap-3">
             <img
-              src={comment.avatarUrl || '/images/default-avatar.png'}
+              src={comment.avatarUrl ?? '/defaultPfp.png'}
               alt={`${comment.username} avatar`}
               className="h-10 w-10 rounded-full object-cover"
             />

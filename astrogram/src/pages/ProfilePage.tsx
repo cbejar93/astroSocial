@@ -146,15 +146,11 @@ export default function ProfilePage(): JSX.Element {
       <div className="w-full max-w-3xl px-0 sm:px-4 text-gray-200">
       {/* Profile header */}
       <div className="flex items-center mb-4">
-        {user.avatarUrl ? (
-          <img
-            src={user.avatarUrl}
-            alt="avatar"
-            className="w-16 h-16 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-gray-700" />
-        )}
+        <img
+          src={user.avatarUrl ?? '/defaultPfp.png'}
+          alt="avatar"
+          className="w-16 h-16 rounded-full object-cover"
+        />
         <div className="ml-4">
           <div className="text-xl font-bold">{user.username}</div>
           <div className="text-sm text-gray-400">
@@ -239,7 +235,7 @@ export default function ProfilePage(): JSX.Element {
                   >
                     <div className="flex items-center mb-1">
                       <img
-                        src={post.avatarUrl}
+                        src={post.avatarUrl ?? '/defaultPfp.png'}
                         alt={`${post.username} avatar`}
                         className="w-8 h-8 rounded-full object-cover mr-2"
                       />
@@ -302,7 +298,7 @@ export default function ProfilePage(): JSX.Element {
           {comments.map((c) => (
             <li key={c.id} className="flex gap-2 border-b border-white/20 pb-2">
               <img
-                src={c.avatarUrl}
+                src={c.avatarUrl ?? '/defaultPfp.png'}
                 alt="avatar"
                 className="w-8 h-8 rounded-full object-cover"
               />
@@ -335,7 +331,7 @@ export default function ProfilePage(): JSX.Element {
             <h2 className="text-lg font-semibold">Profile Picture</h2>
             <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
               <img
-                src={previewUrl || user.avatarUrl}
+                src={previewUrl ?? user.avatarUrl ?? '/defaultPfp.png'}
                 alt="avatar"
                 className="w-20 h-20 rounded-full object-cover"
               />

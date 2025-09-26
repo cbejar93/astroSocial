@@ -129,7 +129,10 @@ export class UsersService {
       id: p.id,
       authorId: userId,
       username: p.originalAuthor?.username || user?.username || '',
-      avatarUrl: p.originalAuthor?.avatarUrl || user?.avatarUrl || '',
+      avatarUrl:
+        p.originalAuthor?.avatarUrl ||
+        user?.avatarUrl ||
+        '/defaultPfp.png',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
       caption: p.body,
       title: p.title,
@@ -163,7 +166,7 @@ export class UsersService {
       text: c.text,
       authorId: userId,
       username: user?.username || '',
-      avatarUrl: user?.avatarUrl || '',
+      avatarUrl: user?.avatarUrl || '/defaultPfp.png',
       timestamp: c.createdAt.toISOString(),
       likes: c.likes,
       likedByMe: c.likedBy.length > 0,
@@ -209,7 +212,10 @@ export class UsersService {
       id: p.id,
       authorId: user.id,
       username: p.originalAuthor?.username || user.username || '',
-      avatarUrl: p.originalAuthor?.avatarUrl || user.avatarUrl || '',
+      avatarUrl:
+        p.originalAuthor?.avatarUrl ||
+        user.avatarUrl ||
+        '/defaultPfp.png',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
       caption: p.body,
       title: p.title,
@@ -243,7 +249,7 @@ export class UsersService {
       text: c.text,
       authorId: user.id,
       username: user.username || '',
-      avatarUrl: user.avatarUrl || '',
+      avatarUrl: user.avatarUrl || '/defaultPfp.png',
       timestamp: c.createdAt.toISOString(),
       likes: c.likes,
       likedByMe: false,
@@ -301,7 +307,7 @@ export class UsersService {
       results: items.map((u) => ({
         id: u.id,
         username: u.username,
-        avatarUrl: u.avatarUrl,
+        avatarUrl: u.avatarUrl ?? '/defaultPfp.png',
       })),
       total,
       page,
@@ -379,7 +385,7 @@ export class UsersService {
     return {
       id: user.id,
       username: user.username ?? undefined,
-      avatarUrl: user.avatarUrl ?? undefined,
+      avatarUrl: user.avatarUrl ?? '/defaultPfp.png',
       profileComplete: user.profileComplete,
       role: user.role,
       followedLounges: user.followedLounges?.map((l) => l.id),

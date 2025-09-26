@@ -29,7 +29,7 @@ const NotificationsPage: React.FC = () => {
           {items.map((n) => (
             <li key={n.id} className="flex gap-2 border-b border-white/20 pb-2">
               <img
-                src={n.actor.avatarUrl}
+                src={n.actor.avatarUrl ?? '/defaultPfp.png'}
                 alt="avatar"
                 className="w-8 h-8 rounded-full object-cover"
               />

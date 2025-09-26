@@ -10,7 +10,7 @@ export class NotificationsService {
   async create(userId: string, actorId: string, type: NotificationType, postId?: string, commentId?: string) {
     if (userId === actorId) return; // don't notify self
     return this.prisma.notification.create({
-      data: { userId, actorId, type, postId, commentId }
+      data: { userId, actorId, type, postId, commentId },
     });
   }
 
@@ -22,14 +22,20 @@ export class NotificationsService {
         actor: { select: { username: true, avatarUrl: true } },
       },
     });
-    await this.prisma.notification.updateMany({ where: { userId, read: false }, data: { read: true } });
-    return list.map(n => ({
+    await this.prisma.notification.updateMany({
+      where: { userId, read: false },
+      data: { read: true },
+    });
+    return list.map((n) => ({
       id: n.id,
       type: n.type,
       timestamp: n.createdAt.toISOString(),
       postId: n.postId || undefined,
       commentId: n.commentId || undefined,
-      actor: { username: n.actor.username!, avatarUrl: n.actor.avatarUrl || '' },
+      actor: {
+        username: n.actor.username!,
+        avatarUrl: n.actor.avatarUrl || '/defaultPfp.png',
+      },
     }));
   }
 

@@ -1,4 +1,4 @@
-import { Menu, Bell, User, ChevronDown, ChevronUp } from "lucide-react";
+import { Menu, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth";
@@ -131,15 +131,11 @@ const Navbar = () => {
               </Link>
               {!isProfilePage && (
                 <Link to="/profile" className="btn-unstyled" aria-label="Account">
-                  {user?.avatarUrl ? (
-                    <img
-                      src={user.avatarUrl}
-                      alt="Your avatar"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-6 h-6 m-auto text-gray-400" />
-                  )}
+                  <img
+                    src={user.avatarUrl ?? '/defaultPfp.png'}
+                    alt="Your avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
                 </Link>
               )}
             </>
