@@ -15,7 +15,7 @@
   padding: 0.75rem 1.25rem;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #d8e4ff;
+  color: #e6edff;
   background-color: transparent;
   text-decoration: none;
   transition: background-color 0.2s ease, color 0.2s ease,
@@ -25,13 +25,13 @@
 .desktop-nav__link:hover,
 .desktop-nav__link:focus-visible {
   background-color: rgba(30, 41, 59, 0.6);
-  color: #ffffff;
+  color: #f8fbff;
   text-decoration: none;
 }
 
 .desktop-nav__link--active {
   background-color: #1e293b;
-  color: #ffffff;
+  color: #f8fbff;
   box-shadow: 0 20px 45px rgba(15, 23, 42, 0.4);
   text-decoration: none;
 }
@@ -39,18 +39,18 @@
 .desktop-nav__icon {
   width: 1.75rem;
   height: 1.75rem;
-  color: #69c8ff;
+  color: #7fd2ff;
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .desktop-nav__link:hover .desktop-nav__icon,
 .desktop-nav__link:focus-visible .desktop-nav__icon {
   transform: scale(1.05);
-  color: #9bdcff;
+  color: #b3e5ff;
 }
 
 .desktop-nav__link--active .desktop-nav__icon {
-  color: #c7ecff;
+  color: #daf2ff;
 }
 
 .desktop-nav__label {
@@ -63,10 +63,10 @@
     color: transparent;
     background: linear-gradient(
       90deg,
-      #1d4ed8 0%,
-      #2563eb 30%,
-      #4338ca 65%,
-      #5b21b6 100%
+      #3f7dff 0%,
+      #4f8dff 30%,
+      #7665f4 65%,
+      #9a5cff 100%
     );
     background-clip: text;
     -webkit-background-clip: text;
