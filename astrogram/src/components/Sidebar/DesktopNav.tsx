@@ -48,7 +48,11 @@ const DesktopNav: React.FC = () => {
             <Icon
               className="h-7 w-7 text-sky-400 transition-transform duration-200 group-hover:scale-105"
             />
-            <span>{label}</span>
+            <span
+              className="transition-colors duration-200 text-slate-300 group-hover:text-white lg:bg-gradient-to-b lg:from-[#0b3d91] lg:via-[#3a1c71] lg:to-[#5a189a] lg:bg-clip-text lg:text-transparent lg:group-hover:text-transparent lg:hover:text-transparent"
+            >
+              {label}
+            </span>
           </NavLink>
         );
       })}
