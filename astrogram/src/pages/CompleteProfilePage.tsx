@@ -6,6 +6,7 @@ import { UploadCloud } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 
+
 const USERNAME_PATTERN = /^[a-zA-Z0-9._]+$/;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 20;
@@ -27,6 +28,7 @@ const validateUsername = (value: string): string | null => {
 
   return null;
 };
+
 
 
 
@@ -85,6 +87,7 @@ const CompleteProfilePage: React.FC = () => {
         body: form,
       });
 
+
       if (!res.ok) {
         let message = 'Failed to update profile';
         try {
@@ -99,6 +102,7 @@ const CompleteProfilePage: React.FC = () => {
         }
         throw new Error(message);
       }
+
       await refreshUser();
       navigate('/', { replace: true });
     } catch (err: unknown) {
