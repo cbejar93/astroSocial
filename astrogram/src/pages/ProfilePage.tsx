@@ -122,7 +122,7 @@ export default function ProfilePage(): JSX.Element {
 
   const handleLogout = () => {
     logout();
-    navigate('/signup');
+    navigate('/');
   };
 
   const handleLike = async (id: string) => {
@@ -144,56 +144,69 @@ export default function ProfilePage(): JSX.Element {
   return (
     <div className="w-full py-8 lg:pl-64 flex justify-center">
       <div className="w-full max-w-3xl px-0 sm:px-4 text-gray-200">
-      {/* Profile header */}
-      <div className="flex items-center mb-4">
-        <img
-          src={user.avatarUrl ?? '/defaultPfp.png'}
-          alt="avatar"
-          className="w-16 h-16 rounded-full object-cover"
-        />
-        <div className="ml-4">
-          <div className="text-xl font-bold">{user.username}</div>
-          <div className="text-sm text-gray-400">
-            <span className="mr-4"><span className="font-semibold text-white">Trackers</span> {user.followers?.length ?? 0}</span>
-            <span><span className="font-semibold text-white">Tracking</span> {user.following?.length ?? 0}</span>
+        {/* Profile header */}
+        <div className="flex items-center mb-4">
+          <img
+            src={user.avatarUrl ?? '/defaultPfp.png'}
+            alt="avatar"
+            className="w-16 h-16 rounded-full object-cover"
+          />
+          <div className="ml-4 flex-1">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="text-xl font-bold">{user.username}</div>
+                <div className="ml-auto">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-3 py-1 text-sm font-semibold rounded-md border border-gray-600 text-gray-200 bg-transparent hover:bg-gray-800/60 transition-colors"
+                  >
+                    Log out
+                  </button>
+                </div>
+              </div>
+              <div className="text-sm text-gray-400">
+                <span className="mr-4"><span className="font-semibold text-white">Trackers</span> {user.followers?.length ?? 0}</span>
+                <span><span className="font-semibold text-white">Tracking</span> {user.following?.length ?? 0}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      {/* Tabs */}
-      <div className="border-b border-gray-700 mb-4 pt-4">
-        <nav className="-mb-px flex justify-center space-x-8" aria-label="Profile tabs">
-          <Link
-            to="/profile/posts"
-            className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
-              active === 'posts'
-                ? 'border-brand text-white'
-                : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
-            }`}
-          >
-            Posts
-          </Link>
-          <Link
-            to="/profile/comments"
-            className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
-              active === 'comments'
-                ? 'border-brand text-white'
-                : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
-            }`}
-          >
-            Comments
-          </Link>
-          <Link
-            to="/profile/me"
-            className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
-              active === 'profile'
-                ? 'border-brand text-white'
-                : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
-            }`}
-          >
-            Profile
-          </Link>
-        </nav>
-      </div>
+        {/* Tabs */}
+        <div className="border-b border-gray-700 mb-4 pt-4">
+          <nav className="-mb-px flex justify-center space-x-8" aria-label="Profile tabs">
+            <Link
+              to="/profile/posts"
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
+                active === 'posts'
+                  ? 'border-brand text-white'
+                  : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              Posts
+            </Link>
+            <Link
+              to="/profile/comments"
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
+                active === 'comments'
+                  ? 'border-brand text-white'
+                  : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              Comments
+            </Link>
+            <Link
+              to="/profile/me"
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
+                active === 'profile'
+                  ? 'border-brand text-white'
+                  : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              Profile
+            </Link>
+          </nav>
+        </div>
 
       {active === 'posts' && (
         <div className="space-y-8">
