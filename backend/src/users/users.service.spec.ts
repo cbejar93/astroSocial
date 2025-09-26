@@ -154,5 +154,14 @@ describe('UsersService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(prisma.user.update).not.toHaveBeenCalled();
     });
+
+    it("throws a BadRequestException when the username isn't unique", async () => {
+      prisma.user.update.mockRejectedValue({ code: 'P2002' });
+
+      await expect(
+        service.updateProfile('user-123', 'duplicate'),
+      ).rejects.toThrow("username's must be unique");
+      expect(prisma.user.update).toHaveBeenCalled();
+    });
   });
 });

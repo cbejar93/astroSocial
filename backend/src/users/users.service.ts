@@ -81,16 +81,33 @@ export class UsersService {
       data.avatarUrl = avatarUrl;
     }
 
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data,
-      include: {
-        followedLounges: { select: { id: true } },
-        followers: { select: { id: true } },
-        following: { select: { id: true } },
-      },
-    });
-    return this.toDto(user);
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data,
+        include: {
+          followedLounges: { select: { id: true } },
+          followers: { select: { id: true } },
+          following: { select: { id: true } },
+        },
+      });
+      return this.toDto(user);
+    } catch (error) {
+      if (this.isUniqueConstraintViolation(error)) {
+        throw new BadRequestException("username's must be unique");
+      }
+
+      throw error;
+    }
+  }
+
+  private isUniqueConstraintViolation(error: unknown): error is { code: string } {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: string }).code === 'P2002'
+    );
   }
 
   async uploadAvatar(userId: string, file: Express.Multer.File) {
