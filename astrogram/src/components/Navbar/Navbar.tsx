@@ -68,9 +68,9 @@ const Navbar = () => {
   return (
     <>
     <nav className="fixed top-0 left-0 z-[80] w-full bg-transparent  text-white">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
         {/* Left Section */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3 sm:gap-5">
           <button
             className="btn-unstyled"
             aria-label="Toggle menu"
@@ -87,13 +87,13 @@ const Navbar = () => {
           {/* AstroLounge Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
-              className="btn-unstyled flex items-center gap-1"
+              className="btn-unstyled flex items-center gap-1 whitespace-nowrap"
               onClick={() => setDropdownOpen((prev) => !prev)}
               onKeyDown={handleKeyDown}
               aria-haspopup="true"
               aria-expanded={dropdownOpen}
             >
-              <span className="text-lg font-semibold leading-none">AstroLounge-dev</span>
+              <span className="text-base font-semibold leading-none sm:text-lg">AstroLounge-dev</span>
               {/* <ChevronDown className="w-4 h-4 align-middle" /> */}
             </button>
 
@@ -110,7 +110,7 @@ const Navbar = () => {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3 sm:gap-5">
           {user ? (
             <>
               <Link
@@ -140,16 +140,16 @@ const Navbar = () => {
               )}
             </>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-900/60 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
+                className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-900/60 px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap transition-colors hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70 sm:px-4 sm:py-2 sm:text-sm"
               >
                 Log in
               </Link>
               <Link
                 to="/signup"
-                className="inline-flex items-center justify-center rounded-md bg-fuchsia-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-fuchsia-400 focus-visible:bg-fuchsia-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
+                className="inline-flex items-center justify-center rounded-md bg-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap transition-colors hover:bg-fuchsia-400 focus-visible:bg-fuchsia-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70 sm:px-4 sm:py-2 sm:text-sm"
               >
                 Sign up
               </Link>
