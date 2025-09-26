@@ -290,7 +290,10 @@ export class PostsService {
         username: p.originalAuthor?.username || p.author.username!,
         ...(p.title ? { title: p.title } : {}),
         ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
-        avatarUrl: p.originalAuthor?.avatarUrl || p.author.avatarUrl || '',
+        avatarUrl:
+          p.originalAuthor?.avatarUrl ||
+          p.author.avatarUrl ||
+          '/defaultPfp.png',
         caption: p.body,
         timestamp: p.createdAt.toISOString(),
         stars: p.likes,
@@ -364,7 +367,10 @@ export class PostsService {
         username: p.originalAuthor?.username || p.author.username!,
         title: p.title,
         ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
-        avatarUrl: p.originalAuthor?.avatarUrl || p.author.avatarUrl || '',
+        avatarUrl:
+          p.originalAuthor?.avatarUrl ||
+          p.author.avatarUrl ||
+          '/defaultPfp.png',
         caption: p.body,
         timestamp: p.createdAt.toISOString(),
         stars: p.likes,
@@ -461,7 +467,10 @@ export class PostsService {
       username: post.originalAuthor?.username || post.author.username!,
       authorId: post.authorId,
 
-      avatarUrl: post.originalAuthor?.avatarUrl || post.author.avatarUrl || '',
+      avatarUrl:
+        post.originalAuthor?.avatarUrl ||
+        post.author.avatarUrl ||
+        '/defaultPfp.png',
       ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
       ...(post.loungeId || post.title ? { title: post.title } : {}),
       caption: post.body,

@@ -78,13 +78,11 @@ const SearchPage: React.FC = () => {
               <ul className="space-y-2">
                 {results.users.results.map((u) => (
                   <li key={u.id} className="flex items-center gap-2">
-                    {u.avatarUrl && (
-                      <img
-                        src={u.avatarUrl}
-                        alt={u.username ?? 'user'}
-                        className="w-8 h-8 rounded-full"
-                      />
-                    )}
+                    <img
+                      src={u.avatarUrl ?? '/defaultPfp.png'}
+                      alt={u.username ?? 'user'}
+                      className="w-8 h-8 rounded-full"
+                    />
                     <span>{u.username}</span>
                   </li>
                 ))}

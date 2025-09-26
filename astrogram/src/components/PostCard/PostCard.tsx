@@ -164,7 +164,7 @@ const PostCard: React.FC<PostCardProps> = ({
             className="flex items-center gap-2 hover:underline"
           >
             <img
-              src={avatarUrl}
+              src={avatarUrl ?? '/defaultPfp.png'}
               alt={`${username}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
