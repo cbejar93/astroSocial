@@ -336,7 +336,8 @@ export async function fetchMyComments<T = unknown>(): Promise<T[]> {
 }
 
 export async function fetchUser<T = unknown>(username: string): Promise<T> {
-  const res = await apiFetch(`/users/${username}`);
+  const encoded = encodeURIComponent(username);
+  const res = await apiFetch(`/users/${encoded}`);
   return res.json();
 }
 
@@ -353,12 +354,14 @@ export async function unfollowUser(username: string) {
 }
 
 export async function fetchUserPosts<T = unknown>(username: string): Promise<T[]> {
-  const res = await apiFetch(`/users/${username}/posts`);
+  const encoded = encodeURIComponent(username);
+  const res = await apiFetch(`/users/${encoded}/posts`);
   return res.json();
 }
 
 export async function fetchUserComments<T = unknown>(username: string): Promise<T[]> {
-  const res = await apiFetch(`/users/${username}/comments`);
+  const encoded = encodeURIComponent(username);
+  const res = await apiFetch(`/users/${encoded}/comments`);
   return res.json();
 }
 

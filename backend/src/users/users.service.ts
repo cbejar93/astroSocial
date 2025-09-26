@@ -12,6 +12,10 @@ import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class UsersService {
+  private static readonly USERNAME_PATTERN = /^[a-z0-9._]+$/i;
+  private static readonly USERNAME_MIN_LENGTH = 3;
+  private static readonly USERNAME_MAX_LENGTH = 20;
+
   constructor(
     @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,
     private readonly storage: StorageService,
@@ -48,12 +52,29 @@ export class UsersService {
     username: string,
     avatarUrl?: string,
   ): Promise<UserDto> {
-    if (!username.trim()) {
+    const trimmed = username.trim();
+
+    if (!trimmed) {
       throw new BadRequestException('Username is required');
     }
 
+    if (
+      trimmed.length < UsersService.USERNAME_MIN_LENGTH ||
+      trimmed.length > UsersService.USERNAME_MAX_LENGTH
+    ) {
+      throw new BadRequestException(
+        `Username must be between ${UsersService.USERNAME_MIN_LENGTH} and ${UsersService.USERNAME_MAX_LENGTH} characters long`,
+      );
+    }
+
+    if (!UsersService.USERNAME_PATTERN.test(trimmed)) {
+      throw new BadRequestException(
+        'Username may only contain letters, numbers, periods, and underscores',
+      );
+    }
+
     const data: Record<string, any> = {
-      username,
+      username: trimmed,
       profileComplete: true,
     };
     if (avatarUrl) {
@@ -99,7 +120,11 @@ export class UsersService {
     }
 
     const uploadPath = `${userId}/${file.originalname}`;
-    const publicUrl = await this.storage.uploadFile('avatars', uploadPath, file);
+    const publicUrl = await this.storage.uploadFile(
+      'avatars',
+      uploadPath,
+      file,
+    );
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -279,7 +304,11 @@ export class UsersService {
     page = 1,
     limit = 20,
   ): Promise<{
-    results: { id: string; username: string | null; avatarUrl: string | null }[];
+    results: {
+      id: string;
+      username: string | null;
+      avatarUrl: string | null;
+    }[];
     total: number;
     page: number;
     limit: number;
@@ -398,7 +427,7 @@ export class UsersService {
       if (match?.[1]) {
         return match[1];
       }
-    } catch (error) {
+    } catch {
       // Ignore parsing errors and fall through to the string checks below.
     }
 

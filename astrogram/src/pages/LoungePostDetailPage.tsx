@@ -86,6 +86,7 @@ const LoungePostDetailPage: React.FC = () => {
   const authorJoined = post.authorJoinedAt
     ? formatDistanceToNow(new Date(post.authorJoinedAt), { addSuffix: true })
     : null;
+  const encodedAuthorUsername = encodeURIComponent(post.username);
 
   const handleQuotePost = () => {
     if (!post) return;
@@ -122,7 +123,7 @@ const LoungePostDetailPage: React.FC = () => {
                 className="mx-auto h-20 w-20 rounded-full object-cover"
               />
               <Link
-                to={`/users/${post.username}/posts`}
+                to={`/users/${encodedAuthorUsername}/posts`}
                 className="mt-3 block text-sm font-semibold text-teal-400 hover:underline"
               >
                 @{post.username}
