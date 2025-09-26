@@ -1,10 +1,14 @@
 import React from 'react';
 // import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook, FaGoogle } from "react-icons/fa";
+import { useLocation } from 'react-router-dom';
 
 
 const SignupPage: React.FC = () => {
   const base = import.meta.env.VITE_API_BASE_URL || '/api';
+  const location = useLocation();
+  const isLoginRoute = location.pathname === '/login';
+  const headingText = isLoginRoute ? 'Log in' : 'Sign Up';
 
   const handleGoogleSignIn = () => {
     // Redirect to NestJS Google OAuth start
@@ -19,7 +23,7 @@ const SignupPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 lg:items-start lg:pt-16">
       <div className="max-w-sm w-full p-8 space-y-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
         <h1 className="text-2xl font-semibold text-center text-gray-800 dark:text-gray-100">
-          Sign Up
+          {headingText}
         </h1>
         {/* Google */}
         <button

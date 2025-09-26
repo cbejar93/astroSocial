@@ -57,6 +57,7 @@ const App: React.FC = () => {
           <section className="w-full min-w-0">
             <Routes>
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/login" element={<SignupPage />} />
               <Route path="/auth/success" element={<AuthSuccessPage />} />
               <Route element={<RequireProfileCompletion />}>
                 <Route path="/" element={<Feed />} />
