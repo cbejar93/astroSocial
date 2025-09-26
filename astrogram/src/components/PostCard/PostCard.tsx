@@ -56,6 +56,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const [saved, setSaved] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const encodedUsername = encodeURIComponent(username);
 
   const handleLike = async () => {
     try {
@@ -158,7 +159,7 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <Link
-            to={`/users/${username}/posts`}
+            to={`/users/${encodedUsername}/posts`}
             onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-2 hover:underline"
           >

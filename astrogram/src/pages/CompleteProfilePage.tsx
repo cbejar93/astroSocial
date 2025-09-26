@@ -2,20 +2,44 @@
 import React, { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud }             from "lucide-react";
+import { UploadCloud } from 'lucide-react';
 import { apiFetch } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
+
+const USERNAME_PATTERN = /^[a-zA-Z0-9._]+$/;
+const USERNAME_MIN_LENGTH = 3;
+const USERNAME_MAX_LENGTH = 20;
+
+const validateUsername = (value: string): string | null => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return 'Username is required';
+  }
+
+  if (trimmed.length < USERNAME_MIN_LENGTH || trimmed.length > USERNAME_MAX_LENGTH) {
+    return `Username must be between ${USERNAME_MIN_LENGTH} and ${USERNAME_MAX_LENGTH} characters`;
+  }
+
+  if (!USERNAME_PATTERN.test(trimmed)) {
+    return 'Only letters, numbers, periods, and underscores are allowed';
+  }
+
+  return null;
+};
 
 
 
 const CompleteProfilePage: React.FC = () => {
   const navigate        = useNavigate();
+  const { refreshUser } = useAuth();
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [error, setError]         = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
-  const [username,     setUsername]      = useState("");
-  const [selectedFile, setSelectedFile]  = useState<File | null>(null);
-  const [previewUrl,   setPreviewUrl]    = useState<string>("");
+  const [username, setUsername] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   // clean up object URL
   useEffect(() => {
@@ -43,20 +67,39 @@ const CompleteProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!username.trim()) return setError('Username is required');
+    const validationMessage = validateUsername(username);
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
       const form = new FormData();
-      form.append('username', username);
+      form.append('username', username.trim());
       if (imageFile) form.append('avatar', imageFile);
       const res = await apiFetch('/users/me', {
         method: 'PUT',
         body: form,
       });
 
-      if (!res.ok) throw new Error('Failed to update profile');
+      if (!res.ok) {
+        let message = 'Failed to update profile';
+        try {
+          const body = await res.json();
+          if (Array.isArray(body?.message)) {
+            message = body.message[0];
+          } else if (body?.message) {
+            message = body.message;
+          }
+        } catch {
+          // ignore JSON parse errors and fall back to default message
+        }
+        throw new Error(message);
+      }
+      await refreshUser();
       navigate('/', { replace: true });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong';
@@ -80,19 +123,20 @@ const CompleteProfilePage: React.FC = () => {
         <input
           type="text"
           value={username}
+          maxLength={USERNAME_MAX_LENGTH}
           onChange={(e) => {
-            setUsername(e.target.value)
-          if(error){
-            setError(null)
-          }
-          }
-          }
+            setUsername(e.target.value);
+            if (error) {
+              setError(null);
+            }
+          }}
           placeholder="Choose a username"
           className="w-full px-4 py-2 rounded bg-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-teal-400 outline-none"
         />
-         {error && (
-            <p className="mt-1 text-sm text-red-500">{error}</p>
-          )}
+        <p className="mt-1 text-xs text-gray-400">
+          Use {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} characters: letters, numbers, periods, or underscores.
+        </p>
+        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
       </div>
 
       {/* Styled file upload */}

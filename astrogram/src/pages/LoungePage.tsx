@@ -177,46 +177,47 @@ const LoungePage: React.FC = () => {
           {loadingPosts ? (
             <div>Loading posts...</div>
           ) : (
-            posts.map((post) => {
-            const isOwn = user?.username === post.username;
-            return (
-              <div
-                key={post.id}
-                className="p-4 bg-white dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() =>
-                  navigate(
-                    `/lounge/${encodeURIComponent(lounge.name)}/posts/${post.id}`,
-                  )
-                }
-              >
-                <div className="flex items-center mb-1">
-                  <img
-                    src={post.avatarUrl}
-                    alt={`${post.username} avatar`}
-                    className="w-8 h-8 rounded-full object-cover mr-2"
-                  />
-                  <Link
-                    to={`/users/${post.username}/posts`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="font-semibold text-teal-400 text-sm hover:underline"
+              posts.map((post) => {
+                const isOwn = user?.username === post.username;
+                const encodedUsername = encodeURIComponent(post.username);
+                return (
+                  <div
+                    key={post.id}
+                    className="p-4 bg-white dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() =>
+                      navigate(
+                        `/lounge/${encodeURIComponent(lounge.name)}/posts/${post.id}`,
+                      )
+                    }
                   >
-                    @{post.username}
-                  </Link>
-                  <span className="ml-2 text-sm text-gray-500">
-                    {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
-                  </span>
-                  <div className="ml-auto flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
-                      {post.comments} replies
-                    </span>
-                    {isOwn && (
-                      <div
-                        className="relative"
+                    <div className="flex items-center mb-1">
+                      <img
+                        src={post.avatarUrl}
+                        alt={`${post.username} avatar`}
+                        className="w-8 h-8 rounded-full object-cover mr-2"
+                      />
+                      <Link
+                        to={`/users/${encodedUsername}/posts`}
                         onClick={(e) => e.stopPropagation()}
+                        className="font-semibold text-teal-400 text-sm hover:underline"
                       >
-                        <button
-                          type="button"
-                          onClick={(e) => {
+                        @{post.username}
+                      </Link>
+                      <span className="ml-2 text-sm text-gray-500">
+                        {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+                      </span>
+                      <div className="ml-auto flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          {post.comments} replies
+                        </span>
+                        {isOwn && (
+                          <div
+                            className="relative"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              onClick={(e) => {
                             e.stopPropagation();
                             setMenuPostId((id) => (id === post.id ? null : post.id));
                           }}

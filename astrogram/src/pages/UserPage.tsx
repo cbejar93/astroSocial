@@ -39,6 +39,7 @@ const UserPage: React.FC = () => {
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const isFollowing = user?.following?.includes(info?.id ?? '') ?? false;
+  const encodedUsername = encodeURIComponent(username);
 
   useEffect(() => {
     if (!username) return;
@@ -107,7 +108,7 @@ const UserPage: React.FC = () => {
       <div className="border-b border-gray-700 mb-4 pt-4">
         <nav className="-mb-px flex justify-center space-x-8" aria-label="User tabs">
           <Link
-            to={`/users/${username}/posts`}
+            to={`/users/${encodedUsername}/posts`}
             className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'posts'
                 ? 'border-brand text-white'
@@ -117,7 +118,7 @@ const UserPage: React.FC = () => {
             Posts
           </Link>
           <Link
-            to={`/users/${username}/comments`}
+            to={`/users/${encodedUsername}/comments`}
             className={`whitespace-nowrap py-2 px-1 border-b-2 font-bold text-sm hover:no-underline transition-colors duration-200 ${
               active === 'comments'
                 ? 'border-brand text-white'
