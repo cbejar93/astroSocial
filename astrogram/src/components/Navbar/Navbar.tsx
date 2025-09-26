@@ -140,22 +140,19 @@ const Navbar = () => {
               )}
             </>
           ) : (
-            <div className="flex items-center">
-              <div className="flex h-8 items-center rounded-full border border-neutral-700 bg-neutral-900/60 overflow-hidden">
-                <Link
-                  to="/login"
-                  className="inline-flex h-full items-center px-4 text-sm font-medium text-white transition-colors bg-transparent hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
-                >
-                  Log in
-                </Link>
-                <span className="self-stretch w-px bg-neutral-700/80" aria-hidden="true" />
-                <Link
-                  to="/signup"
-                  className="inline-flex h-full items-center px-4 text-sm font-semibold text-white bg-fuchsia-500 transition-colors hover:bg-fuchsia-400 focus-visible:bg-fuchsia-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
-                >
-                  Sign up
-                </Link>
-              </div>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-900/60 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/signup"
+                className="inline-flex items-center justify-center rounded-md bg-fuchsia-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-fuchsia-400 focus-visible:bg-fuchsia-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400/70"
+              >
+                Sign up
+              </Link>
             </div>
           )}
         </div>
