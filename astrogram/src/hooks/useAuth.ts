@@ -14,6 +14,9 @@ export function useAuth() {
       logout: () => {
         throw new Error('AuthProvider is missing');
       },
+      refreshUser: async () => {
+        throw new Error('AuthProvider is missing');
+      },
       updateFollowedLounge: async () => {
         throw new Error('AuthProvider is missing');
       },
