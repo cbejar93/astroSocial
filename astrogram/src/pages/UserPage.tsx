@@ -84,7 +84,7 @@ const UserPage: React.FC = () => {
         <>
           <div className="flex items-center space-x-2 mb-2">
             <img
-              src={info.avatarUrl}
+              src={info.avatarUrl ?? '/defaultPfp.png'}
               alt="avatar"
               className="w-12 h-12 rounded-full object-cover"
             />
@@ -146,7 +146,7 @@ const UserPage: React.FC = () => {
           {comments.map((c) => (
             <li key={c.id} className="flex gap-2 border-b border-white/20 pb-2">
               <img
-                src={c.avatarUrl}
+                src={c.avatarUrl ?? '/defaultPfp.png'}
                 alt="avatar"
                 className="w-8 h-8 rounded-full object-cover"
               />

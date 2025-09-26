@@ -192,7 +192,7 @@ const LoungePage: React.FC = () => {
                   >
                     <div className="flex items-center mb-1">
                       <img
-                        src={post.avatarUrl}
+                        src={post.avatarUrl ?? '/defaultPfp.png'}
                         alt={`${post.username} avatar`}
                         className="w-8 h-8 rounded-full object-cover mr-2"
                       />
