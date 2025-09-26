@@ -13,6 +13,7 @@ import {
   Body,
   Delete,
   Param,
+  HttpException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
@@ -94,6 +95,11 @@ export class UsersController {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
       this.logger.error(`Error in PUT /api/users/me: ${message}`, stack);
+
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
       throw new InternalServerErrorException('Could not update profile');
     }
   }

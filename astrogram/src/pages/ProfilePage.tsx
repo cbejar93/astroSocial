@@ -295,15 +295,22 @@ export default function ProfilePage(): JSX.Element {
           {comments.length === 0 && (
             <li className="text-center text-gray-400">No comments yet.</li>
           )}
-          {comments.map((c) => (
-            <li key={c.id} className="flex gap-2 border-b border-white/20 pb-2">
+          {comments.map((c) => {
+            const encodedUsername = encodeURIComponent(c.username);
+            return (
+              <li key={c.id} className="flex gap-2 border-b border-white/20 pb-2">
               <img
                 src={c.avatarUrl ?? '/defaultPfp.png'}
                 alt="avatar"
                 className="w-8 h-8 rounded-full object-cover"
               />
               <div className="flex-1">
-                <Link to={`/users/${c.username}/posts`} className="text-sm text-teal-400 hover:underline">@{c.username}</Link>
+                <Link
+                  to={`/users/${encodedUsername}/posts`}
+                  className="text-sm text-teal-400 hover:underline"
+                >
+                  @{c.username}
+                </Link>
                 <div className="text-sm text-gray-200">{c.text}</div>
                 <div className="flex items-center text-xs text-gray-400 mt-1">
                   <button
@@ -321,7 +328,8 @@ export default function ProfilePage(): JSX.Element {
                 </div>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
 

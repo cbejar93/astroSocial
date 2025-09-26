@@ -425,6 +425,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       if (depth > 0) {
         containerClasses.push('ml-6');
       }
+      const encodedUsername = encodeURIComponent(comment.username);
 
       return (
         <div key={comment.id} className={containerClasses.join(' ')}>
@@ -438,7 +439,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <Link
-                    to={`/users/${comment.username}/posts`}
+                    to={`/users/${encodedUsername}/posts`}
                     className="text-sm font-semibold text-teal-400 hover:underline"
                   >
                     @{comment.username}
