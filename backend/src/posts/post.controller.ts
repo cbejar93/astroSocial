@@ -154,6 +154,59 @@ export class PostsController {
         }
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Post(':id/save')
+    async savePost(@Req() req: any, @Param('id') postId: string) {
+        const userId = req.user.sub as string;
+        this.logger.log(`User ${userId} → SAVE POST → ${postId}`);
+        try {
+            const result = await this.posts.savePost(userId, postId);
+            this.logger.log(`SAVE POST: saved=${result.saved}, total=${result.count}`);
+            return result;
+        } catch (err: any) {
+            this.logger.error(`SAVE POST failed for ${postId}: ${err.message}`, err.stack);
+            throw err;
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id/save')
+    async unsavePost(@Req() req: any, @Param('id') postId: string) {
+        const userId = req.user.sub as string;
+        this.logger.log(`User ${userId} → UNSAVE POST → ${postId}`);
+        try {
+            const result = await this.posts.unsavePost(userId, postId);
+            this.logger.log(`UNSAVE POST: saved=${result.saved}, total=${result.count}`);
+            return result;
+        } catch (err: any) {
+            this.logger.error(`UNSAVE POST failed for ${postId}: ${err.message}`, err.stack);
+            throw err;
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('saved')
+    async getSavedPosts(
+        @Req() req: any,
+        @Query('page') page = '1',
+        @Query('limit') limit = '20',
+    ): Promise<FeedResponseDto> {
+        const userId = req.user.sub as string;
+        const p = parseInt(page, 10) || 1;
+        const l = parseInt(limit, 10) || 20;
+        this.logger.log(`User ${userId} → FETCH SAVED POSTS (page=${p}, limit=${l})`);
+
+        try {
+            return await this.posts.getSavedPosts(userId, p, l);
+        } catch (err: any) {
+            this.logger.error(
+                `FETCH SAVED POSTS failed for ${userId}: ${err.message}`,
+                err.stack,
+            );
+            throw err;
+        }
+    }
+
     @Get(':id')
     @UseGuards(OptionalAuthGuard)  // if you want only logged‑in users, otherwise drop this
     async getPost(

@@ -10,6 +10,8 @@ export interface FeedPostDto {
   shares: number;
   reposts: number;
   likedByMe: boolean;
+  savedByMe: boolean;
+  saves: number;
   repostedByMe: boolean;
   repostedBy?: string;
   title?: string;

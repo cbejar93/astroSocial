@@ -21,6 +21,7 @@ import LoungesPage from './pages/LoungesPage'
 import LoungePostPage from './pages/LoungePostPage'
 import LoungePostDetailPage from './pages/LoungePostDetailPage'
 import AdminPage from './pages/AdminPage'
+import SavedPage from './pages/SavedPage'
 
 import NotFoundPage from './pages/NotFoundPage'
 import SearchPage from './pages/SearchPage'
@@ -64,6 +65,7 @@ const App: React.FC = () => {
                 {/* single-post detail view */}
                 <Route path="/posts/:id" element={<PostPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/saved" element={<SavedPage />} />
                 <Route path="/users/:username" element={<UserPage />} />
                 <Route path="/users/:username/:tab" element={<UserPage />} />
                 <Route path="/lounge" element={<LoungesPage />} />
