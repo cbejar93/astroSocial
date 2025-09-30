@@ -26,6 +26,15 @@ export class NotificationsService {
       orderBy: { createdAt: 'desc' },
       include: {
         actor: { select: { username: true, avatarUrl: true } },
+        post: {
+          select: {
+            lounge: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
     await this.prisma.notification.updateMany({
@@ -38,6 +47,7 @@ export class NotificationsService {
       timestamp: n.createdAt.toISOString(),
       postId: n.postId || undefined,
       commentId: n.commentId || undefined,
+      loungeName: n.post?.lounge?.name || undefined,
       actor: {
         username: n.actor.username!,
         avatarUrl: n.actor.avatarUrl || '/defaultPfp.png',
