@@ -1,5 +1,5 @@
 import { Menu, Bell, ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -19,11 +19,9 @@ interface LoungeInfo {
 
 
 const Navbar = () => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [loungesOpen, setLoungesOpen] = useState(false);
   const [loungesList, setLoungesList] = useState<LoungeInfo[]>([]);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { count } = useNotifications();
   const location = useLocation();
@@ -31,21 +29,13 @@ const Navbar = () => {
 
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSideMenuOpen(false);
-        setDropdownOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEsc);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEsc);
     };
   }, []);
@@ -55,16 +45,6 @@ const Navbar = () => {
       .then(setLoungesList)
       .catch(() => {});
   }, []);
-
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      setDropdownOpen((prev) => !prev);
-    } else if (event.key === "Escape") {
-      setDropdownOpen(false);
-    }
-  };
-
   return (
     <>
     <nav className="fixed top-0 left-0 z-[80] w-full bg-transparent  text-white">
@@ -84,29 +64,9 @@ const Navbar = () => {
             />
           </button>
 
-          {/* AstroLounge Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              className="btn-unstyled flex items-center gap-1 whitespace-nowrap"
-              onClick={() => setDropdownOpen((prev) => !prev)}
-              onKeyDown={handleKeyDown}
-              aria-haspopup="true"
-              aria-expanded={dropdownOpen}
-            >
-              <span className="text-base font-semibold leading-none sm:text-lg">AstroLounge</span>
-              {/* <ChevronDown className="w-4 h-4 align-middle" /> */}
-            </button>
-
-            {dropdownOpen && (
-              <div className="absolute left-0 mt-2 w-40 bg-neutral-900 border border-neutral-700 rounded shadow-md animate-slide-down">
-                <ul className="py-2">
-                  <li className="px-4 py-2 hover:bg-neutral-800 cursor-pointer">Dashboard</li>
-                  <li className="px-4 py-2 hover:bg-neutral-800 cursor-pointer">Projects</li>
-                  <li className="px-4 py-2 hover:bg-neutral-800 cursor-pointer">Settings</li>
-                </ul>
-              </div>
-            )}
-          </div>
+          <span className="text-base font-semibold leading-none sm:text-lg whitespace-nowrap">
+            AstroLounge
+          </span>
         </div>
 
         {/* Right Section */}
