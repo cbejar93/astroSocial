@@ -12,6 +12,43 @@ const DEFAULT_LOCATION: Coordinates = {
   longitude: -122.2712,
 };
 
+const TIMEZONE_LOCATIONS: Record<
+  string,
+  {
+    coordinates: Coordinates;
+    displayName: string;
+  }
+> = {
+  'America/New_York': {
+    coordinates: {
+      latitude: 40.7128,
+      longitude: -74.006,
+    },
+    displayName: 'New York City, NY',
+  },
+  'America/Chicago': {
+    coordinates: {
+      latitude: 41.8781,
+      longitude: -87.6298,
+    },
+    displayName: 'Chicago, IL',
+  },
+  'America/Denver': {
+    coordinates: {
+      latitude: 39.7392,
+      longitude: -104.9903,
+    },
+    displayName: 'Denver, CO',
+  },
+  'America/Los_Angeles': {
+    coordinates: {
+      latitude: 34.0522,
+      longitude: -118.2437,
+    },
+    displayName: 'Los Angeles, CA',
+  },
+};
+
 export const useWeatherService = () => {
   const [location, setLocation] = useState<Coordinates | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -38,6 +75,17 @@ export const useWeatherService = () => {
         console.error(err);
 
         if (err.code === err.PERMISSION_DENIED) {
+          const timeZone =
+            typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function'
+              ? Intl.DateTimeFormat().resolvedOptions().timeZone
+              : undefined;
+          const fallbackLocation = timeZone ? TIMEZONE_LOCATIONS[timeZone] : undefined;
+
+          if (fallbackLocation) {
+            setLocation(fallbackLocation.coordinates);
+            return;
+          }
+
           setLocation(DEFAULT_LOCATION);
           return;
         }
