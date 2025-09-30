@@ -35,6 +35,19 @@ main a:hover,
   text-decoration: underline;
 }
 
+.prose blockquote {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 0.25rem solid rgba(56, 189, 248, 0.8);
+  background-color: rgba(56, 189, 248, 0.12);
+  color: #bae6fd;
+  border-radius: 0.75rem;
+}
+
+.prose blockquote strong {
+  color: #e0f2fe;
+}
+
 @layer base {
   /* Reset margin and keep layout responsive */
   body {
