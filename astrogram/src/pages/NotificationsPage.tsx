@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { fetchNotifications, type NotificationItem } from '../lib/api';
 
@@ -43,12 +44,16 @@ const NotificationsPage: React.FC = () => {
                 {n.postId && (
                   <>
                     {' '}
-                    <a
-                      href={`/posts/${n.postId}`}
+                    <Link
+                      to={
+                        n.loungeName
+                          ? `/lounge/${encodeURIComponent(n.loungeName)}/posts/${n.postId}`
+                          : `/posts/${n.postId}`
+                      }
                       className="underline text-teal-300 hover:text-teal-200"
                     >
                       View post
-                    </a>
+                    </Link>
                   </>
                 )}
               </div>

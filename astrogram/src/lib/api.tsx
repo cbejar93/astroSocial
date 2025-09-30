@@ -336,6 +336,7 @@ export interface NotificationItem {
   actor: { username: string; avatarUrl: string };
   postId?: string;
   commentId?: string;
+  loungeName?: string;
 }
 
 export async function fetchNotifications(): Promise<NotificationItem[]> {
