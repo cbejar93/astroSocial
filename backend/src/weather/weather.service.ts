@@ -109,9 +109,14 @@ export class WeatherService {
           hourly.boundary_layer_height[i];
       }
 
-      const result = Object.values(resultMap);
+      const result = {
+        timezone: (response.data.timezone as string) ?? 'UTC',
+        timezoneAbbreviation: response.data.timezone_abbreviation ?? '',
+        utcOffsetSeconds: Number(response.data.utc_offset_seconds ?? 0),
+        daily: Object.values(resultMap),
+      };
       this.logger.log(
-        `✅ fetchVisibility complete for [${lat},${lon}] with ${result.length} days`,
+        `✅ fetchVisibility complete for [${lat},${lon}] with ${result.daily.length} days in ${result.timezone}`,
       );
       return result;
     } catch (err) {

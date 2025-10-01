@@ -34,5 +34,8 @@ export interface WeatherDay {
 export interface WeatherData {
   status: string;
   coordinates: string;
+  timezone: string;
+  timezoneAbbreviation: string;
+  utcOffsetSeconds: number;
   data: WeatherDay[];
 }

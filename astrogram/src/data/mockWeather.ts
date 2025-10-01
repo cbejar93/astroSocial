@@ -1,3 +1,5 @@
+import type { WeatherData as ApiWeatherData, WeatherDay as ApiWeatherDay } from "../types/weather";
+
 export const mockCurrentWeather = {
     location: "La Palma, Canary Islands",
     date: "July 3, 2025",
@@ -16,7 +18,7 @@ export const mockCurrentWeather = {
 
 export type WeatherConditionLevel = 1 | 2 | 3 | 4;
 
-export interface WeatherData {
+export interface LegacyWeatherSummary {
   date: string;
   sight: WeatherConditionLevel;
   clear: WeatherConditionLevel;
@@ -34,7 +36,7 @@ export const conditionColors = {
 
   export type TimeBlock = '0'|'3' |"6" | "12" | "18" | '21';
 
-  export interface WeatherDay {
+export interface LegacyWeatherDay {
     date: string;
     conditions: {
       clouds?: Partial<Record<TimeBlock, number>>;        // add this if you're calculating this
@@ -54,7 +56,7 @@ export const conditionColors = {
     };
   }
   
-  export const mockWeatherData: WeatherDay[] = [
+  export const mockWeatherData: ApiWeatherDay[] = [
     {
       date: "2025-07-03",
       conditions: {
@@ -164,4 +166,13 @@ export const conditionColors = {
       moonPhase: { phase: "Waxing Crescent", illumination: 0.22 },
     },
   ];
+
+export const mockWeatherPayload: ApiWeatherData = {
+  status: "ok",
+  coordinates: "Mauna Kea, Hawaii",
+  timezone: "Pacific/Honolulu",
+  timezoneAbbreviation: "HST",
+  utcOffsetSeconds: -36000,
+  data: mockWeatherData,
+};
   

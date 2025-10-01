@@ -31,7 +31,7 @@ export class WeatherController {
 
     // Fetch visibility data from Open-Meteo
     // fire all three requests at once
-    const [visibilityData, astronomy, location] = await Promise.all([
+    const [visibilityResult, astronomy, location] = await Promise.all([
       this.weatherService.fetchVisibility(latitude, longitude, unit),
       this.weatherService.fetchAstronomy(latitude, longitude, unit),
       this.weatherService.fetchLocationName(latitude, longitude),
@@ -41,12 +41,12 @@ export class WeatherController {
 
     this.logger.log(
       `Fetched data in ${duration}ms → ` +
-        `visibility days: ${visibilityData.length}, ` +
+        `visibility days: ${visibilityResult.daily.length}, ` +
         `astronomy days: ${astronomy.length}, ` +
         `location: ${location}`,
     );
 
-    const daily: WeatherDay[] = visibilityData.map((visDay) => {
+    const daily: WeatherDay[] = visibilityResult.daily.map((visDay) => {
       // find the matching astro object by date
       const astroRaw = astronomy.find((a) => a.datetime === visDay.date);
 
@@ -66,9 +66,18 @@ export class WeatherController {
       };
     });
 
-    this.logger.log(`Returning payload with ${daily.length} days of data`);
+    this.logger.log(
+      `Returning payload with ${daily.length} days of data for ${visibilityResult.timezone}`,
+    );
 
-    return { status: 'ok', coordinates: location, data: daily };
+    return {
+      status: 'ok',
+      coordinates: location,
+      timezone: visibilityResult.timezone,
+      timezoneAbbreviation: visibilityResult.timezoneAbbreviation,
+      utcOffsetSeconds: visibilityResult.utcOffsetSeconds,
+      data: daily,
+    };
   }
 }
 
