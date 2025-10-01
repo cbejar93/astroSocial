@@ -1,5 +1,5 @@
 import React from "react";
-import type { WeatherDay, TimeBlock } from "../../data/mockWeather";
+import type { WeatherDay, TimeBlock } from "../../types/weather";
 
 type WeatherCardProps = {
   day: WeatherDay;
@@ -14,13 +14,17 @@ const levelColors: Record<number, string> = {
   5: "bg-green-500",   // Best
 };
 
-const timeBlocks: TimeBlock[] = ["0",'3' ,"6", "12", "18", "21"];
-const conditions: Array<keyof WeatherDay["conditions"]> = ["cloudcover", "visibility", "seeing"];
+const timeBlocks: TimeBlock[] = ["0", "3", "6", "12", "18", "21"];
+const conditions: Array<keyof WeatherDay["conditions"]> = [
+  "cloudcover",
+  "visibility",
+  "seeing",
+];
 
 const conditionLabels: Record<string, string> = {
   cloudcover: "Clouds",
-  visibility: "Transparancy",
-  seeing : "Seeing",
+  visibility: "Transparency",
+  seeing: "Seeing",
 };
 
 function getClosestTimeBlock(): TimeBlock {
@@ -69,21 +73,22 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
         {/* Condition rows */}
 
         {conditions.map((condition) => (
-          <React.Fragment key={condition}>
+          <React.Fragment key={String(condition)}>
             <div className="capitalize text-sm text-gray-300">
-              {conditionLabels[condition] ?? condition}
-            </div>            {timeBlocks.map((time) => {
+              {conditionLabels[String(condition)] ?? String(condition)}
+            </div>
+            {timeBlocks.map((time) => {
               const rawValue = day.conditions[condition]?.[time];
-              const level = mapValueToLevel(condition, rawValue ?? 0);
+              const level = mapValueToLevel(String(condition), rawValue ?? 0);
               const colorClass = levelColors[level] ?? "bg-gray-700";
               const isActive = time === activeTime && isToday;
 
               return (
                 <div
-                  key={`${condition}-${time}`}
+                  key={`${String(condition)}-${time}`}
                   className={`w-6 h-6 mx-auto rounded ${colorClass} ${isActive ? "ring-2 ring-cyan-400" : ""
                     }`}
-                  title={`${condition} at ${time}H = ${rawValue ?? "N/A"}`}
+                  title={`${String(condition)} at ${time}H = ${rawValue ?? "N/A"}`}
                 />
               );
             })}
@@ -96,43 +101,43 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
 
 export default WeatherCard;
 
-function mapValueToLevel(condition: string, value: number): number {
+export function mapValueToLevel(condition: string, value: number): number {
   if (value == null || isNaN(value)) return 1;
 
   switch (condition) {
     case "clouds":
     case "cloudcover":
       // % of sky covered — lower is better
-      if (value < 10) return 5;        // Crystal clear
-      if (value < 30) return 4;        // Mostly clear
-      if (value < 50) return 3;        // Partly cloudy
-      if (value < 80) return 2;        // Mostly cloudy
-      return 1;                        // Overcast
+      if (value <= 10) return 5;        // Crystal clear
+      if (value <= 30) return 4;        // Mostly clear
+      if (value <= 55) return 3;        // Partly cloudy
+      if (value <= 80) return 2;        // Mostly cloudy
+      return 1;                         // Overcast
 
-      case "seeing":
-        // boundary layer height in metres — lower is better for astronomical viewing
-        if (value <= 100)  return 5;  // Excellent (very stable)
-        if (value <= 300)  return 4;  // Great (low mixing)
-        if (value <= 600)  return 3;  // Good (moderate mixing)
-        if (value <= 1000) return 2;  // Fair (high mixing)
-        return 1; 
+    case "seeing":
+      // boundary layer height in metres — lower is better for astronomical viewing
+      if (value <= 300) return 5;       // Excellent (very stable)
+      if (value <= 600) return 4;       // Great (low mixing)
+      if (value <= 900) return 3;       // Good (moderate mixing)
+      if (value <= 1200) return 2;      // Fair (higher turbulence)
+      return 1;                         // Very turbulent boundary layer
 
     case "transparency":
     case "humidity":
     case "relative_humidity_2m":
       // % — lower is better
-      if (value < 30) return 5;        // Dry and transparent
-      if (value < 45) return 4;        // Good
-      if (value < 60) return 3;        // Fair
-      if (value < 80) return 2;        // Humid
-      return 1;                        // Very humid / poor transparency
+      if (value < 35) return 5;         // Dry and transparent
+      if (value < 50) return 4;         // Good
+      if (value < 65) return 3;         // Fair
+      if (value < 80) return 2;         // Humid
+      return 1;                         // Very humid / poor transparency
 
     case "visibility":
-      // meters — higher is better
-      if (value >= 25000) return 5;    // Crystal clear
+      // metres — higher is better. Open-Meteo tops out around 24 km.
+      if (value >= 24000) return 5;    // Crystal clear horizon
       if (value >= 20000) return 4;    // Excellent
-      if (value >= 15000) return 3;    // Good
-      if (value >= 8000) return 2;     // Fair
+      if (value >= 16000) return 3;    // Good
+      if (value >= 10000) return 2;    // Fair
       return 1;                        // Poor
 
     case "precipitation":
