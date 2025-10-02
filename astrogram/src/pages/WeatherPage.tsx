@@ -5,72 +5,116 @@ import WeatherCard from "../components/Weather/WeatherCard";
 import MoonPhaseCard from "../components/Weather/MoonPhaseCard";
 import WeatherSkeleton from "../components/Weather/WeatherSkeleton";
 import WindCard from "../components/Weather/WindCard";
-
-interface WeatherConditions {
-  temperature?: Record<string, number>;
-  dewpoint?: Record<string, number>;
-  visibility?: Record<string, number>;
-  cloudcover?: Record<string, number>;
-  humidity?: Record<string, number>;
-  precipitation?: Record<string, number>;
-  windspeed?: Record<string, number>;
-  winddirection?: Record<string, number>;
-  seeing?:Record<string, number>
-}
-
-export interface AstroData {
-  sunrise: string;    // “06:12:34”
-  sunset: string;    // “20:03:21”
-  moonrise?: string;
-  moonset?: string;
-  moonPhase: {
-    phase: string;        // e.g. “Full Moon”
-    illumination: number; // percent 0–100
-  };
-}
-
-export interface WeatherDay {
-  date: string;         // “2025-07-11”
-  conditions: WeatherConditions;
-  astro?: AstroData;
-}
-
-
-
-export interface WeatherData {
-  status: string;
-  coordinates: string;
-  data: WeatherDay[];
-}
+import type { WeatherData } from "../types/weather";
 
 interface WeatherPageProps {
   weather: WeatherData | null;
   loading: boolean;
   error: string | null;
-  unit: 'metric' | 'us';
-  setUnit: (u: 'metric' | 'us') => void;
+  unit: "metric" | "us";
+  setUnit: (u: "metric" | "us") => void;
 }
 
+export interface ZonedDateInfo {
+  isoDate: string;
+  hour: number;
+  minute: number;
+  formattedDate: string;
+}
+
+export const getZonedDateInfo = (
+  timeZone: string,
+  referenceDate: Date = new Date(),
+): ZonedDateInfo => {
+  const zone = timeZone || "UTC";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: zone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(referenceDate)
+    .reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== "literal") {
+        acc[part.type] = part.value;
+      }
+      return acc;
+    }, {});
+
+  const isoDate = `${parts.year}-${parts.month}-${parts.day}`;
+  const hour = Number.parseInt(parts.hour ?? "0", 10);
+  const minute = Number.parseInt(parts.minute ?? "0", 10);
+
+  const formattedDate = new Intl.DateTimeFormat(undefined, {
+    timeZone: zone,
+    dateStyle: "long",
+  }).format(referenceDate);
+
+  return { isoDate, hour, minute, formattedDate };
+};
+
+export interface TimeParts {
+  hour: number;
+  minute: number;
+}
+
+export const parseTimeParts = (value?: string): TimeParts | null => {
+  if (!value) return null;
+  const [timeSection] = value.includes("T") ? value.split("T").slice(-1) : [value];
+  const [hour, minute] = timeSection.split(":");
+  const parsedHour = Number.parseInt(hour ?? "", 10);
+  const parsedMinute = Number.parseInt(minute ?? "", 10);
+  if (Number.isNaN(parsedHour) || Number.isNaN(parsedMinute)) return null;
+  return { hour: parsedHour, minute: parsedMinute };
+};
+
+export const isWithinDaylight = (
+  sunrise: string,
+  sunset: string,
+  currentHour: number,
+  currentMinute: number,
+): boolean => {
+  const sunriseParts = parseTimeParts(sunrise);
+  const sunsetParts = parseTimeParts(sunset);
+  if (!sunriseParts || !sunsetParts) return true;
+
+  const sunriseMinutes = sunriseParts.hour * 60 + sunriseParts.minute;
+  const sunsetMinutes = sunsetParts.hour * 60 + sunsetParts.minute;
+  const currentMinutes = currentHour * 60 + currentMinute;
+
+  if (sunsetMinutes === sunriseMinutes) {
+    return currentMinutes === sunriseMinutes;
+  }
+
+  if (sunsetMinutes < sunriseMinutes) {
+    return currentMinutes >= sunriseMinutes || currentMinutes < sunsetMinutes;
+  }
+
+  return currentMinutes >= sunriseMinutes && currentMinutes < sunsetMinutes;
+};
+
 const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit, setUnit }) => {
-  const today = useMemo(() => new Date(), []);
-  const todayStr = today.toISOString().split("T")[0];
-  const todayMidnight = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.getTime();
-  }, []);
+  const resolvedLocalZone =
+    typeof Intl !== "undefined" && typeof Intl.DateTimeFormat === "function"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone
+      : "UTC";
+  const timeZone = weather?.timezone ?? resolvedLocalZone ?? "UTC";
+
+  const zonedNow = useMemo(() => getZonedDateInfo(timeZone), [timeZone]);
+  const todayStr = zonedNow.isoDate;
 
   const todayData = useMemo(
     () => (weather?.data ?? []).find((day) => day.date === todayStr),
-    [weather, todayStr]
+    [weather, todayStr],
   );
 
   const futureWeatherData = useMemo(
-    () =>
-      (weather?.data ?? []).filter(
-        (day) => new Date(day.date).setHours(0, 0, 0, 0) >= todayMidnight
-      ),
-    [weather, todayMidnight]
+    () => (weather?.data ?? []).filter((day) => day.date >= todayStr),
+    [weather, todayStr],
   );
 
   if (loading) return <WeatherSkeleton />;
@@ -78,34 +122,32 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   if (!weather || !weather.data)
     return <div className="text-center text-gray-400 py-6">No weather data available.</div>;
 
-  // const currentTemp = todayData?.conditions.temperature?.["12"] ?? 0;
-  // const currentCondition = getConditionFromClouds(todayData?.conditions.cloudcover?.["12"]);
   const sunrise = todayData?.astro?.sunrise;
   const sunset = todayData?.astro?.sunset;
 
   const isDaytime = todayData?.astro
-    ? checkDaytime(todayData.astro.sunrise, todayData.astro.sunset)
+    ? isWithinDaylight(
+        todayData.astro.sunrise,
+        todayData.astro.sunset,
+        zonedNow.hour,
+        zonedNow.minute,
+      )
     : true;
-
 
   const speedMap = todayData?.conditions.windspeed ?? {};
   const directionMap = todayData?.conditions.winddirection ?? {};
   const tempMap = todayData?.conditions.temperature ?? {};
   const conditionMap = todayData?.conditions.cloudcover ?? {};
 
-  // 2) turn the keys into numbers and find which hour is closest to now
-  const nowHour = new Date().getHours();
-  const available = Object.keys(speedMap).map(h => parseInt(h, 10));
-  // fallback if no data
+  const available = Object.keys(speedMap).map((h) => parseInt(h, 10));
   let chosenHour = available.length ? available[0] : 0;
 
   if (available.length) {
     chosenHour = available.reduce((prev, curr) => {
-      return Math.abs(curr - nowHour) < Math.abs(prev - nowHour) ? curr : prev;
+      return Math.abs(curr - zonedNow.hour) < Math.abs(prev - zonedNow.hour) ? curr : prev;
     }, available[0]);
   }
 
-  // 3) pull out the values for that hour
   const currentWindSpeed = speedMap[chosenHour];
   const currentWindDirection = directionMap[chosenHour];
   const currentTemp = tempMap[chosenHour];
@@ -116,55 +158,51 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   return (
     <div className="w-full py-8 flex justify-center">
       <div className="w-full max-w-3xl px-0 sm:px-4">
-      <WeatherHeader
-        location={weather.coordinates}
-        date={today.toLocaleDateString()}
-      />
+        <WeatherHeader
+          location={weather.coordinates}
+          date={zonedNow.formattedDate}
+        />
 
-      <CurrentWeatherCard
-        temperature={currentTemp}
-        condition={currentCondition}
-        icon={icon} // You can update this dynamically later
-        sunrise={sunrise}
-        sunset={sunset}
-        unit={unit}
-        onToggle={() => setUnit(unit === 'metric' ? 'us' : 'metric')}
-      />
+        <CurrentWeatherCard
+          temperature={currentTemp}
+          condition={currentCondition}
+          icon={icon}
+          sunrise={sunrise}
+          sunset={sunset}
+          unit={unit}
+          onToggle={() => setUnit(unit === "metric" ? "us" : "metric")}
+        />
 
-      {/* Forecast Cards */}
-      <div className="overflow-x-auto px-0 sm:px-4 pb-4">
-        <div className="flex gap-3 w-max">
-          {futureWeatherData.map((day, index) => (
-            <WeatherCard key={day.date} day={day} isToday={index === 0} />
-          ))}
-        </div>
-      </div>
-
-      {/* Moon Phase */}
-      {todayData?.astro && (
-        <div className="mt-6 flex gap-4">
-          {/* Moon card at half-width */}
-          <div className="w-1/2">
-            <MoonPhaseCard
-             className="h-full"
-              phase={todayData.astro.moonPhase.phase}
-              illumination={todayData.astro.moonPhase.illumination}
-              moonrise={todayData.astro.moonrise}
-              moonset={todayData.astro.moonset}
-            />
-          </div>
-
-          {/* Wind card at half-width */}
-          <div className="w-1/2">
-            <WindCard
-              className="h-full"
-              speed={currentWindSpeed}
-              direction={currentWindDirection}
-              unit="km/h"
-            />
+        <div className="overflow-x-auto px-0 sm:px-4 pb-4">
+          <div className="flex gap-3 w-max">
+            {futureWeatherData.map((day, index) => (
+              <WeatherCard key={day.date} day={day} isToday={index === 0} />
+            ))}
           </div>
         </div>
-      )}
+
+        {todayData?.astro && (
+          <div className="mt-6 flex gap-4">
+            <div className="w-1/2">
+              <MoonPhaseCard
+                className="h-full"
+                phase={todayData.astro.moonPhase.phase}
+                illumination={todayData.astro.moonPhase.illumination}
+                moonrise={todayData.astro.moonrise}
+                moonset={todayData.astro.moonset}
+              />
+            </div>
+
+            <div className="w-1/2">
+              <WindCard
+                className="h-full"
+                speed={currentWindSpeed}
+                direction={currentWindDirection}
+                unit={unit === "us" ? "mph" : "km/h"}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -180,27 +218,17 @@ function getConditionFromClouds(cloudCover?: number): string {
 
 function getWeatherIcon(condition: string, isDay: boolean): string {
   switch (condition) {
-    case 'Clear':
-      return isDay ? '☀️' : '🌕';
-    case 'Partly Cloudy':
-      return isDay ? '⛅️' : '🌥️';
-    case 'Cloudy':
-      return '☁️';
-    case 'Overcast':
-      return '🌫️';
+    case "Clear":
+      return isDay ? "☀️" : "🌕";
+    case "Partly Cloudy":
+      return isDay ? "⛅️" : "🌥️";
+    case "Cloudy":
+      return "☁️";
+    case "Overcast":
+      return "🌫️";
     default:
-      return '❓';
+      return "❓";
   }
-}
-
-function checkDaytime(sunrise: string, sunset: string): boolean {
-  const now = new Date();
-  // parse “HH:MM:SS” to a Date for today
-  const [srH, srM] = sunrise.split(':').map(Number);
-  const [ssH, ssM] = sunset.split(':').map(Number);
-  const sr = new Date(now); sr.setHours(srH, srM, 0, 0);
-  const ss = new Date(now); ss.setHours(ssH, ssM, 0, 0);
-  return now >= sr && now < ss;
 }
 
 export default WeatherPage;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchWeather } from './weatherApi';
-import type { WeatherData } from '../pages/WeatherPage';
+import type { WeatherData } from '../types/weather';
 
 type Coordinates = {
   latitude: number;
