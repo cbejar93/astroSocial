@@ -32,6 +32,10 @@ export const RequireProfileCompletion: React.FC = () => {
     return <Navigate to="/signup" replace />;
   }
 
+  if (pathname === "/saved" && !user) {
+    return <Navigate to="/signup" replace />;
+  }
+
   // redirect unauthenticated users away from lounge post creation
   if (/^\/lounge\/[^/]+\/post$/.test(pathname) && !user) {
     return <Navigate to="/signup" replace />;
