@@ -25,6 +25,8 @@ import SavedPage from './pages/SavedPage'
 
 import NotFoundPage from './pages/NotFoundPage'
 import SearchPage from './pages/SearchPage'
+import TermsPage from './pages/TermsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 
 
@@ -57,6 +59,8 @@ const App: React.FC = () => {
           </aside>
           <section className="w-full min-w-0">
             <Routes>
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/login" element={<SignupPage />} />
               <Route path="/auth/success" element={<AuthSuccessPage />} />
