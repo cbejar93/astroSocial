@@ -153,13 +153,15 @@ const Navbar = () => {
                 )}
               </ul>
             )}
-            <Link
-              to="/saved"
-              onClick={() => setSideMenuOpen(false)}
-              className="block mt-4 mb-1 text-lg font-semibold"
-            >
-              Saved
-            </Link>
+            {user && (
+              <Link
+                to="/saved"
+                onClick={() => setSideMenuOpen(false)}
+                className="block mt-4 mb-1 text-lg font-semibold"
+              >
+                Saved
+              </Link>
+            )}
             <Link
               to="/settings"
               onClick={() => setSideMenuOpen(false)}
