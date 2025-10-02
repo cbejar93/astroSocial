@@ -19,6 +19,11 @@ enum NotificationType {
   COMMENT_LIKE
 }
 
+enum TemperatureUnit {
+  C
+  F
+}
+
 model User {
   id                String            @id @default(uuid())
   emailEncrypted    String
@@ -31,6 +36,7 @@ model User {
   profileComplete   Boolean           @default(false)
   username          String?           @unique
   role              String            @default("USER")
+  temperature       TemperatureUnit   @default(F)
   comments          Comment[]         @relation("UserComments")
   posts             Post[]            @relation("UserPosts")
   originalPosts     Post[]            @relation("OriginalAuthor")

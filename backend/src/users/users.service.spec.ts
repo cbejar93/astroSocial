@@ -3,6 +3,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UsersService } from './users.service';
+import { TemperatureUnit } from '@prisma/client';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -119,6 +120,7 @@ describe('UsersService', () => {
       avatarUrl: null,
       profileComplete: true,
       role: 'USER',
+      temperature: TemperatureUnit.F,
       followedLounges: [],
       followers: [],
       following: [],

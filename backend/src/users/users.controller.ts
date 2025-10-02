@@ -20,6 +20,7 @@ import { UsersService } from './users.service';
 import type { Request } from 'express';
 import { UserDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateTemperatureDto } from './dto/update-temperature.dto';
 
 @Controller('api/users')
 export class UsersController {
@@ -102,6 +103,18 @@ export class UsersController {
 
       throw new InternalServerErrorException('Could not update profile');
     }
+  }
+
+  @Put('me/temperature')
+  @UseGuards(JwtAuthGuard)
+  async updateTemperature(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() body: UpdateTemperatureDto,
+  ): Promise<UserDto> {
+    return this.usersService.updateTemperaturePreference(
+      req.user.sub,
+      body.temperature,
+    );
   }
 
   @Get('me/posts')
