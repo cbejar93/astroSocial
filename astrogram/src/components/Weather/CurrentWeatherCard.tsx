@@ -1,4 +1,5 @@
 import { WiSunrise, WiSunset } from 'react-icons/wi';
+import { formatTimeForUnit } from '../../lib/time';
 
 
 type Props = {
@@ -13,7 +14,7 @@ type Props = {
 
 const CurrentWeatherCard: React.FC<Props> = ({ temperature, condition, icon, sunrise, sunset, unit, onToggle }) => {
 
-  const fmt = (t?: string) => t ? t.slice(0, 5) : '';
+  const fmt = (t?: string) => (t ? formatTimeForUnit(t, unit) : '');
 
 
   return (
