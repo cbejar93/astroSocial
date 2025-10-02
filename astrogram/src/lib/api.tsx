@@ -406,6 +406,15 @@ export async function deleteProfile() {
   return res.json();
 }
 
+export async function updateTemperaturePreference(temperature: 'C' | 'F') {
+  const res = await apiFetch('/users/me/temperature', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ temperature }),
+  });
+  return res.json();
+}
+
 // --------------------------------------------------
 // Search API helpers
 

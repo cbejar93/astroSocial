@@ -1,4 +1,11 @@
-import { useMemo } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import WeatherHeader from "../components/Weather/WeatherHeader";
 import CurrentWeatherCard from "../components/Weather/CurrentWeatherCard";
 import WeatherCard from "../components/Weather/WeatherCard";
@@ -7,13 +14,14 @@ import WeatherSkeleton from "../components/Weather/WeatherSkeleton";
 import WindCard from "../components/Weather/WindCard";
 import { isWithinDaylight } from "../lib/time";
 import type { WeatherData } from "../types/weather";
+import { useAuth } from "../hooks/useAuth";
 
 interface WeatherPageProps {
   weather: WeatherData | null;
   loading: boolean;
   error: string | null;
   unit: "metric" | "us";
-  setUnit: (u: "metric" | "us") => void;
+  setUnit: Dispatch<SetStateAction<"metric" | "us">>;
 }
 
 export interface ZonedDateInfo {
@@ -61,6 +69,41 @@ export const getZonedDateInfo = (
 export { isWithinDaylight, parseTimeParts } from "../lib/time";
 
 const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit, setUnit }) => {
+  const { user, updateTemperaturePreference } = useAuth();
+  const [savingPreference, setSavingPreference] = useState(false);
+  const [preferenceError, setPreferenceError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.temperature) return;
+    const preferredUnit = user.temperature === 'F' ? 'us' : 'metric';
+    setUnit((current) => (current === preferredUnit ? current : preferredUnit));
+  }, [user?.temperature, setUnit]);
+
+  const handleToggleUnit = useCallback(async () => {
+    if (savingPreference) return;
+
+    const previousUnit = unit;
+    const nextUnit = unit === 'metric' ? 'us' : 'metric';
+    setPreferenceError(null);
+    setSavingPreference(true);
+    setUnit(nextUnit);
+
+    if (!user) {
+      setSavingPreference(false);
+      return;
+    }
+
+    try {
+      await updateTemperaturePreference(nextUnit === 'metric' ? 'C' : 'F');
+    } catch (err) {
+      console.error(err);
+      setUnit(previousUnit);
+      setPreferenceError('Unable to save temperature preference. Please try again.');
+    } finally {
+      setSavingPreference(false);
+    }
+  }, [savingPreference, unit, setUnit, user, updateTemperaturePreference]);
+
   const resolvedLocalZone =
     typeof Intl !== "undefined" && typeof Intl.DateTimeFormat === "function"
       ? Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -133,8 +176,14 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           sunrise={sunrise}
           sunset={sunset}
           unit={unit}
-          onToggle={() => setUnit(unit === "metric" ? "us" : "metric")}
+          onToggle={handleToggleUnit}
         />
+
+        {preferenceError && (
+          <p className="mt-2 text-center text-sm text-red-400 px-4">
+            {preferenceError}
+          </p>
+        )}
 
         <div className="overflow-x-auto px-0 sm:px-4 pb-4">
           <div className="flex gap-3 w-max">
