@@ -5,7 +5,7 @@ const PrivacyPolicyPage: FC = () => {
     <div className="px-6 py-24 mx-auto max-w-4xl text-left text-white space-y-8">
       <header className="space-y-4">
         <h1 className="text-3xl font-bold">Privacy Policy for AstroSocial</h1>
-        <p className="text-neutral-300">Effective Date: [Insert date]</p>
+        <p className="text-neutral-300">Effective Date: October 02, 2025</p>
         <p className="text-neutral-300">
           AstroSocial (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) provides this Privacy Policy to explain how
           we collect, use, share, and safeguard personal information when you use our
