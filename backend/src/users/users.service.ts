@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from '../storage/storage.service';
+import { TemperatureUnit } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -34,6 +35,7 @@ export class UsersService {
         avatarUrl: true,
         profileComplete: true, // ← add this
         role: true,
+        temperature: true,
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
@@ -99,6 +101,39 @@ export class UsersService {
 
       throw error;
     }
+  }
+
+  async updateTemperaturePreference(
+    userId: string,
+    temperature: string,
+  ): Promise<UserDto> {
+    const normalized = temperature
+      ?.toUpperCase()
+      .trim() as TemperatureUnit | undefined;
+
+    const allowedUnits = Object.values(TemperatureUnit) as TemperatureUnit[];
+
+    if (!normalized || !allowedUnits.includes(normalized)) {
+      throw new BadRequestException('Temperature must be either C or F');
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { temperature: normalized },
+      select: {
+        id: true,
+        username: true,
+        avatarUrl: true,
+        profileComplete: true,
+        role: true,
+        temperature: true,
+        followedLounges: { select: { id: true } },
+        followers: { select: { id: true } },
+        following: { select: { id: true } },
+      },
+    });
+
+    return this.toDto(user);
   }
 
   private isUniqueConstraintViolation(error: unknown): error is { code: string } {
@@ -222,6 +257,7 @@ export class UsersService {
         avatarUrl: true,
         profileComplete: true,
         role: true,
+        temperature: true,
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
@@ -368,6 +404,7 @@ export class UsersService {
             avatarUrl: true,
             profileComplete: true,
             role: true,
+            temperature: true,
             followedLounges: { select: { id: true } },
           },
         },
@@ -388,6 +425,7 @@ export class UsersService {
             avatarUrl: true,
             profileComplete: true,
             role: true,
+            temperature: true,
             followedLounges: { select: { id: true } },
           },
         },
@@ -420,6 +458,7 @@ export class UsersService {
     avatarUrl?: string | null;
     profileComplete: boolean;
     role: string;
+    temperature: TemperatureUnit;
     followedLounges?: { id: string }[];
     followers?: { id: string }[];
     following?: { id: string }[];
@@ -430,6 +469,7 @@ export class UsersService {
       avatarUrl: user.avatarUrl ?? undefined,
       profileComplete: user.profileComplete,
       role: user.role,
+      temperature: user.temperature,
       followedLounges: user.followedLounges?.map((l) => l.id),
       followers: user.followers?.map((u) => u.id),
       following: user.following?.map((u) => u.id),

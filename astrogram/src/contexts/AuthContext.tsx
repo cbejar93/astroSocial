@@ -8,7 +8,15 @@ import React, {
 
 } from "react";
 import type { ReactNode } from 'react';
-import { apiFetch, setAccessToken, followLounge, unfollowLounge, followUser, unfollowUser } from "../lib/api";
+import {
+  apiFetch,
+  setAccessToken,
+  followLounge,
+  unfollowLounge,
+  followUser,
+  unfollowUser,
+  updateTemperaturePreference as updateTemperaturePreferenceApi,
+} from "../lib/api";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -18,6 +26,7 @@ export interface User {
   avatarUrl?: string;
   profileComplete: boolean;
   role: string;
+  temperature: 'C' | 'F';
   followedLounges?: string[];
   followers?: string[];
   following?: string[];
@@ -39,6 +48,7 @@ export interface AuthContextType {
     username: string,
     follow: boolean,
   ) => Promise<void>;
+  updateTemperaturePreference: (temperature: 'C' | 'F') => Promise<User>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -185,6 +195,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateTemperaturePreference = useCallback(
+    async (temperature: 'C' | 'F'): Promise<User> => {
+      const updated = await updateTemperaturePreferenceApi(temperature);
+      setUser(updated);
+      localStorage.setItem('USER_SNAPSHOT', JSON.stringify(updated));
+      return updated;
+    },
+    [],
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -195,6 +215,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         refreshUser,
         updateFollowedLounge,
         updateFollowingUser,
+        updateTemperaturePreference,
       }}
     >
       {children}

@@ -6,6 +6,7 @@ export interface UserDto {
   avatarUrl?: string;
   profileComplete: boolean;
   role: string;
+  temperature: 'C' | 'F';
   name?: string;
   followedLounges?: string[];
   followers?: string[];

@@ -23,6 +23,9 @@ export function useAuth() {
       updateFollowingUser: async () => {
         throw new Error('AuthProvider is missing');
       },
+      updateTemperaturePreference: async () => {
+        throw new Error('AuthProvider is missing');
+      },
     };
   }
   return ctx;
