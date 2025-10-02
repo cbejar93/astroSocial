@@ -1,9 +1,11 @@
 import React from "react";
+import { formatHourLabel } from "../../lib/time";
 import type { WeatherDay, TimeBlock } from "../../types/weather";
 
 type WeatherCardProps = {
   day: WeatherDay;
   isToday?: boolean;
+  unit?: "metric" | "us";
 };
 
 const levelColors: Record<number, string> = {
@@ -45,7 +47,7 @@ function getClosestTimeBlock(): TimeBlock {
   return blocks[0].toString() as TimeBlock;
 }
 
-const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
+const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false, unit = "metric" }) => {
   const activeTime = isToday ? getClosestTimeBlock() : null;
 
   return (
@@ -64,11 +66,18 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
       <div className="grid grid-cols-[100px_repeat(6,1fr)] gap-x-1 gap-y-2 items-center px-4 pb-4">
         {/* Time headers */}
         <div></div>
-        {timeBlocks.map((time) => (
-          <div key={time} className={`text-sm text-center ${time === activeTime && isToday ? "text-cyan-400 font-semibold" : "text-gray-400"}`}>
-            {time}H
-          </div>
-        ))}
+        {timeBlocks.map((time) => {
+          const hour = Number.parseInt(time, 10);
+          const label = formatHourLabel(hour, unit);
+          return (
+            <div
+              key={time}
+              className={`text-sm text-center ${time === activeTime && isToday ? "text-cyan-400 font-semibold" : "text-gray-400"}`}
+            >
+              {label}
+            </div>
+          );
+        })}
 
         {/* Condition rows */}
 
@@ -83,12 +92,15 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false }) => {
               const colorClass = levelColors[level] ?? "bg-gray-700";
               const isActive = time === activeTime && isToday;
 
+              const hour = Number.parseInt(time, 10);
+              const label = formatHourLabel(hour, unit);
+
               return (
                 <div
                   key={`${String(condition)}-${time}`}
                   className={`w-6 h-6 mx-auto rounded ${colorClass} ${isActive ? "ring-2 ring-cyan-400" : ""
                     }`}
-                  title={`${String(condition)} at ${time}H = ${rawValue ?? "N/A"}`}
+                  title={`${String(condition)} at ${label} = ${rawValue ?? "N/A"}`}
                 />
               );
             })}

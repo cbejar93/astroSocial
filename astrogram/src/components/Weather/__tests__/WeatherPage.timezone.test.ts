@@ -5,6 +5,7 @@ import {
   isWithinDaylight,
   parseTimeParts,
 } from '../../../pages/WeatherPage';
+import { formatHourLabel, formatTimeForUnit } from '../../../lib/time';
 
 test('getZonedDateInfo resolves non-local timezone offsets', () => {
   const info = getZonedDateInfo('Pacific/Honolulu', new Date('2024-01-15T15:30:00Z'));
@@ -31,4 +32,18 @@ test('isWithinDaylight respects overnight sun events', () => {
   // Polar day scenario where sunset occurs after midnight local time
   assert.equal(isWithinDaylight('20:00:00', '02:00:00', 22, 0), true);
   assert.equal(isWithinDaylight('20:00:00', '02:00:00', 3, 0), false);
+});
+
+test('formatTimeForUnit toggles between 24h and 12h clocks', () => {
+  assert.equal(formatTimeForUnit('06:30:00', 'metric'), '06:30');
+  assert.equal(formatTimeForUnit('18:45:00', 'metric'), '18:45');
+  assert.equal(formatTimeForUnit('06:30:00', 'us'), '6:30 AM');
+  assert.equal(formatTimeForUnit('18:45:00', 'us'), '6:45 PM');
+});
+
+test('formatHourLabel respects selected unit', () => {
+  assert.equal(formatHourLabel(0, 'metric'), '0H');
+  assert.equal(formatHourLabel(15, 'metric'), '15H');
+  assert.equal(formatHourLabel(0, 'us'), '12 AM');
+  assert.equal(formatHourLabel(15, 'us'), '3 PM');
 });
