@@ -347,9 +347,10 @@ const AdminAnalyticsDashboard: React.FC = () => {
           <section className="rounded-lg border border-gray-700 bg-gray-900/70 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold text-white">Unique visits by locale</h3>
+                <h3 className="text-lg font-semibold text-white">Unique visits by region</h3>
                 <p className="text-xs text-gray-400">
-                  Estimated from browser locale strings captured in session metadata.
+                  Approximated from session IP geolocation when available, falling back to
+                  browser locale metadata.
                 </p>
               </div>
               <div className="text-xs font-medium text-gray-300">
@@ -414,13 +415,13 @@ const AdminAnalyticsDashboard: React.FC = () => {
               </div>
             ) : (
               <p className="mt-4 text-sm text-gray-400">
-                No visit locale information captured for this period.
+                No visit geolocation information captured for this period.
               </p>
             )}
 
             <p className="mt-3 text-xs text-gray-500">
-              Locale-derived locations help highlight regional reach while keeping
-              IP addresses private.
+              Geolocation uses stored session IPs only for aggregation and never exposes
+              raw addresses in the dashboard.
             </p>
           </section>
         </>

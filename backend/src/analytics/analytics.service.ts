@@ -4,6 +4,26 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { IngestAnalyticsEventsDto } from './dto/ingest-events.dto';
 
+type GeoIpLookupResult = {
+  country?: string;
+  region?: string;
+  city?: string;
+};
+
+type GeoIpModule = {
+  lookup: (ip: string) => GeoIpLookupResult | null;
+};
+
+// geoip-lite ships as a CommonJS module. Load it lazily so that local development
+// continues to work even when the optional database is unavailable.
+let geoipLite: GeoIpModule | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+  geoipLite = require('geoip-lite');
+} catch (error) {
+  geoipLite = null;
+}
+
 type CanonicalEvent = {
   userId?: string;
   sessionKey?: string;
@@ -43,6 +63,7 @@ export class AnalyticsService implements OnModuleDestroy {
   private static readonly SUMMARY_CACHE_TTL_MS = 5 * 60 * 1000;
   private static readonly RETENTION_DAYS = 180;
   private static readonly UNKNOWN_LOCATION_LABEL = 'Unknown region';
+  private static loggedGeoIpWarning = false;
 
   private static readonly REGION_DISPLAY =
     typeof Intl.DisplayNames === 'function'
@@ -137,7 +158,61 @@ export class AnalyticsService implements OnModuleDestroy {
     this.pendingEvents.push(...records);
   }
 
-  private inferApproximateLocation(userAgent?: string | null): string {
+  private normalizeIpAddress(ip?: string | null): string | null {
+    if (!ip) {
+      return null;
+    }
+
+    let normalized = ip.trim();
+    if (!normalized) {
+      return null;
+    }
+
+    if (normalized.startsWith('[') && normalized.endsWith(']')) {
+      normalized = normalized.slice(1, -1);
+    }
+
+    if (normalized.startsWith('::ffff:')) {
+      normalized = normalized.slice(7);
+    }
+
+    const ipv4WithPort = normalized.match(/^((?:\d{1,3}\.){3}\d{1,3}):\d+$/);
+    if (ipv4WithPort) {
+      return ipv4WithPort[1];
+    }
+
+    if (normalized.includes(':')) {
+      const potentialIpv4 = normalized.split(':').pop();
+      if (potentialIpv4 && /^(?:\d{1,3}\.){3}\d{1,3}$/.test(potentialIpv4)) {
+        return potentialIpv4;
+      }
+    }
+
+    return normalized;
+  }
+
+  private resolveCountryName(code?: string | null): string | null {
+    if (!code) {
+      return null;
+    }
+
+    if (AnalyticsService.REGION_DISPLAY) {
+      try {
+        const name = AnalyticsService.REGION_DISPLAY.of(code);
+        if (name) {
+          return name;
+        }
+      } catch (error) {
+        this.logger.debug(
+          `Failed to resolve country name for ${code}: ${(error as Error).message}`,
+        );
+      }
+    }
+
+    return code;
+  }
+
+  private inferLocationFromLocale(userAgent?: string | null): string {
     if (!userAgent) {
       return AnalyticsService.UNKNOWN_LOCATION_LABEL;
     }
@@ -152,20 +227,72 @@ export class AnalyticsService implements OnModuleDestroy {
       return AnalyticsService.UNKNOWN_LOCATION_LABEL;
     }
 
-    if (AnalyticsService.REGION_DISPLAY) {
-      try {
-        const regionName = AnalyticsService.REGION_DISPLAY.of(regionCode);
-        if (regionName) {
-          return regionName;
-        }
-      } catch (error) {
-        this.logger.debug(
-          `Failed to resolve region name for ${regionCode}: ${(error as Error).message}`,
-        );
-      }
+    const regionName = this.resolveCountryName(regionCode);
+    if (regionName) {
+      return regionName;
     }
 
     return `Region ${regionCode}`;
+  }
+
+  private inferLocationFromIp(ip?: string | null): string | null {
+    const normalized = this.normalizeIpAddress(ip);
+    if (!normalized) {
+      return null;
+    }
+
+    if (!geoipLite) {
+      if (!AnalyticsService.loggedGeoIpWarning) {
+        AnalyticsService.loggedGeoIpWarning = true;
+        this.logger.warn(
+          'geoip-lite module unavailable; falling back to locale-derived locations.',
+        );
+      }
+      return null;
+    }
+
+    try {
+      const result = geoipLite.lookup(normalized);
+      if (!result) {
+        return null;
+      }
+
+      const parts: string[] = [];
+      if (result.city) {
+        parts.push(result.city);
+      }
+
+      const countryName = this.resolveCountryName(result.country);
+      if (countryName) {
+        parts.push(countryName);
+      }
+
+      if (!parts.length && result.region) {
+        parts.push(result.region);
+      }
+
+      if (!parts.length) {
+        return null;
+      }
+
+      return parts.join(', ');
+    } catch (error) {
+      this.logger.debug(
+        `Failed to resolve IP geolocation for ${normalized}: ${(error as Error).message}`,
+      );
+      return null;
+    }
+  }
+
+  private inferApproximateLocation(
+    session: { ipAddress?: string | null; userAgent?: string | null },
+  ): string {
+    const ipLocation = this.inferLocationFromIp(session.ipAddress);
+    if (ipLocation) {
+      return ipLocation;
+    }
+
+    return this.inferLocationFromLocale(session.userAgent);
   }
 
   private async flushPendingEventsInternal(): Promise<number> {
@@ -251,6 +378,7 @@ export class AnalyticsService implements OnModuleDestroy {
           startedAt: true,
           endedAt: true,
           userAgent: true,
+          ipAddress: true,
         },
       }),
       this.prisma.analyticsEvent.findMany({
@@ -300,7 +428,10 @@ export class AnalyticsService implements OnModuleDestroy {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     const visitsByLocationMap = sessions.reduce<Map<string, number>>((map, session) => {
-      const key = this.inferApproximateLocation(session.userAgent);
+      const key = this.inferApproximateLocation({
+        ipAddress: session.ipAddress,
+        userAgent: session.userAgent,
+      });
       map.set(key, (map.get(key) ?? 0) + 1);
       return map;
     }, new Map());
