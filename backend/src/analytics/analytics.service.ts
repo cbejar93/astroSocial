@@ -33,6 +33,7 @@ export interface AnalyticsSummary {
     postInteractions: { type: string; count: number }[];
     commentLikes: number;
   };
+  visitsByLocation: { location: string; count: number }[];
 }
 
 @Injectable()
@@ -41,6 +42,14 @@ export class AnalyticsService implements OnModuleDestroy {
   private static readonly FLUSH_INTERVAL_MS = 5_000;
   private static readonly SUMMARY_CACHE_TTL_MS = 5 * 60 * 1000;
   private static readonly RETENTION_DAYS = 180;
+  private static readonly UNKNOWN_LOCATION_LABEL = 'Unknown region';
+
+  private static readonly REGION_DISPLAY =
+    typeof Intl.DisplayNames === 'function'
+      ? new Intl.DisplayNames(['en'], {
+          type: 'region',
+        })
+      : null;
 
   private readonly logger = new Logger(AnalyticsService.name);
   private pendingEvents: Prisma.AnalyticsEventCreateManyInput[] = [];
@@ -128,6 +137,37 @@ export class AnalyticsService implements OnModuleDestroy {
     this.pendingEvents.push(...records);
   }
 
+  private inferApproximateLocation(userAgent?: string | null): string {
+    if (!userAgent) {
+      return AnalyticsService.UNKNOWN_LOCATION_LABEL;
+    }
+
+    const localeMatch = userAgent.match(/([a-z]{2,3})[-_]?([A-Z]{2})/);
+    if (!localeMatch) {
+      return AnalyticsService.UNKNOWN_LOCATION_LABEL;
+    }
+
+    const regionCode = localeMatch[2]?.toUpperCase();
+    if (!regionCode) {
+      return AnalyticsService.UNKNOWN_LOCATION_LABEL;
+    }
+
+    if (AnalyticsService.REGION_DISPLAY) {
+      try {
+        const regionName = AnalyticsService.REGION_DISPLAY.of(regionCode);
+        if (regionName) {
+          return regionName;
+        }
+      } catch (error) {
+        this.logger.debug(
+          `Failed to resolve region name for ${regionCode}: ${(error as Error).message}`,
+        );
+      }
+    }
+
+    return `Region ${regionCode}`;
+  }
+
   private async flushPendingEventsInternal(): Promise<number> {
     if (!this.pendingEvents.length) {
       return 0;
@@ -210,6 +250,7 @@ export class AnalyticsService implements OnModuleDestroy {
         select: {
           startedAt: true,
           endedAt: true,
+          userAgent: true,
         },
       }),
       this.prisma.analyticsEvent.findMany({
@@ -258,6 +299,17 @@ export class AnalyticsService implements OnModuleDestroy {
       .map(([date, users]) => ({ date, count: users.size }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
+    const visitsByLocationMap = sessions.reduce<Map<string, number>>((map, session) => {
+      const key = this.inferApproximateLocation(session.userAgent);
+      map.set(key, (map.get(key) ?? 0) + 1);
+      return map;
+    }, new Map());
+
+    const visitsByLocation = Array.from(visitsByLocationMap.entries())
+      .map(([location, count]) => ({ location, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 20);
+
     return {
       rangeDays,
       generatedAt: new Date().toISOString(),
@@ -282,6 +334,7 @@ export class AnalyticsService implements OnModuleDestroy {
         })),
         commentLikes,
       },
+      visitsByLocation,
     };
   }
 

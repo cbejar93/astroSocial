@@ -135,6 +135,13 @@ const AdminAnalyticsDashboard: React.FC = () => {
     );
   }, [summary]);
 
+  const totalUniqueVisits = useMemo(() => {
+    if (!summary?.visitsByLocation?.length) {
+      return 0;
+    }
+    return summary.visitsByLocation.reduce((sum, entry) => sum + entry.count, 0);
+  }, [summary]);
+
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-4">
@@ -270,71 +277,153 @@ const AdminAnalyticsDashboard: React.FC = () => {
       </section>
 
       {summary && (
-        <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-6">
-            <h3 className="text-lg font-semibold text-white">Daily active users</h3>
-            {summary.dailyActiveUsers.length ? (
-              <div className="mt-4">
-                <div className="flex h-40 items-end gap-2">
-                  {summary.dailyActiveUsers.map((entry) => {
-                    const percent = maxDaily
-                      ? Math.max((entry.count / maxDaily) * 100, entry.count > 0 ? 6 : 0)
+        <>
+          <section className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-6">
+              <h3 className="text-lg font-semibold text-white">Daily active users</h3>
+              {summary.dailyActiveUsers.length ? (
+                <div className="mt-4">
+                  <div className="flex h-40 items-end gap-2">
+                    {summary.dailyActiveUsers.map((entry) => {
+                      const percent = maxDaily
+                        ? Math.max((entry.count / maxDaily) * 100, entry.count > 0 ? 6 : 0)
+                        : 0;
+                      return (
+                        <div key={entry.date} className="flex-1 text-center">
+                          <div
+                            className="mx-auto w-full rounded-t bg-brand"
+                            style={{ height: `${percent}%` }}
+                          />
+                          <div className="mt-2 text-[10px] uppercase tracking-wide text-gray-400">
+                            {formatDateLabel(entry.date)}
+                          </div>
+                          <div className="text-xs font-semibold text-gray-200">
+                            {formatNumber(entry.count)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-gray-400">
+                  No active user data captured for this period.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-6">
+              <h3 className="text-lg font-semibold text-white">Interaction breakdown</h3>
+              {sortedInteractions.length ? (
+                <ul className="mt-4 space-y-3">
+                  {sortedInteractions.map((interaction) => {
+                    const percent = maxInteraction
+                      ? Math.max((interaction.count / maxInteraction) * 100, 6)
                       : 0;
                     return (
-                      <div key={entry.date} className="flex-1 text-center">
-                        <div
-                          className="mx-auto w-full rounded-t bg-brand"
-                          style={{ height: `${percent}%` }}
-                        />
-                        <div className="mt-2 text-[10px] uppercase tracking-wide text-gray-400">
-                          {formatDateLabel(entry.date)}
+                      <li key={interaction.type}>
+                        <div className="flex items-center justify-between text-sm text-gray-300">
+                          <span className="capitalize">{interaction.type.replace(/_/g, ' ')}</span>
+                          <span className="font-mono text-xs text-gray-400">
+                            {formatNumber(interaction.count)}
+                          </span>
                         </div>
-                        <div className="text-xs font-semibold text-gray-200">
-                          {formatNumber(entry.count)}
+                        <div className="mt-1 h-2 rounded bg-gray-800">
+                          <div
+                            className="h-2 rounded bg-brand"
+                            style={{ width: `${percent}%` }}
+                          />
                         </div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm text-gray-400">No interaction events recorded.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-gray-700 bg-gray-900/70 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Unique visits by locale</h3>
+                <p className="text-xs text-gray-400">
+                  Estimated from browser locale strings captured in session metadata.
+                </p>
+              </div>
+              <div className="text-xs font-medium text-gray-300">
+                Total unique visits:{' '}
+                <span className="font-semibold text-white">
+                  {formatNumber(totalUniqueVisits)}
+                </span>
+              </div>
+            </div>
+
+            {summary.visitsByLocation.length ? (
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-800 text-left text-sm">
+                  <thead className="text-gray-400">
+                    <tr>
+                      <th scope="col" className="px-3 py-2 font-medium">
+                        Approximate location
+                      </th>
+                      <th scope="col" className="px-3 py-2 font-medium">
+                        Unique visits
+                      </th>
+                      <th scope="col" className="px-3 py-2 font-medium">
+                        Share
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800 text-gray-200">
+                    {summary.visitsByLocation.map((entry) => {
+                      const share = totalUniqueVisits
+                        ? (entry.count / totalUniqueVisits) * 100
+                        : 0;
+                      const roundedShare = Math.round(share);
+                      const barWidth = share > 0 ? Math.max(share, 6) : 0;
+                      const clampedWidth = Math.min(barWidth, 100);
+
+                      return (
+                        <tr key={entry.location}>
+                          <td className="px-3 py-2">
+                            {entry.location || 'Unknown region'}
+                          </td>
+                          <td className="px-3 py-2 font-mono">
+                            {formatNumber(entry.count)}
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 flex-1 rounded bg-gray-800">
+                                <div
+                                  className="h-2 rounded bg-brand"
+                                  style={{ width: `${clampedWidth}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-gray-400">
+                                {roundedShare}%
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-gray-400">
-                No active user data captured for this period.
+              <p className="mt-4 text-sm text-gray-400">
+                No visit locale information captured for this period.
               </p>
             )}
-          </div>
 
-          <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-6">
-            <h3 className="text-lg font-semibold text-white">Interaction breakdown</h3>
-            {sortedInteractions.length ? (
-              <ul className="mt-4 space-y-3">
-                {sortedInteractions.map((interaction) => {
-                  const percent = maxInteraction
-                    ? Math.max((interaction.count / maxInteraction) * 100, 6)
-                    : 0;
-                  return (
-                    <li key={interaction.type}>
-                      <div className="flex items-center justify-between text-sm text-gray-300">
-                        <span className="capitalize">{interaction.type.replace(/_/g, ' ')}</span>
-                        <span className="font-mono text-xs text-gray-400">
-                          {formatNumber(interaction.count)}
-                        </span>
-                      </div>
-                      <div className="mt-1 h-2 rounded bg-gray-800">
-                        <div
-                          className="h-2 rounded bg-brand"
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-gray-400">No interaction events recorded.</p>
-            )}
-          </div>
-        </section>
+            <p className="mt-3 text-xs text-gray-500">
+              Locale-derived locations help highlight regional reach while keeping
+              IP addresses private.
+            </p>
+          </section>
+        </>
       )}
     </div>
   );
