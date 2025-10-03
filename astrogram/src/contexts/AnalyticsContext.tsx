@@ -10,7 +10,7 @@ import {
   updateAnalyticsUser,
 } from '../lib/analytics';
 import type { AnalyticsEventInput, TrackEventOptions } from '../lib/analytics';
-import { AnalyticsContext, AnalyticsContextValue } from './analytics-context';
+import { AnalyticsContext, type AnalyticsContextValue } from './analytics-context';
 
 const SESSION_STORAGE_KEY = 'astro.analytics.session-key';
 const OPT_OUT_STORAGE_KEY = 'astro.analytics.optOut';
