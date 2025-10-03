@@ -16,10 +16,16 @@ const SESSION_STORAGE_KEY = 'astro.analytics.session-key';
 const OPT_OUT_STORAGE_KEY = 'astro.analytics.optOut';
 
 function randomSessionKey(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
+  const globalCrypto = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
+  if (globalCrypto?.randomUUID) {
+    return globalCrypto.randomUUID();
   }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  if (globalCrypto?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    globalCrypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+  throw new Error('Secure random generator is unavailable in this environment.');
 }
 
 function ensureSessionKey(): string {
