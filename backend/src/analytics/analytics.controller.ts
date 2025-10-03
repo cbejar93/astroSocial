@@ -8,7 +8,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { AnalyticsService } from './analytics.service';
+import { AnalyticsService, AnalyticsSummary } from './analytics.service';
 import { IngestAnalyticsEventsDto } from './dto/ingest-events.dto';
 
 @Controller('api/analytics')
@@ -33,7 +33,9 @@ export class AnalyticsController {
   }
 
   @Get('summary')
-  async summary(@Query('rangeDays') rangeDays = '7') {
+  async summary(
+    @Query('rangeDays') rangeDays = '7',
+  ): Promise<AnalyticsSummary> {
     const parsed = Number.parseInt(rangeDays, 10);
     return this.analytics.getSummary(Number.isNaN(parsed) ? 7 : parsed);
   }

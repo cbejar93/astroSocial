@@ -15,7 +15,7 @@ type CanonicalEvent = {
   metadata?: Record<string, unknown>;
 };
 
-interface AnalyticsSummary {
+export interface AnalyticsSummary {
   rangeDays: number;
   generatedAt: string;
   totals: {
@@ -414,7 +414,7 @@ export class AnalyticsService implements OnModuleDestroy {
     }
   }
 
-  async getSummary(rangeDays: number) {
+  async getSummary(rangeDays: number): Promise<AnalyticsSummary> {
     const safeRange = Number.isFinite(rangeDays) ? Math.max(rangeDays, 1) : 7;
     const cached = this.summaryCache.get(safeRange);
 
@@ -437,7 +437,7 @@ export class AnalyticsService implements OnModuleDestroy {
     return summary;
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_0100)
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async pruneOldAnalytics(): Promise<void> {
     if (this.pendingEvents.length) {
       try {
@@ -474,7 +474,7 @@ export class AnalyticsService implements OnModuleDestroy {
     this.clearSummaryCache();
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_0115)
+  @Cron('15 1 * * *')
   async warmAnalyticsRollups(): Promise<void> {
     const rangesToWarm = [1, 7, 30];
 
