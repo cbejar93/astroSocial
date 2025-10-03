@@ -277,6 +277,7 @@ export interface AnalyticsSummary {
     postInteractions: { type: string; count: number }[];
     commentLikes: number;
   };
+  visitsByLocation: { location: string; count: number }[];
 }
 
 export async function fetchAnalyticsSummary(
