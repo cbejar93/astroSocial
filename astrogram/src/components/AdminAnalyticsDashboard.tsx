@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  AnalyticsSummary,
-  fetchAnalyticsSummary,
-} from '../lib/api';
+import { fetchAnalyticsSummary } from '../lib/api';
+import type { AnalyticsSummary } from '../lib/api';
 import { useAnalytics } from '../hooks/useAnalytics';
 
 const RANGE_OPTIONS = [7, 30, 90];
