@@ -259,6 +259,33 @@ export async function savePost(postId: string) {
   return res.json();
 }
 
+export interface AnalyticsSummary {
+  rangeDays: number;
+  generatedAt: string;
+  totals: {
+    events: number;
+    uniqueUsers: number;
+  };
+  interactionCounts: { type: string; count: number }[];
+  sessions: {
+    count: number;
+    totalDurationMs: number;
+    averageDurationMs: number;
+  };
+  dailyActiveUsers: { date: string; count: number }[];
+  platformActivity: {
+    postInteractions: { type: string; count: number }[];
+    commentLikes: number;
+  };
+}
+
+export async function fetchAnalyticsSummary(
+  rangeDays: number,
+): Promise<AnalyticsSummary> {
+  const res = await apiFetch(`/analytics/summary?rangeDays=${rangeDays}`);
+  return res.json();
+}
+
 export async function unsavePost(postId: string) {
   const res = await apiFetch(`/posts/${postId}/save`, { method: 'DELETE' });
   if (!res.ok) {

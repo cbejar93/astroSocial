@@ -1,4 +1,5 @@
 import { Module, MiddlewareConsumer } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WeatherModule } from './weather/weather.module';
@@ -18,6 +19,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     HttpModule,
     WeatherModule,
     SupabaseModule.forRoot(),

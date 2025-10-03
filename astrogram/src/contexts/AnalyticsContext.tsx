@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
   configureAnalyticsSession,
+  setAnalyticsEnabled,
   trackEvent as trackEventClient,
   trackEvents as trackEventsClient,
   updateAnalyticsUser,
@@ -12,6 +13,7 @@ import type { AnalyticsEventInput, TrackEventOptions } from '../lib/analytics';
 import { AnalyticsContext, AnalyticsContextValue } from './analytics-context';
 
 const SESSION_STORAGE_KEY = 'astro.analytics.session-key';
+const OPT_OUT_STORAGE_KEY = 'astro.analytics.optOut';
 
 function randomSessionKey(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -39,6 +41,52 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
   const sessionKeyRef = useRef<string>('');
   const sessionStartRef = useRef<number>(Date.now());
   const activeViewRef = useRef<{ path: string; startedAt: number } | null>(null);
+  const hasStartedRef = useRef(false);
+
+  const [enabled, setEnabledState] = useState<boolean>(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+    try {
+      const stored = window.localStorage?.getItem(OPT_OUT_STORAGE_KEY);
+      if (stored === '1') {
+        return false;
+      }
+      if (stored === '0') {
+        return true;
+      }
+    } catch {
+      // ignore storage errors
+    }
+
+    try {
+      const nav = window.navigator as Navigator & { msDoNotTrack?: string };
+      const dnt = nav.doNotTrack ?? nav.msDoNotTrack ?? null;
+      if (dnt === '1') {
+        return false;
+      }
+    } catch {
+      // ignore navigator errors
+    }
+
+    return true;
+  });
+
+  useEffect(() => {
+    setAnalyticsEnabled(enabled);
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      if (!enabled) {
+        window.localStorage?.setItem(OPT_OUT_STORAGE_KEY, '1');
+      } else {
+        window.localStorage?.removeItem(OPT_OUT_STORAGE_KEY);
+      }
+    } catch {
+      // ignore storage persistence issues
+    }
+  }, [enabled]);
 
   if (!sessionKeyRef.current) {
     sessionKeyRef.current = ensureSessionKey();
@@ -46,25 +94,41 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
 
   const emitEvent = useCallback(
     async (event: AnalyticsEventInput, options?: TrackEventOptions) => {
+      if (!enabled) {
+        return;
+      }
       await trackEventClient(event, options);
     },
-    [],
+    [enabled],
   );
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+    if (!hasStartedRef.current) {
+      sessionStartRef.current = Date.now();
+    }
     configureAnalyticsSession({
       sessionKey: sessionKeyRef.current,
       startedAt: new Date(sessionStartRef.current),
       userId: user?.id,
     });
-  }, [user?.id]);
+  }, [enabled, user?.id]);
 
   useEffect(() => {
     updateAnalyticsUser(user?.id ?? undefined);
   }, [user?.id]);
 
   useEffect(() => {
-    const start = new Date(sessionStartRef.current);
+    if (!enabled) {
+      hasStartedRef.current = false;
+      return;
+    }
+
+    const startAt = new Date(sessionStartRef.current);
+    hasStartedRef.current = true;
+
     void trackEventClient({
       type: 'session_start',
       metadata: {
@@ -73,44 +137,51 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
-    activeViewRef.current = {
-      path: `${location.pathname}${location.search}`,
-      startedAt: Date.now(),
-    };
-
-    void trackEventClient({
-      type: 'page_view',
-      targetType: 'route',
-      targetId: activeViewRef.current.path,
-      metadata: {
-        path: location.pathname,
-        search: location.search,
-      },
-    });
-
     return () => {
+      const activeView = activeViewRef.current;
+      if (activeView) {
+        const duration = Math.max(0, Date.now() - activeView.startedAt);
+        if (duration > 0) {
+          void trackEventClient({
+            type: 'page_view_duration',
+            targetType: 'route',
+            targetId: activeView.path,
+            durationMs: duration,
+            metadata: { path: activeView.path },
+          });
+        }
+      }
+
       const endedAt = new Date();
       void trackEventClient(
         {
           type: 'session_end',
           metadata: {
-            reason: 'unmount',
+            reason: 'teardown',
           },
         },
         {
           keepalive: true,
           endedAt,
-          startedAt: start.toISOString(),
+          startedAt: startAt.toISOString(),
         },
       );
+      hasStartedRef.current = false;
+      activeViewRef.current = null;
     };
+    // We intentionally only depend on `enabled` so a route change
+    // doesn't terminate the session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     const currentPath = `${location.pathname}${location.search}`;
     const now = Date.now();
     const previousView = activeViewRef.current;
+
+    if (!enabled) {
+      return;
+    }
 
     if (previousView && previousView.path === currentPath) {
       return;
@@ -140,10 +211,13 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
         search: location.search,
       },
     });
-  }, [location.pathname, location.search]);
+  }, [enabled, location.pathname, location.search]);
 
   useEffect(() => {
     const handler = () => {
+      if (!enabled) {
+        return;
+      }
       const state = document.visibilityState;
       void trackEventClient({
         type: 'session_heartbeat',
@@ -151,12 +225,19 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
       });
     };
 
+    if (!enabled) {
+      return;
+    }
+
     document.addEventListener('visibilitychange', handler);
     return () => document.removeEventListener('visibilitychange', handler);
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     const beforeUnloadHandler = () => {
+      if (!enabled) {
+        return;
+      }
       const now = Date.now();
       const activeView = activeViewRef.current;
       const events: AnalyticsEventInput[] = [];
@@ -185,13 +266,23 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
       });
     };
 
+    if (!enabled) {
+      return;
+    }
+
     window.addEventListener('beforeunload', beforeUnloadHandler);
     return () => window.removeEventListener('beforeunload', beforeUnloadHandler);
+  }, [enabled]);
+
+  const setEnabled = useCallback((value: boolean) => {
+    setEnabledState(value);
   }, []);
 
   const value = useMemo<AnalyticsContextValue>(() => ({
+    enabled,
+    setEnabled,
     trackEvent: emitEvent,
-  }), [emitEvent]);
+  }), [emitEvent, enabled, setEnabled]);
 
   return (
     <AnalyticsContext.Provider value={value}>

@@ -5,6 +5,10 @@ export function useAnalytics() {
   const ctx = useContext(AnalyticsContext);
   if (!ctx) {
     return {
+      enabled: false,
+      setEnabled: () => {
+        /* noop */
+      },
       trackEvent: async () => {
         /* noop when provider missing */
       },

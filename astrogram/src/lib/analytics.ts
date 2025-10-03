@@ -29,6 +29,7 @@ const sessionState: AnalyticsSessionState = {
 };
 
 let fetcher: AnalyticsFetcher | null = null;
+let analyticsEnabled = true;
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export interface TrackEventOptions {
@@ -72,10 +73,21 @@ function buildEnvelope(
   };
 }
 
+export function setAnalyticsEnabled(enabled: boolean): void {
+  analyticsEnabled = enabled;
+}
+
+export function isAnalyticsEnabled(): boolean {
+  return analyticsEnabled;
+}
+
 async function sendEnvelope(
   envelope: AnalyticsEnvelope,
   options?: TrackEventOptions,
 ): Promise<void> {
+  if (!analyticsEnabled) {
+    return;
+  }
   if (!envelope.events.length) {
     return;
   }
