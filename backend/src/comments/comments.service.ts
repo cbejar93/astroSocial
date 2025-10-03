@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType, Prisma } from '@prisma/client';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable()
 export class CommentsService {
@@ -17,6 +18,7 @@ export class CommentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly analytics: AnalyticsService,
   ) {}
 
   async createComment(userId: string, postId: string, dto: CreateCommentDto) {
@@ -42,6 +44,17 @@ export class CommentsService {
         parentId: dto.parentId,
       },
       include: { author: { select: { username: true, avatarUrl: true } } },
+    });
+
+    await this.analytics.recordCanonicalEvent({
+      userId,
+      type: 'comment.create',
+      targetType: 'post',
+      targetId: postId,
+      metadata: {
+        commentId: comment.id,
+        parentId: comment.parentId ?? null,
+      },
     });
 
     const post = await this.prisma.post.findUnique({
@@ -198,6 +211,13 @@ export class CommentsService {
         updated.postId,
         commentId,
       );
+      await this.analytics.recordCanonicalEvent({
+        userId,
+        type: 'comment.like',
+        targetType: 'comment',
+        targetId: commentId,
+        metadata: { count: updated.likes },
+      });
       return { liked: true, count: updated.likes };
     } catch (e) {
       if (
@@ -213,6 +233,13 @@ export class CommentsService {
           where: { id: commentId },
           data: { likes: { decrement: 1 } },
           select: { likes: true },
+        });
+        await this.analytics.recordCanonicalEvent({
+          userId,
+          type: 'comment.unlike',
+          targetType: 'comment',
+          targetId: commentId,
+          metadata: { count: updated.likes },
         });
         return { liked: false, count: updated.likes };
       }
@@ -241,6 +268,12 @@ export class CommentsService {
     }
 
     await this.prisma.comment.deleteMany({ where: { parentId: commentId } });
+    await this.analytics.recordCanonicalEvent({
+      userId,
+      type: 'comment.delete',
+      targetType: 'comment',
+      targetId: commentId,
+    });
     return { success: true };
   }
 }

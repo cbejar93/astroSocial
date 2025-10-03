@@ -14,6 +14,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { FeedResponseDto } from './dto/feed.dto';
 import { StorageService } from '../storage/storage.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable()
 export class PostsService {
@@ -57,6 +58,7 @@ export class PostsService {
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
     private readonly notifications: NotificationsService,
+    private readonly analytics: AnalyticsService,
   ) {}
 
   async create(
@@ -214,6 +216,13 @@ export class PostsService {
 
       const count = (post as any)[field] as number;
       this.logger.log(`📊 post ${postId} has now ${count} ${field}`);
+      await this.analytics.recordCanonicalEvent({
+        userId,
+        type: `post.${type.toLowerCase()}`,
+        targetType: 'post',
+        targetId: postId,
+        metadata: { count },
+      });
       return { type, count };
     } catch (e: any) {
       this.logger.error(`❌ failed to fetch updated ${field}`, e.stack);
@@ -565,6 +574,13 @@ export class PostsService {
         this.logger.log(
           `User ${userId} unliked ${postId}, total=${updated.likes}`,
         );
+        await this.analytics.recordCanonicalEvent({
+          userId,
+          type: 'post.unlike',
+          targetType: 'post',
+          targetId: postId,
+          metadata: { count: updated.likes },
+        });
         return { liked: false, count: updated.likes };
       }
       throw e;
@@ -583,6 +599,13 @@ export class PostsService {
       postId,
     );
     this.logger.log(`User ${userId} liked ${postId}, total=${updated.likes}`);
+    await this.analytics.recordCanonicalEvent({
+      userId,
+      type: 'post.like',
+      targetType: 'post',
+      targetId: postId,
+      metadata: { count: updated.likes },
+    });
     return { liked: true, count: updated.likes };
   }
 

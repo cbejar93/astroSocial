@@ -42,6 +42,8 @@ model User {
   followers         User[]            @relation("UserFollows")
   following         User[]            @relation("UserFollows")
   savedPosts        SavedPost[]
+  analyticsSessions AnalyticsSession[]
+  analyticsEvents   AnalyticsEvent[]
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -140,4 +142,39 @@ model Lounge {
   profileUrl  String
   posts       Post[]
   followers   User[] @relation("LoungeFollowers")
+}
+
+model AnalyticsSession {
+  id         String           @id @default(uuid())
+  sessionKey String           @unique
+  userId     String?
+  startedAt  DateTime         @default(now())
+  endedAt    DateTime?
+  userAgent  String?
+  ipAddress  String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user   User?            @relation(fields: [userId], references: [id])
+  events AnalyticsEvent[]
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid())
+  sessionId  String?
+  userId     String?
+  type       String
+  targetType String?
+  targetId   String?
+  durationMs Int?
+  value      Float?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  session AnalyticsSession? @relation(fields: [sessionId], references: [id])
+  user    User?             @relation(fields: [userId], references: [id])
+
+  @@index([type])
+  @@index([createdAt])
+  @@index([userId])
 }
