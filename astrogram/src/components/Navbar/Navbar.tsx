@@ -181,7 +181,13 @@ const Navbar = () => {
           </div>
           <div className="absolute bottom-0 left-0 w-full p-4 text-sm space-y-1">
             <Link to="/terms" className="block">Terms and Conditions</Link>
-            <Link to="/privacy" className="block">Privacy Policy</Link>
+            <Link
+              to="/privacy"
+              className="block"
+              onClick={() => setSideMenuOpen(false)}
+            >
+              Privacy Policy
+            </Link>
             <a href="#" className="block">Community Notes</a>
           </div>
         </div>
