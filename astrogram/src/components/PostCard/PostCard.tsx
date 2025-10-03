@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
 import { sharePost, repostPost, apiFetch, savePost as savePostRequest, unsavePost } from '../../lib/api';
 import { useAuth } from "../../hooks/useAuth";
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 
 export interface PostCardProps {
@@ -48,6 +49,7 @@ const PostCard: React.FC<PostCardProps> = ({
 }) => {
 
   const { user } = useAuth();
+  const { trackEvent } = useAnalytics();
   const navigate = useNavigate();
   const isOwn = user?.id === authorId;
 
@@ -83,9 +85,15 @@ const PostCard: React.FC<PostCardProps> = ({
     try {
       const res = await apiFetch(`/posts/${id}/like`, { method: 'POST' });
       if (!res.ok) throw new Error('Like toggle failed');
-      const { liked, count } = await res.json();
-      setLiked(liked);
+      const { liked: nextLiked, count } = await res.json();
+      setLiked(nextLiked);
       setStarCount(count);
+      void trackEvent({
+        type: nextLiked ? 'post_like' : 'post_unlike',
+        targetType: 'post',
+        targetId: id,
+        value: count,
+      });
     } catch (err) {
       console.error(err);
     }
@@ -97,6 +105,12 @@ const PostCard: React.FC<PostCardProps> = ({
     try {
       const { count } = await sharePost(id);
       setShareCount(count);
+      void trackEvent({
+        type: 'post_share',
+        targetType: 'post',
+        targetId: id,
+        value: count,
+      });
     } catch (err) {
       console.error("Failed to share:", err);
     }
@@ -130,6 +144,12 @@ const PostCard: React.FC<PostCardProps> = ({
       setRepostCount(count);
       setReposted(true);
       setShareCount((prev) => prev); // share count unaffected by repost
+      void trackEvent({
+        type: 'post_repost',
+        targetType: 'post',
+        targetId: id,
+        value: count,
+      });
     } catch (err: unknown) {
       console.error("Failed to repost:", err);
     }
@@ -143,10 +163,22 @@ const PostCard: React.FC<PostCardProps> = ({
         const { saved: isSaved, count } = await unsavePost(id);
         setSaved(isSaved);
         setSaveCount(count);
+        void trackEvent({
+          type: 'post_unsave',
+          targetType: 'post',
+          targetId: id,
+          value: count,
+        });
       } else {
         const { saved: isSaved, count } = await savePostRequest(id);
         setSaved(isSaved);
         setSaveCount(count);
+        void trackEvent({
+          type: 'post_save',
+          targetType: 'post',
+          targetId: id,
+          value: count,
+        });
       }
     } catch (err) {
       console.error('Failed to toggle save:', err);
