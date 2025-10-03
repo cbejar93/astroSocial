@@ -1,4 +1,6 @@
 // src/lib/api.ts
+import { trackEvent, setAnalyticsFetcher } from './analytics';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 // Some endpoints like the lounges API live at the root without the `/api` prefix.
 // Strip a trailing `/api` segment from the base URL so we can reuse the origin
@@ -133,6 +135,8 @@ export async function fetchLoungePosts<Item = unknown>(
   return res.json();
 }
 
+setAnalyticsFetcher((path, requestInit = {}) => apiFetch(path, requestInit));
+
 export async function fetchLounges<T = unknown>(): Promise<T[]> {
   const res = await apiFetch(`${API_BASE}/lounges`, {}, false);
   if (!res.ok) {
@@ -155,6 +159,11 @@ export async function followLounge(name: string) {
     { method: 'POST' },
     false,
   );
+  void trackEvent({
+    type: 'lounge_follow',
+    targetType: 'lounge',
+    targetId: name,
+  });
 }
 
 export async function unfollowLounge(name: string) {
@@ -163,11 +172,23 @@ export async function unfollowLounge(name: string) {
     { method: 'DELETE' },
     false,
   );
+  void trackEvent({
+    type: 'lounge_unfollow',
+    targetType: 'lounge',
+    targetId: name,
+  });
 }
 
 export async function createLounge(form: FormData) {
   const res = await apiFetch(`${API_BASE}/lounges`, { method: 'POST', body: form }, false);
-  return res.json();
+  const data = await res.json();
+  void trackEvent({
+    type: 'lounge_create',
+    targetType: 'lounge',
+    targetId: (data as { id?: string })?.id ?? form.get('name')?.toString(),
+    metadata: { name: form.get('name') ?? undefined },
+  });
+  return data;
 }
 
 
@@ -177,11 +198,22 @@ export async function updateLounge(id: string, form: FormData) {
     { method: 'PATCH', body: form },
     false,
   );
-  return res.json();
+  const data = await res.json();
+  void trackEvent({
+    type: 'lounge_update',
+    targetType: 'lounge',
+    targetId: id,
+  });
+  return data;
 }
 
 export async function deleteLounge(id: string) {
   await apiFetch(`${API_BASE}/lounges/${id}`, { method: 'DELETE' }, false);
+  void trackEvent({
+    type: 'lounge_delete',
+    targetType: 'lounge',
+    targetId: id,
+  });
 }
 
 
@@ -224,6 +256,33 @@ export async function savePost(postId: string) {
   if (!res.ok) {
     throw new Error(`Failed to save post (${res.status})`);
   }
+  return res.json();
+}
+
+export interface AnalyticsSummary {
+  rangeDays: number;
+  generatedAt: string;
+  totals: {
+    events: number;
+    uniqueUsers: number;
+  };
+  interactionCounts: { type: string; count: number }[];
+  sessions: {
+    count: number;
+    totalDurationMs: number;
+    averageDurationMs: number;
+  };
+  dailyActiveUsers: { date: string; count: number }[];
+  platformActivity: {
+    postInteractions: { type: string; count: number }[];
+    commentLikes: number;
+  };
+}
+
+export async function fetchAnalyticsSummary(
+  rangeDays: number,
+): Promise<AnalyticsSummary> {
+  const res = await apiFetch(`/analytics/summary?rangeDays=${rangeDays}`);
   return res.json();
 }
 
@@ -302,7 +361,17 @@ export async function createComment<T = CommentResponse>(
   if (!res.ok) {
     throw new Error(`Failed to create comment (${res.status})`);
   }
-  return res.json();
+  const data = await res.json();
+  void trackEvent({
+    type: 'comment_create',
+    targetType: 'post',
+    targetId: postId,
+    metadata: {
+      commentId: (data as CommentResponse)?.id,
+      parentId: parentId ?? null,
+    },
+  });
+  return data;
 }
 
 export async function deleteComment(commentId: string): Promise<void> {
@@ -312,6 +381,11 @@ export async function deleteComment(commentId: string): Promise<void> {
   if (!res.ok) {
     throw new Error(`Failed to delete comment (${res.status})`);
   }
+  void trackEvent({
+    type: 'comment_delete',
+    targetType: 'comment',
+    targetId: commentId,
+  });
 }
 
 
@@ -322,7 +396,14 @@ export async function toggleCommentLike(
   if (!res.ok) {
     throw new Error(`Failed to like comment (${res.status})`);
   }
-  return res.json();
+  const data = await res.json();
+  void trackEvent({
+    type: data.liked ? 'comment_like' : 'comment_unlike',
+    targetType: 'comment',
+    targetId: commentId,
+    value: data.count,
+  });
+  return data;
 }
 
 
@@ -373,11 +454,21 @@ export async function followUser(username: string) {
   await apiFetch(`/users/${encodeURIComponent(username)}/follow`, {
     method: 'POST',
   });
+  void trackEvent({
+    type: 'user_follow',
+    targetType: 'user',
+    targetId: username,
+  });
 }
 
 export async function unfollowUser(username: string) {
   await apiFetch(`/users/${encodeURIComponent(username)}/follow`, {
     method: 'DELETE',
+  });
+  void trackEvent({
+    type: 'user_unfollow',
+    targetType: 'user',
+    targetId: username,
   });
 }
 

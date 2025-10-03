@@ -1,6 +1,7 @@
 import React, { useState, useEffect, type ChangeEvent, type FormEvent } from 'react'
 import { UploadCloud } from 'lucide-react'
 import { apiFetch } from '../../lib/api'
+import { trackEvent } from '../../lib/analytics'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -47,6 +48,8 @@ const UploadForm: React.FC = () => {
     setCaptionError(null)
     setLoading(true)
 
+    const hadImage = Boolean(file)
+
     try {
       const form = new FormData()
       form.append('body', caption)
@@ -62,7 +65,14 @@ const UploadForm: React.FC = () => {
         throw new Error(text || 'Upload failed')
       }
 
-      await res.json()
+      const data = await res.json()
+
+      void trackEvent({
+        type: 'post_upload',
+        targetType: 'post',
+        targetId: data?.id,
+        metadata: { hasImage: hadImage },
+      })
 
       navigate('/', { replace: true })
 
