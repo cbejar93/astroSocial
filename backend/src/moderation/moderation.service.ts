@@ -53,7 +53,7 @@ export class ModerationService {
 
     return {
       id: response.id,
-      created: response.created,
+      createdAt: response.created_at,
       model: response.model,
       output: response.output,
       usage: response.usage,
