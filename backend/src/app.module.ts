@@ -15,6 +15,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { LoungesModule } from './lounges/lounges.module';
 import { SearchModule } from './search/search.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ModerationModule } from './moderation/moderation.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     LoungesModule,
     SearchModule,
     AnalyticsModule,
+    ModerationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
