@@ -4,8 +4,7 @@ import { CheckModerationDto } from './dto/check-moderation.dto';
 
 type ModerationContentItem =
   | { type: 'input_text'; text: string }
-  | { type: 'input_image'; image_url: { url: string } }
-  | { type: 'input_image'; image_base64: string };
+  | { type: 'input_image'; image_url: string; detail: 'auto' | 'low' | 'high' };
 
 @Injectable()
 export class ModerationService {
@@ -15,7 +14,11 @@ export class ModerationService {
     this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
 
-  async checkContent({ texts = [], imageUrls = [], imageBase64 = [] }: CheckModerationDto) {
+  async checkContent({
+    texts = [],
+    imageUrls = [],
+    imageBase64 = [],
+  }: CheckModerationDto) {
     const normalizedTexts = texts.filter((text) => text?.trim().length);
     const normalizedUrls = imageUrls.filter((url) => url?.trim().length);
     const normalizedBase64 = imageBase64.filter((value) => value?.trim().length);
@@ -26,8 +29,16 @@ export class ModerationService {
 
     const content: ModerationContentItem[] = [
       ...normalizedTexts.map<ModerationContentItem>((text) => ({ type: 'input_text', text })),
-      ...normalizedUrls.map<ModerationContentItem>((url) => ({ type: 'input_image', image_url: { url } })),
-      ...normalizedBase64.map<ModerationContentItem>((value) => ({ type: 'input_image', image_base64: value })),
+      ...normalizedUrls.map<ModerationContentItem>((url) => ({
+        type: 'input_image',
+        image_url: url,
+        detail: 'auto',
+      })),
+      ...normalizedBase64.map<ModerationContentItem>((value) => ({
+        type: 'input_image',
+        image_url: value.startsWith('data:') ? value : `data:image/jpeg;base64,${value}`,
+        detail: 'auto',
+      })),
     ];
 
     const response = await this.client.responses.create({
