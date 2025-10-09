@@ -1,0 +1,2 @@
+ALTER TABLE "Post"
+ADD COLUMN "flagged" BOOLEAN NOT NULL DEFAULT false;

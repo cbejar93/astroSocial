@@ -62,6 +62,7 @@ model Post {
   body             String
   imageUrl         String?
   loungeId         String?
+  flagged          Boolean          @default(false)
   likes            Int               @default(0)
   shares           Int               @default(0)
   reposts          Int               @default(0)
