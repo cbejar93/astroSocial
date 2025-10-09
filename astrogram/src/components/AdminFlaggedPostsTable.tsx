@@ -3,9 +3,8 @@ import {
   deletePostAsAdmin,
   deleteUserAsAdmin,
   fetchFlaggedPosts,
-  FlaggedPostSummary,
-  FeedResponse,
 } from '../lib/api';
+import type { FlaggedPostSummary, FeedResponse } from '../lib/api';
 import ConfirmModal from './Modal/ConfirmModal';
 
 interface DeletionState {
