@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { createLounge, updateLounge } from '../lib/api';
 import AdminAnalyticsDashboard from '../components/AdminAnalyticsDashboard';
+import AdminFlaggedPostsTable from '../components/AdminFlaggedPostsTable';
 
 interface LoungeState {
   lounge?: {
@@ -169,7 +170,7 @@ const AdminPage: React.FC = () => {
         )}
 
         {active === 'users' && <div>User management coming soon.</div>}
-        {active === 'posts' && <div>Post moderation coming soon.</div>}
+        {active === 'posts' && <AdminFlaggedPostsTable />}
         {active === 'analytics' && <AdminAnalyticsDashboard />}
       </div>
     </div>

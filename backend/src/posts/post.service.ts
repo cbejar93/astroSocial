@@ -94,16 +94,7 @@ export class PostsService {
     const flaggedCategories = this.extractFlaggedCategories(
       moderationResult.results,
     );
-    if (flaggedCategories.length) {
-      this.logger.warn(
-        `Post blocked by moderation for user ${userId}: ${flaggedCategories.join(', ')}`,
-      );
-      throw new ForbiddenException({
-        message: 'Post failed content moderation',
-        categories: flaggedCategories,
-        moderation: moderationResult,
-      });
-    }
+    const isFlagged = flaggedCategories.length > 0;
 
     // 1) if they sent a file, upload it and grab the public URL
     let imageUrl: string | undefined;
@@ -122,23 +113,38 @@ export class PostsService {
     }
 
     // 2) now create the Post record, only including imageUrl if we got one
+    let post: Post;
     try {
-      const post = await this.prisma.post.create({
+      post = await this.prisma.post.create({
         data: {
           authorId: userId,
           originalAuthorId: userId,
           title: dto.title ?? '',
           body: dto.body,
           loungeId: dto.loungeId,
+          flagged: isFlagged,
           ...(imageUrl ? { imageUrl } : {}),
         },
       });
-      this.logger.log(`Post created (id=${post.id})`);
-      return post;
     } catch (err: any) {
       this.logger.error(`Failed to create post for user ${userId}`, err.stack);
       throw new InternalServerErrorException('Could not create post');
     }
+
+    if (isFlagged) {
+      this.logger.warn(
+        `Post flagged by moderation for user ${userId}: ${flaggedCategories.join(', ')}`,
+      );
+      throw new ForbiddenException({
+        message: 'Post failed content moderation',
+        categories: flaggedCategories,
+        moderation: moderationResult,
+        postId: post.id,
+      });
+    }
+
+    this.logger.log(`Post created (id=${post.id})`);
+    return post;
   }
 
   private extractFlaggedCategories(results: Moderation[]): string[] {
@@ -878,5 +884,85 @@ export class PostsService {
       throw new ForbiddenException(`Cannot delete post ${postId}`);
     }
     this.logger.log(`Post ${postId} deleted`);
+  }
+
+  async getFlaggedPosts(
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    posts: {
+      id: string;
+      title: string;
+      body: string;
+      createdAt: string;
+      imageUrl?: string;
+      author: {
+        id: string;
+        username?: string | null;
+        avatarUrl?: string | null;
+      };
+    }[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    this.logger.log(`Fetching flagged posts (page=${page}, limit=${limit})`);
+
+    const take = Math.max(1, limit);
+    const skip = Math.max(0, (Math.max(1, page) - 1) * take);
+
+    const [posts, total] = await this.prisma.$transaction([
+      this.prisma.post.findMany({
+        where: { flagged: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: {
+          author: {
+            select: { id: true, username: true, avatarUrl: true },
+          },
+        },
+      }),
+      this.prisma.post.count({ where: { flagged: true } }),
+    ]);
+
+    return {
+      posts: posts.map((post) => ({
+        id: post.id,
+        title: post.title,
+        body: post.body,
+        createdAt: post.createdAt.toISOString(),
+        ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
+        author: {
+          id: post.author.id,
+          username: post.author.username,
+          avatarUrl: post.author.avatarUrl,
+        },
+      })),
+      total,
+      page: Math.max(1, page),
+      limit: take,
+    };
+  }
+
+  async deletePostAsAdmin(postId: string) {
+    this.logger.warn(`Admin deleting post ${postId}`);
+    const [, , , , , { count }] = await this.prisma.$transaction([
+      this.prisma.savedPost.deleteMany({ where: { postId } }),
+      this.prisma.commentLike.deleteMany({ where: { comment: { postId } } }),
+      this.prisma.postInteraction.deleteMany({ where: { postId } }),
+      this.prisma.notification.deleteMany({
+        where: { OR: [{ postId }, { comment: { postId } }] },
+      }),
+      this.prisma.comment.deleteMany({ where: { postId } }),
+      this.prisma.post.deleteMany({ where: { id: postId } }),
+    ]);
+
+    if (count === 0) {
+      this.logger.warn(`Admin attempted to delete non-existent post ${postId}`);
+      throw new NotFoundException(`Post ${postId} not found`);
+    }
+
+    this.logger.log(`Post ${postId} deleted by admin`);
   }
 }

@@ -13,6 +13,7 @@ import {
     Query,
     InternalServerErrorException,
     Delete,
+    ForbiddenException,
 } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { PostsService } from './post.service'
@@ -87,6 +88,30 @@ export class PostsController {
             )
             throw err
         }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('admin/flagged')
+    async getFlaggedPosts(
+        @Req() req: any,
+        @Query('page') page = '1',
+        @Query('limit') limit = '20',
+    ) {
+        if (req.user.role !== 'ADMIN') throw new ForbiddenException()
+
+        const p = parseInt(page, 10) || 1
+        const l = parseInt(limit, 10) || 20
+
+        return this.posts.getFlaggedPosts(p, l)
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('admin/:id')
+    async deletePostAsAdmin(@Req() req: any, @Param('id') postId: string) {
+        if (req.user.role !== 'ADMIN') throw new ForbiddenException()
+
+        await this.posts.deletePostAsAdmin(postId)
+        return { success: true }
     }
 
     @UseGuards(JwtAuthGuard)
