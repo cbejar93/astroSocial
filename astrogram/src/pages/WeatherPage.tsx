@@ -69,6 +69,8 @@ export const getZonedDateInfo = (
 
 export { isWithinDaylight, parseTimeParts } from "../lib/time";
 
+const SECONDARY_CARD_HEIGHT = "min-h-[18rem]";
+
 const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit, setUnit }) => {
   const { user, updateTemperaturePreference } = useAuth();
   const [savingPreference, setSavingPreference] = useState(false);
@@ -210,7 +212,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           <div className="mt-6 flex gap-4">
             <div className="w-1/2">
               <MoonPhaseCard
-                className="h-full"
+                className={`h-full ${SECONDARY_CARD_HEIGHT}`}
                 phase={todayData.astro.moonPhase.phase}
                 illumination={todayData.astro.moonPhase.illumination}
                 moonrise={todayData.astro.moonrise}
@@ -221,7 +223,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
 
             <div className="w-1/2">
               <WindCard
-                className="h-full"
+                className={`h-full ${SECONDARY_CARD_HEIGHT}`}
                 speed={currentWindSpeed}
                 direction={currentWindDirection}
                 unit={unit === "us" ? "mph" : "km/h"}
@@ -233,6 +235,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
         {Object.keys(precipitationMap).length > 0 && (
           <div className="mt-6">
             <PrecipitationChart
+              className={SECONDARY_CARD_HEIGHT}
               data={precipitationMap}
               unit={unit}
               highlightHour={highlightedPrecipitationHour}
