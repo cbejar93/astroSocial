@@ -6,10 +6,6 @@ interface PrecipitationChartProps {
   data?: Partial<Record<TimeBlock, number>>;
   unit?: "metric" | "us";
   /**
-   * Hour (0-23) that should be highlighted to indicate the current or closest observation time.
-   */
-  highlightHour?: number | null;
-  /**
    * First hour (0-23) that should be included in the chart. Earlier hours will be hidden.
    */
   startHour?: number;
@@ -32,7 +28,6 @@ const clampPercentage = (value: number): number => {
 const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
   data,
   unit = "metric",
-  highlightHour,
   startHour = 0,
   className = "",
 }) => {
@@ -91,8 +86,6 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
             >
               {bars.map((bar) => {
                 const heightPercent = bar.value === 0 ? 4 : bar.value;
-                const isActive =
-                  highlightHour != null && Math.round(bar.hour) === highlightHour;
 
                 return (
                   <div
@@ -104,11 +97,7 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
                     </span>
                     <div className="w-full flex-1 flex items-end justify-center">
                       <div
-                        className={`w-full max-w-[1.75rem] rounded-t-lg bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 transition-all duration-500 ${
-                          isActive
-                            ? "ring-2 ring-cyan-300 dark:ring-cyan-400 ring-offset-1 ring-offset-white dark:ring-offset-gray-900"
-                            : ""
-                        }`}
+                        className="w-full max-w-[1.75rem] rounded-t-lg bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 transition-all duration-500"
                         style={{ height: `${heightPercent}%` }}
                         aria-hidden="true"
                         title={`${bar.label}: ${bar.value}% chance of precipitation`}

@@ -164,25 +164,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   const currentTemp = tempMap[chosenHour];
   const currentCondition = getConditionFromClouds(conditionMap[chosenHour]);
 
-  const precipitationHours = useMemo(
-    () =>
-      Object.keys(precipitationMap)
-        .map((h) => Number.parseInt(h, 10))
-        .filter((hour) => !Number.isNaN(hour))
-        .sort((a, b) => a - b),
-    [precipitationMap],
-  );
-
-  const upcomingPrecipitationHours = useMemo(
-    () => precipitationHours.filter((hour) => hour >= currentHour),
-    [precipitationHours, currentHour],
-  );
-
-  const highlightedPrecipitationHour =
-    upcomingPrecipitationHours.length > 0
-      ? upcomingPrecipitationHours[0]
-      : null;
-
   const icon = getWeatherIcon(currentCondition, isDaytime);
 
   return (
@@ -247,7 +228,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
               className={`h-full ${SECONDARY_CARD_HEIGHT}`}
               data={precipitationMap}
               unit={unit}
-              highlightHour={highlightedPrecipitationHour}
               startHour={currentHour}
             />
           </div>
