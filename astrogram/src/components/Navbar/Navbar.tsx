@@ -188,7 +188,13 @@ const Navbar = () => {
             >
               Privacy Policy
             </Link>
-            <a href="#" className="block">Community Notes</a>
+            <Link
+              to="/community-guidelines"
+              className="block"
+              onClick={() => setSideMenuOpen(false)}
+            >
+              Community Guidelines
+            </Link>
           </div>
         </div>
       </div>

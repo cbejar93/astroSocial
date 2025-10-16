@@ -27,6 +27,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import SearchPage from './pages/SearchPage'
 import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import CommunityGuidelinesPage from './pages/CommunityGuidelinesPage';
 
 
 
@@ -61,6 +62,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPolicyPage />} />
+              <Route path="/community-guidelines" element={<CommunityGuidelinesPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/login" element={<SignupPage />} />
               <Route path="/auth/success" element={<AuthSuccessPage />} />
