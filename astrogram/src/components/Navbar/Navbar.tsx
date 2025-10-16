@@ -180,17 +180,23 @@ const Navbar = () => {
             )}
           </div>
           <div className="absolute bottom-0 left-0 w-full p-4 text-sm space-y-1">
-            <Link to="/terms" className="block">Terms and Conditions</Link>
+            <Link
+              to="/terms"
+              className="block text-sky-400 transition-colors hover:text-sky-300 focus-visible:text-sky-200"
+              onClick={() => setSideMenuOpen(false)}
+            >
+              Terms and Conditions
+            </Link>
             <Link
               to="/privacy"
-              className="block"
+              className="block text-sky-400 transition-colors hover:text-sky-300 focus-visible:text-sky-200"
               onClick={() => setSideMenuOpen(false)}
             >
               Privacy Policy
             </Link>
             <Link
               to="/community-guidelines"
-              className="block"
+              className="block text-sky-400 transition-colors hover:text-sky-300 focus-visible:text-sky-200"
               onClick={() => setSideMenuOpen(false)}
             >
               Community Guidelines
