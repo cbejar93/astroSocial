@@ -15,6 +15,7 @@ import WindCard from "../components/Weather/WindCard";
 import { isWithinDaylight } from "../lib/time";
 import type { WeatherData } from "../types/weather";
 import { useAuth } from "../hooks/useAuth";
+import PrecipitationChart from "../components/Weather/PrecipitationChart";
 
 interface WeatherPageProps {
   weather: WeatherData | null;
@@ -67,6 +68,8 @@ export const getZonedDateInfo = (
 };
 
 export { isWithinDaylight, parseTimeParts } from "../lib/time";
+
+const SECONDARY_CARD_HEIGHT = "md:min-h-[178px]";
 
 const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit, setUnit }) => {
   const { user, updateTemperaturePreference } = useAuth();
@@ -144,6 +147,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   const directionMap = todayData?.conditions.winddirection ?? {};
   const tempMap = todayData?.conditions.temperature ?? {};
   const conditionMap = todayData?.conditions.cloudcover ?? {};
+  const precipitationMap = todayData?.conditions.precipitation ?? {};
+  const currentHour = Math.min(23, Math.max(0, zonedNow.hour));
 
   const available = Object.keys(speedMap).map((h) => parseInt(h, 10));
   let chosenHour = available.length ? available[0] : 0;
@@ -185,7 +190,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           </p>
         )}
 
-        <div className="overflow-x-auto px-0 sm:px-4 pb-4">
+        <div className="overflow-x-auto pb-4">
           <div className="flex gap-3 w-max">
             {futureWeatherData.map((day, index) => (
               <WeatherCard key={day.date} day={day} isToday={index === 0} unit={unit} />
@@ -197,7 +202,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           <div className="mt-6 flex gap-4">
             <div className="w-1/2">
               <MoonPhaseCard
-                className="h-full"
+                className={`h-full ${SECONDARY_CARD_HEIGHT}`}
                 phase={todayData.astro.moonPhase.phase}
                 illumination={todayData.astro.moonPhase.illumination}
                 moonrise={todayData.astro.moonrise}
@@ -208,12 +213,23 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
 
             <div className="w-1/2">
               <WindCard
-                className="h-full"
+                className={`h-full ${SECONDARY_CARD_HEIGHT}`}
                 speed={currentWindSpeed}
                 direction={currentWindDirection}
                 unit={unit === "us" ? "mph" : "km/h"}
               />
             </div>
+          </div>
+        )}
+
+        {Object.keys(precipitationMap).length > 0 && (
+          <div className="mt-6">
+            <PrecipitationChart
+              className={`h-full ${SECONDARY_CARD_HEIGHT}`}
+              data={precipitationMap}
+              unit={unit}
+              startHour={currentHour}
+            />
           </div>
         )}
       </div>
