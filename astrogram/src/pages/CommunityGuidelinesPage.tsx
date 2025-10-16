@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 const CommunityGuidelinesPage: FC = () => {
   return (
-    <div className="px-6 py-24 mx-auto max-w-4xl text-left text-white space-y-10">
+    <div className="px-6 pt-10 pb-24 mx-auto max-w-4xl text-left text-white space-y-10">
       <header className="space-y-3">
         <h1 className="text-3xl font-bold">Community Guidelines</h1>
         <p className="text-neutral-300 italic">Where the night sky meets community.</p>
