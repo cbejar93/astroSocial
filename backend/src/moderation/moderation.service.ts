@@ -26,6 +26,11 @@ export class ModerationService {
       (value) => value?.trim().length,
     );
 
+    console.log('hello from chatgpt');
+    console.log(imageUrls);
+    console.log(texts);
+    console.log(imageBase64);
+
     if (
       !normalizedTexts.length &&
       !normalizedUrls.length &&
@@ -55,10 +60,15 @@ export class ModerationService {
       })),
     ];
 
+    console.log('before the call');
+    console.log(content);
+
     const response = await this.client.moderations.create({
       model: 'omni-moderation-latest',
       input: content,
     });
+
+    console.log(response);
 
     return {
       id: response.id,
