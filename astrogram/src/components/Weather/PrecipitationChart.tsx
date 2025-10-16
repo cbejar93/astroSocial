@@ -9,6 +9,10 @@ interface PrecipitationChartProps {
    * Hour (0-23) that should be highlighted to indicate the current or closest observation time.
    */
   highlightHour?: number | null;
+  /**
+   * First hour (0-23) that should be included in the chart. Earlier hours will be hidden.
+   */
+  startHour?: number;
   className?: string;
 }
 
@@ -29,10 +33,23 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
   data,
   unit = "metric",
   highlightHour,
+  startHour = 0,
   className = "",
 }) => {
+  const normalizedStartHour = useMemo(() => {
+    if (!Number.isFinite(startHour)) return 0;
+
+    const floored = Math.floor(startHour);
+    if (floored < 0) return 0;
+    if (floored > 23) return 23;
+    return floored;
+  }, [startHour]);
+
   const bars = useMemo<BarDatum[]>(() => {
-    return Array.from({ length: 24 }, (_, hour) => {
+    const totalBars = 24 - normalizedStartHour;
+
+    return Array.from({ length: totalBars }, (_, index) => {
+      const hour = normalizedStartHour + index;
       const key = hour.toString() as TimeBlock;
       const rawValue = data?.[key] ?? 0;
 
@@ -42,9 +59,9 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
         value: clampPercentage(rawValue),
       } satisfies BarDatum;
     });
-  }, [data, unit]);
+  }, [data, unit, normalizedStartHour]);
 
-  const hasData = Boolean(data && Object.keys(data).length > 0);
+  const hasData = bars.length > 0 && Boolean(data && Object.keys(data).length > 0);
 
   return (
     <section

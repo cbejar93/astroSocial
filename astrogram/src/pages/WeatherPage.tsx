@@ -148,6 +148,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   const tempMap = todayData?.conditions.temperature ?? {};
   const conditionMap = todayData?.conditions.cloudcover ?? {};
   const precipitationMap = todayData?.conditions.precipitation ?? {};
+  const currentHour = Math.min(23, Math.max(0, zonedNow.hour));
 
   const available = Object.keys(speedMap).map((h) => parseInt(h, 10));
   let chosenHour = available.length ? available[0] : 0;
@@ -163,16 +164,24 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   const currentTemp = tempMap[chosenHour];
   const currentCondition = getConditionFromClouds(conditionMap[chosenHour]);
 
-  const precipitationHours = Object.keys(precipitationMap).map((h) =>
-    Number.parseInt(h, 10),
+  const precipitationHours = useMemo(
+    () =>
+      Object.keys(precipitationMap)
+        .map((h) => Number.parseInt(h, 10))
+        .filter((hour) => !Number.isNaN(hour))
+        .sort((a, b) => a - b),
+    [precipitationMap],
   );
-  const highlightedPrecipitationHour = precipitationHours.length
-    ? precipitationHours.reduce((prev, curr) =>
-        Math.abs(curr - zonedNow.hour) < Math.abs(prev - zonedNow.hour)
-          ? curr
-          : prev,
-      precipitationHours[0])
-    : null;
+
+  const upcomingPrecipitationHours = useMemo(
+    () => precipitationHours.filter((hour) => hour >= currentHour),
+    [precipitationHours, currentHour],
+  );
+
+  const highlightedPrecipitationHour =
+    upcomingPrecipitationHours.length > 0
+      ? upcomingPrecipitationHours[0]
+      : null;
 
   const icon = getWeatherIcon(currentCondition, isDaytime);
 
@@ -239,6 +248,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
               data={precipitationMap}
               unit={unit}
               highlightHour={highlightedPrecipitationHour}
+              startHour={currentHour}
             />
           </div>
         )}
