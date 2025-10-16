@@ -69,7 +69,7 @@ export const getZonedDateInfo = (
 
 export { isWithinDaylight, parseTimeParts } from "../lib/time";
 
-const SECONDARY_CARD_HEIGHT = "md:min-h-[14rem]";
+const SECONDARY_CARD_HEIGHT = "md:min-h-[178px]";
 
 const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit, setUnit }) => {
   const { user, updateTemperaturePreference } = useAuth();

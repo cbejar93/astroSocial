@@ -82,7 +82,7 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
             <div
               role="img"
               aria-label="Bar chart showing precipitation probability by hour"
-              className="min-h-[10rem] sm:min-h-[12rem] h-full flex items-end gap-2.5 min-w-max pr-2"
+              className="min-h-[10rem] md:min-h-[178px] h-full flex items-end gap-2.5 min-w-max pr-2"
             >
               {bars.map((bar) => {
                 const heightPercent = bar.value === 0 ? 4 : bar.value;
