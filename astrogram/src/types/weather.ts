@@ -1,4 +1,28 @@
-export type TimeBlock = '0' | '3' | '6' | '12' | '18' | '21';
+export type TimeBlock =
+  | '0'
+  | '1'
+  | '2'
+  | '3'
+  | '4'
+  | '5'
+  | '6'
+  | '7'
+  | '8'
+  | '9'
+  | '10'
+  | '11'
+  | '12'
+  | '13'
+  | '14'
+  | '15'
+  | '16'
+  | '17'
+  | '18'
+  | '19'
+  | '20'
+  | '21'
+  | '22'
+  | '23';
 
 export interface WeatherConditions {
   temperature?: Partial<Record<TimeBlock, number>>; // Air temperature in °C (metric) or °F (US)

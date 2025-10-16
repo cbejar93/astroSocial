@@ -198,16 +198,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           </p>
         )}
 
-        {Object.keys(precipitationMap).length > 0 && (
-          <div className="mt-6 px-0 sm:px-4">
-            <PrecipitationChart
-              data={precipitationMap}
-              unit={unit}
-              highlightHour={highlightedPrecipitationHour}
-            />
-          </div>
-        )}
-
         <div className="overflow-x-auto px-0 sm:px-4 pb-4">
           <div className="flex gap-3 w-max">
             {futureWeatherData.map((day, index) => (
@@ -237,6 +227,16 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
                 unit={unit === "us" ? "mph" : "km/h"}
               />
             </div>
+          </div>
+        )}
+
+        {Object.keys(precipitationMap).length > 0 && (
+          <div className="mt-6 px-0 sm:px-4">
+            <PrecipitationChart
+              data={precipitationMap}
+              unit={unit}
+              highlightHour={highlightedPrecipitationHour}
+            />
           </div>
         )}
       </div>

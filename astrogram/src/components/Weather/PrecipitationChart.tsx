@@ -32,28 +32,19 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
   className = "",
 }) => {
   const bars = useMemo<BarDatum[]>(() => {
-    if (!data) return [];
+    return Array.from({ length: 24 }, (_, hour) => {
+      const key = hour.toString() as TimeBlock;
+      const rawValue = data?.[key] ?? 0;
 
-    return (
-      Object.entries(data) as Array<[string, number | undefined]>
-    )
-      .map(([hourKey, rawValue]) => {
-        if (rawValue == null) return null;
-
-        const parsedHour = Number.parseInt(hourKey, 10);
-        if (Number.isNaN(parsedHour)) return null;
-
-        return {
-          hour: parsedHour,
-          label: formatHourLabel(parsedHour, unit),
-          value: clampPercentage(rawValue),
-        } satisfies BarDatum;
-      })
-      .filter((entry): entry is BarDatum => Boolean(entry))
-      .sort((a, b) => a.hour - b.hour);
+      return {
+        hour,
+        label: formatHourLabel(hour, unit),
+        value: clampPercentage(rawValue),
+      } satisfies BarDatum;
+    });
   }, [data, unit]);
 
-  if (!bars.length) {
+  if (!data || Object.keys(data).length === 0) {
     return (
       <div
         className={`bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm px-6 py-5 text-sm ${className}`}
@@ -65,57 +56,61 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
 
   return (
     <section
-      className={`bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 ${className}`}
+      className={`bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow border border-gray-200 dark:border-gray-700 ${className}`}
     >
-      <header className="px-6 pt-5 flex items-baseline justify-between">
+      <header className="px-5 sm:px-6 pt-4 flex items-baseline justify-between">
         <div>
-          <h3 className="text-base font-semibold">Precipitation probability</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Chance of rain or snow at key observing hours.
+          <h3 className="text-sm font-semibold sm:text-base">
+            Precipitation probability
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            Hourly chance of rain or snow today.
           </p>
         </div>
-        <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
+        <span className="text-[0.65rem] sm:text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
           Percent chance
         </span>
       </header>
 
-      <div className="px-6 pb-6 pt-4">
-        <div
-          role="img"
-          aria-label="Bar chart showing precipitation probability by hour"
-          className="h-56 flex items-end gap-4"
-        >
-          {bars.map((bar) => {
-            const heightPercent = bar.value === 0 ? 4 : bar.value;
-            const isActive =
-              highlightHour != null && Math.round(bar.hour) === highlightHour;
+      <div className="px-5 sm:px-6 pb-5 pt-3">
+        <div className="overflow-x-auto">
+          <div
+            role="img"
+            aria-label="Bar chart showing precipitation probability by hour"
+            className="h-40 sm:h-48 flex items-end gap-2.5 min-w-max pr-2"
+          >
+            {bars.map((bar) => {
+              const heightPercent = bar.value === 0 ? 4 : bar.value;
+              const isActive =
+                highlightHour != null && Math.round(bar.hour) === highlightHour;
 
-            return (
-              <div
-                key={bar.hour}
-                className="min-w-[3.25rem] flex flex-col items-center gap-2"
-              >
-                <span className="text-sm font-medium text-sky-600 dark:text-sky-300">
-                  {bar.value}%
-                </span>
-                <div className="w-full flex-1 flex items-end justify-center">
-                  <div
-                    className={`w-full max-w-[2.75rem] rounded-t-xl bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 transition-all duration-500 ${
-                      isActive
-                        ? "ring-2 ring-cyan-300 dark:ring-cyan-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900"
-                        : ""
-                    }`}
-                    style={{ height: `${heightPercent}%` }}
-                    aria-hidden="true"
-                    title={`${bar.label}: ${bar.value}% chance of precipitation`}
-                  />
+              return (
+                <div
+                  key={bar.hour}
+                  className="min-w-[2.25rem] flex flex-col items-center gap-1.5"
+                >
+                  <span className="text-xs font-semibold text-sky-600 dark:text-sky-300">
+                    {bar.value}%
+                  </span>
+                  <div className="w-full flex-1 flex items-end justify-center">
+                    <div
+                      className={`w-full max-w-[1.75rem] rounded-t-lg bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 transition-all duration-500 ${
+                        isActive
+                          ? "ring-2 ring-cyan-300 dark:ring-cyan-400 ring-offset-1 ring-offset-white dark:ring-offset-gray-900"
+                          : ""
+                      }`}
+                      style={{ height: `${heightPercent}%` }}
+                      aria-hidden="true"
+                      title={`${bar.label}: ${bar.value}% chance of precipitation`}
+                    />
+                  </div>
+                  <span className="text-[0.65rem] font-medium text-gray-600 dark:text-gray-300">
+                    {bar.label}
+                  </span>
                 </div>
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                  {bar.label}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
