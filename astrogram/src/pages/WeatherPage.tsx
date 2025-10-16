@@ -15,6 +15,7 @@ import WindCard from "../components/Weather/WindCard";
 import { isWithinDaylight } from "../lib/time";
 import type { WeatherData } from "../types/weather";
 import { useAuth } from "../hooks/useAuth";
+import PrecipitationChart from "../components/Weather/PrecipitationChart";
 
 interface WeatherPageProps {
   weather: WeatherData | null;
@@ -144,6 +145,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   const directionMap = todayData?.conditions.winddirection ?? {};
   const tempMap = todayData?.conditions.temperature ?? {};
   const conditionMap = todayData?.conditions.cloudcover ?? {};
+  const precipitationMap = todayData?.conditions.precipitation ?? {};
 
   const available = Object.keys(speedMap).map((h) => parseInt(h, 10));
   let chosenHour = available.length ? available[0] : 0;
@@ -158,6 +160,17 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
   const currentWindDirection = directionMap[chosenHour];
   const currentTemp = tempMap[chosenHour];
   const currentCondition = getConditionFromClouds(conditionMap[chosenHour]);
+
+  const precipitationHours = Object.keys(precipitationMap).map((h) =>
+    Number.parseInt(h, 10),
+  );
+  const highlightedPrecipitationHour = precipitationHours.length
+    ? precipitationHours.reduce((prev, curr) =>
+        Math.abs(curr - zonedNow.hour) < Math.abs(prev - zonedNow.hour)
+          ? curr
+          : prev,
+      precipitationHours[0])
+    : null;
 
   const icon = getWeatherIcon(currentCondition, isDaytime);
 
@@ -183,6 +196,16 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           <p className="mt-2 text-center text-sm text-red-400 px-4">
             {preferenceError}
           </p>
+        )}
+
+        {Object.keys(precipitationMap).length > 0 && (
+          <div className="mt-6 px-0 sm:px-4">
+            <PrecipitationChart
+              data={precipitationMap}
+              unit={unit}
+              highlightHour={highlightedPrecipitationHour}
+            />
+          </div>
         )}
 
         <div className="overflow-x-auto px-0 sm:px-4 pb-4">
