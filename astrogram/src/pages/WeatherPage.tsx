@@ -198,7 +198,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           </p>
         )}
 
-        <div className="overflow-x-auto px-0 sm:px-4 pb-4">
+        <div className="overflow-x-auto pb-4">
           <div className="flex gap-3 w-max">
             {futureWeatherData.map((day, index) => (
               <WeatherCard key={day.date} day={day} isToday={index === 0} unit={unit} />
@@ -231,7 +231,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
         )}
 
         {Object.keys(precipitationMap).length > 0 && (
-          <div className="mt-6 px-0 sm:px-4">
+          <div className="mt-6">
             <PrecipitationChart
               data={precipitationMap}
               unit={unit}
