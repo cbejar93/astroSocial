@@ -222,7 +222,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
           </div>
         )}
 
-        {Object.keys(precipitationMap).length > 0 && (
+        {/* {Object.keys(precipitationMap).length > 0 && (
           <div className="mt-6">
             <PrecipitationChart
               className={`h-full ${SECONDARY_CARD_HEIGHT}`}
@@ -231,7 +231,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({ weather, loading, error, unit
               startHour={currentHour}
             />
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
