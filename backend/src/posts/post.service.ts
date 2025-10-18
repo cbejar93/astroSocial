@@ -15,6 +15,10 @@ import { FeedResponseDto } from './dto/feed.dto';
 import { StorageService } from '../storage/storage.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { ModerationService } from '../moderation/moderation.service';
+import { CheckModerationDto } from '../moderation/dto/check-moderation.dto';
+import type { Moderation } from 'openai/resources/moderations';
+import { promises as fs } from 'fs';
 
 @Injectable()
 export class PostsService {
@@ -59,6 +63,7 @@ export class PostsService {
     private readonly storage: StorageService,
     private readonly notifications: NotificationsService,
     private readonly analytics: AnalyticsService,
+    private readonly moderation: ModerationService,
   ) {}
 
   async create(
@@ -84,6 +89,13 @@ export class PostsService {
       );
     }
 
+    const moderationResult = await this.runModerationCheck(dto, file);
+
+    const flaggedCategories = this.extractFlaggedCategories(
+      moderationResult.results,
+    );
+    const isFlagged = flaggedCategories.length > 0;
+
     // 1) if they sent a file, upload it and grab the public URL
     let imageUrl: string | undefined;
     if (file) {
@@ -101,23 +113,121 @@ export class PostsService {
     }
 
     // 2) now create the Post record, only including imageUrl if we got one
+    let post: Post;
     try {
-      const post = await this.prisma.post.create({
+      post = await this.prisma.post.create({
         data: {
           authorId: userId,
           originalAuthorId: userId,
           title: dto.title ?? '',
           body: dto.body,
           loungeId: dto.loungeId,
+          flagged: isFlagged,
           ...(imageUrl ? { imageUrl } : {}),
         },
       });
-      this.logger.log(`Post created (id=${post.id})`);
-      return post;
     } catch (err: any) {
       this.logger.error(`Failed to create post for user ${userId}`, err.stack);
       throw new InternalServerErrorException('Could not create post');
     }
+
+    if (isFlagged) {
+      this.logger.warn(
+        `Post flagged by moderation for user ${userId}: ${flaggedCategories.join(', ')}`,
+      );
+      throw new ForbiddenException({
+        message: 'Post failed content moderation',
+        categories: flaggedCategories,
+        moderation: moderationResult,
+        postId: post.id,
+      });
+    }
+
+    this.logger.log(`Post created (id=${post.id})`);
+    return post;
+  }
+
+  private extractFlaggedCategories(results: Moderation[]): string[] {
+    const categories = new Set<string>();
+    for (const result of results) {
+      if (!result.flagged) {
+        continue;
+      }
+
+      Object.entries(result.categories).forEach(([category, flagged]) => {
+        if (flagged) {
+          categories.add(category);
+        }
+      });
+    }
+
+    return Array.from(categories);
+  }
+
+  private async runModerationCheck(
+    dto: CreatePostDto,
+    file?: Express.Multer.File,
+  ) {
+    const payload: CheckModerationDto = {};
+
+    const textInputs = [dto.title, dto.body]
+      .map((value) => value?.trim())
+      .filter((value): value is string => Boolean(value?.length));
+
+    if (textInputs.length) {
+      payload.texts = textInputs;
+    }
+
+    if (file) {
+      const base64 = await this.encodeFileToBase64(file);
+      if (base64) {
+        payload.imageBase64 = [base64];
+      }
+    }
+
+    this.logger.verbose(
+      `Running moderation check (texts=${payload.texts?.length ?? 0}, images=${
+        payload.imageBase64?.length ?? 0
+      })`,
+    );
+
+    try {
+      return await this.moderation.checkContent(payload);
+    } catch (err: any) {
+      this.logger.error(
+        `Moderation check failed: ${err?.message ?? err}`,
+        err?.stack,
+      );
+      throw new InternalServerErrorException(
+        'Could not verify post content for moderation',
+      );
+    }
+  }
+
+  private async encodeFileToBase64(
+    file: Express.Multer.File,
+  ): Promise<string | undefined> {
+    if (file.buffer) {
+      return file.buffer.toString('base64');
+    }
+
+    if (file.path) {
+      try {
+        const data = await fs.readFile(file.path);
+        return data.toString('base64');
+      } catch (err: any) {
+        this.logger.error(
+          `Failed to read uploaded file for moderation: ${err?.message ?? err}`,
+          err?.stack,
+        );
+        throw new InternalServerErrorException(
+          'Could not process post image for moderation',
+        );
+      }
+    }
+
+    this.logger.warn('Uploaded file missing buffer/path for moderation.');
+    return undefined;
   }
 
   async interact(
@@ -166,7 +276,7 @@ export class PostsService {
     if (type === InteractionType.REPOST) {
       try {
         const original = await this.prisma.post.findUnique({
-          where: { id: postId },
+          where: { id: postId, flagged: false },
           select: {
             title: true,
             body: true,
@@ -205,7 +315,7 @@ export class PostsService {
     // 3) fetch the fresh total
     try {
       const post = await this.prisma.post.findUnique({
-        where: { id: postId },
+        where: { id: postId, flagged: false },
         select: { [field]: true },
       });
 
@@ -242,7 +352,7 @@ export class PostsService {
     try {
       // 1) fetch raw posts + counts
       const posts = await this.prisma.post.findMany({
-        where: { loungeId: null },
+        where: { loungeId: null, flagged: false },
         orderBy: { createdAt: 'desc' },
         take: page * limit,
         include: {
@@ -349,9 +459,9 @@ export class PostsService {
     this.logger.log(`Fetching posts for lounge ${loungeId}`);
     try {
       const [total, posts] = await this.prisma.$transaction([
-        this.prisma.post.count({ where: { loungeId } }),
+        this.prisma.post.count({ where: { loungeId, flagged: false } }),
         this.prisma.post.findMany({
-          where: { loungeId },
+          where: { loungeId, flagged: false },
           orderBy: { createdAt: 'desc' },
           skip: (page - 1) * limit,
           take: limit,
@@ -448,7 +558,7 @@ export class PostsService {
 
     // 1) Fetch the post (with counts + author)
     const post = await this.prisma.post.findUnique({
-      where: { id: postId },
+      where: { id: postId, flagged: false },
       include: {
         author: {
           select: {
@@ -466,17 +576,17 @@ export class PostsService {
             _count: { select: { posts: true } },
           },
         },
-    _count: { select: { comments: true, savedBy: true } },
-    ...(currentUserId
-      ? {
-          savedBy: {
-            where: { userId: currentUserId },
-            select: { id: true },
-          },
-        }
-      : {}),
-  },
-});
+        _count: { select: { comments: true, savedBy: true } },
+        ...(currentUserId
+          ? {
+              savedBy: {
+                where: { userId: currentUserId },
+                select: { id: true },
+              },
+            }
+          : {}),
+      },
+    });
     if (!post) {
       this.logger.warn(`Post ${postId} not found`);
       throw new NotFoundException(`Post ${postId} not found`);
@@ -666,20 +776,26 @@ export class PostsService {
     page = 1,
     limit = 20,
   ): Promise<FeedResponseDto> {
-    this.logger.log(`Fetching saved posts for ${userId} (page=${page}, limit=${limit})`);
+    this.logger.log(
+      `Fetching saved posts for ${userId} (page=${page}, limit=${limit})`,
+    );
 
     try {
       const [total, saves] = await this.prisma.$transaction([
-        this.prisma.savedPost.count({ where: { userId } }),
+        this.prisma.savedPost.count({
+          where: { userId, post: { flagged: false } },
+        }),
         this.prisma.savedPost.findMany({
-          where: { userId },
+          where: { userId, post: { flagged: false } },
           orderBy: { createdAt: 'desc' },
           skip: (page - 1) * limit,
           take: limit,
           include: {
             post: {
               include: {
-                author: { select: { id: true, username: true, avatarUrl: true } },
+                author: {
+                  select: { id: true, username: true, avatarUrl: true },
+                },
                 originalAuthor: {
                   select: { id: true, username: true, avatarUrl: true },
                 },
@@ -687,7 +803,9 @@ export class PostsService {
                 interactions: {
                   where: {
                     userId,
-                    type: { in: [InteractionType.LIKE, InteractionType.REPOST] },
+                    type: {
+                      in: [InteractionType.LIKE, InteractionType.REPOST],
+                    },
                   },
                   select: { type: true },
                 },
@@ -766,5 +884,85 @@ export class PostsService {
       throw new ForbiddenException(`Cannot delete post ${postId}`);
     }
     this.logger.log(`Post ${postId} deleted`);
+  }
+
+  async getFlaggedPosts(
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    posts: {
+      id: string;
+      title: string;
+      body: string;
+      createdAt: string;
+      imageUrl?: string;
+      author: {
+        id: string;
+        username?: string | null;
+        avatarUrl?: string | null;
+      };
+    }[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    this.logger.log(`Fetching flagged posts (page=${page}, limit=${limit})`);
+
+    const take = Math.max(1, limit);
+    const skip = Math.max(0, (Math.max(1, page) - 1) * take);
+
+    const [posts, total] = await this.prisma.$transaction([
+      this.prisma.post.findMany({
+        where: { flagged: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: {
+          author: {
+            select: { id: true, username: true, avatarUrl: true },
+          },
+        },
+      }),
+      this.prisma.post.count({ where: { flagged: true } }),
+    ]);
+
+    return {
+      posts: posts.map((post) => ({
+        id: post.id,
+        title: post.title,
+        body: post.body,
+        createdAt: post.createdAt.toISOString(),
+        ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
+        author: {
+          id: post.author.id,
+          username: post.author.username,
+          avatarUrl: post.author.avatarUrl,
+        },
+      })),
+      total,
+      page: Math.max(1, page),
+      limit: take,
+    };
+  }
+
+  async deletePostAsAdmin(postId: string) {
+    this.logger.warn(`Admin deleting post ${postId}`);
+    const [, , , , , { count }] = await this.prisma.$transaction([
+      this.prisma.savedPost.deleteMany({ where: { postId } }),
+      this.prisma.commentLike.deleteMany({ where: { comment: { postId } } }),
+      this.prisma.postInteraction.deleteMany({ where: { postId } }),
+      this.prisma.notification.deleteMany({
+        where: { OR: [{ postId }, { comment: { postId } }] },
+      }),
+      this.prisma.comment.deleteMany({ where: { postId } }),
+      this.prisma.post.deleteMany({ where: { id: postId } }),
+    ]);
+
+    if (count === 0) {
+      this.logger.warn(`Admin attempted to delete non-existent post ${postId}`);
+      throw new NotFoundException(`Post ${postId} not found`);
+    }
+
+    this.logger.log(`Post ${postId} deleted by admin`);
   }
 }

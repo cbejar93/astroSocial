@@ -306,6 +306,44 @@ export async function fetchSavedPosts<Item = unknown>(
   return res.json();
 }
 
+export interface FlaggedPostSummary {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  imageUrl?: string;
+  author: {
+    id: string;
+    username?: string | null;
+    avatarUrl?: string | null;
+  };
+}
+
+export async function fetchFlaggedPosts(
+  page: number = 1,
+  limit: number = 20,
+): Promise<FeedResponse<FlaggedPostSummary>> {
+  const res = await apiFetch(`/posts/admin/flagged?page=${page}&limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch flagged posts (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function deletePostAsAdmin(postId: string): Promise<void> {
+  const res = await apiFetch(`/posts/admin/${postId}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(`Failed to delete post (${res.status})`);
+  }
+}
+
+export async function deleteUserAsAdmin(userId: string): Promise<void> {
+  const res = await apiFetch(`/users/admin/${userId}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(`Failed to delete user (${res.status})`);
+  }
+}
+
 // --------------------------------------------------
 // Comments API helpers
 
