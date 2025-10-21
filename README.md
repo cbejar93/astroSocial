@@ -1,4 +1,4 @@
-# ColliMate
+# AstroLounge
 
 ColliMate is a full-stack social app for sharing and discovering cosmic photography and musings. Users can sign up via Google or Facebook, complete their profile, post images with captions, interact (like, share, repost), and browse a weighted feed.
 
@@ -32,10 +32,6 @@ Posts are limited to **314** characters, while comments have no character limit.
 ```bash
 cd backend
 npm install
-# push Prisma schema (non-destructive):
-npx prisma db push --accept-data-loss
-# generate Prisma client:
-npx prisma generate
 # start dev server:
 npm run start:dev
 ```
@@ -43,7 +39,7 @@ npm run start:dev
 ### Frontend
 
 ```bash
-cd ../frontend
+cd ../astrosocial
 npm install
 npm run dev
 ```
@@ -63,4 +59,4 @@ Frontend runs on `http://localhost:5173` and backend on `http://localhost:3000` 
 
 ## 📄 License
 
-MIT © Your Carlos Bejar
+MIT © Carlos Bejar
