@@ -4,7 +4,15 @@ import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
 import Comments, { type CommentsHandle } from "../components/Comments/Comments";
 import { useAuth } from "../hooks/useAuth";
-import { MoreVertical, Quote, Reply, Flag, ArrowLeft } from "lucide-react";
+import {
+  MoreVertical,
+  Quote,
+  Reply,
+  Flag,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface Post {
   id: string;
@@ -15,6 +23,8 @@ interface Post {
   timestamp: string;
   authorJoinedAt?: string;
   authorPostCount?: number;
+  imageUrl?: string;
+  images?: string[];
 }
 
 const LoungePostDetailPage: React.FC = () => {
@@ -27,12 +37,16 @@ const LoungePostDetailPage: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const commentsRef = useRef<CommentsHandle>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     if (!postId) return;
     apiFetch(`/posts/${postId}`)
       .then(res => res.json())
-      .then(data => setPost(data))
+      .then((data) => {
+        setPost(data);
+        setActiveImageIndex(0);
+      })
       .catch(() => setError("Could not load post."))
       .finally(() => setLoading(false));
   }, [postId]);
@@ -61,6 +75,24 @@ const LoungePostDetailPage: React.FC = () => {
       console.error("Delete post error:", err);
     }
   };
+
+  const imageSources = React.useMemo(() => {
+    if (!post) return [] as string[];
+
+    const fromArray = Array.isArray(post.images)
+      ? post.images.filter((src): src is string => typeof src === "string" && src.trim().length > 0)
+      : [];
+
+    if (fromArray.length > 0) {
+      return fromArray.slice(0, 4);
+    }
+
+    if (post.imageUrl && typeof post.imageUrl === "string" && post.imageUrl.trim().length > 0) {
+      return [post.imageUrl];
+    }
+
+    return [] as string[];
+  }, [post]);
 
   if (loading)
     return (
@@ -98,6 +130,20 @@ const LoungePostDetailPage: React.FC = () => {
 
   const handleReplyToPost = () => {
     commentsRef.current?.focusEditor();
+  };
+
+  const goToImage = (index: number) => {
+    if (imageSources.length === 0) return;
+    const wrapped = (index + imageSources.length) % imageSources.length;
+    setActiveImageIndex(wrapped);
+  };
+
+  const handlePreviousImage = () => {
+    goToImage(activeImageIndex - 1);
+  };
+
+  const handleNextImage = () => {
+    goToImage(activeImageIndex + 1);
   };
 
   return (
@@ -197,6 +243,76 @@ const LoungePostDetailPage: React.FC = () => {
                   </button>
                 </div>
               </header>
+              {imageSources.length > 0 && (
+                <div className="space-y-3">
+                  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50">
+                    <img
+                      src={imageSources[activeImageIndex]}
+                      alt={`Lounge post image ${activeImageIndex + 1} of ${imageSources.length}`}
+                      className="h-full w-full max-h-[28rem] object-cover"
+                      loading="lazy"
+                    />
+                    {imageSources.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handlePreviousImage}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-gray-100 transition hover:bg-black/80"
+                          aria-label="Previous image"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleNextImage}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-gray-100 transition hover:bg-black/80"
+                          aria-label="Next image"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+                          {imageSources.map((_, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => goToImage(idx)}
+                              className={`h-2 w-2 rounded-full transition ${
+                                idx === activeImageIndex ? "bg-white" : "bg-white/50"
+                              }`}
+                              aria-label={`Go to image ${idx + 1}`}
+                              aria-current={idx === activeImageIndex}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {imageSources.length > 1 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {imageSources.map((src, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => goToImage(idx)}
+                          className={`overflow-hidden rounded-xl border transition ${
+                            idx === activeImageIndex
+                              ? "border-teal-400 ring-2 ring-teal-400/50"
+                              : "border-white/10 hover:border-white/30"
+                          }`}
+                          aria-label={`Select image ${idx + 1}`}
+                        >
+                          <img
+                            src={src}
+                            alt={`Thumbnail ${idx + 1}`}
+                            className="h-20 w-full object-cover"
+                            loading="lazy"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div
                 className="prose prose-invert max-w-none text-sm leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: post.caption }}
