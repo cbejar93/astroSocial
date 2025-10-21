@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 
 const logger = new Logger('Main');
 
@@ -35,6 +36,14 @@ async function bootstrap() {
     next();
   });
 
+  const serveIndexLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests, please try again later.',
+  });
+
   // CORS
   const envOrigins = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
@@ -61,13 +70,19 @@ async function bootstrap() {
       return next();
     }
     // otherwise send back index.html – React Router will take over in the browser
-    const indexPath = path.join(clientDistPath, 'index.html');
-    logger.log(`🗂️  GET ${req.originalUrl} → serving index.html`);
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        logger.error(`❌ Failed to send index.html: ${err.message}`, err.stack);
-        res.status(500).send('Internal Server Error');
+    serveIndexLimiter(req, res, (rateLimitError?: unknown) => {
+      if (rateLimitError) {
+        return next(rateLimitError as Error);
       }
+
+      const indexPath = path.join(clientDistPath, 'index.html');
+      logger.log(`🗂️  GET ${req.originalUrl} → serving index.html`);
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          logger.error(`❌ Failed to send index.html: ${err.message}`, err.stack);
+          res.status(500).send('Internal Server Error');
+        }
+      });
     });
   });
 
