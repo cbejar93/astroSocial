@@ -5,6 +5,7 @@
     
     # Install frontend dependencies
     COPY astrogram/package*.json ./
+    COPY astrogram/.npmrc ./
     RUN npm install
     
     # Copy the rest of the frontend app
