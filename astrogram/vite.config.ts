@@ -4,6 +4,11 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      'react-quill-new': '/src/vendor/react-quill-new.tsx',
+    },
+  },
   build: {
     outDir: 'dist',
   },
