@@ -232,6 +232,50 @@ main a:hover,
 .animate-slide-in-left {
   animation: slide-in-left 0.3s ease-out forwards;
 }
+
+.lounge-editor .ql-toolbar.ql-snow {
+  margin-bottom: 0.5rem;
+  border: none;
+  background-color: #374151;
+  border-radius: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.lounge-editor .ql-toolbar.ql-snow .ql-formats {
+  margin: 0;
+}
+
+.lounge-editor .ql-toolbar.ql-snow button {
+  color: #f9fafb;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  width: auto;
+  height: auto;
+}
+
+.lounge-editor .ql-toolbar.ql-snow button:hover,
+.lounge-editor .ql-toolbar.ql-snow button.ql-active {
+  background-color: #4b5563;
+  color: #f9fafb;
+}
+
+.lounge-editor .ql-container.ql-snow {
+  border: none;
+  background-color: #1f2937;
+  border-radius: 0.5rem;
+}
+
+.lounge-editor .ql-editor {
+  min-height: 6rem;
+  color: #f3f4f6;
+  font-size: 1rem;
+}
+
+.lounge-editor .ql-editor p {
+  margin: 0;
+}
 /* Light theme fallback */
 @media (prefers-color-scheme: light) {
   :root {
