@@ -40,6 +40,11 @@
   transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
 }
 
+.rqn-toolbar-button[data-active="true"] {
+  background-color: rgb(20 184 166 / 1);
+  color: rgb(17 24 39 / 1);
+}
+
 .rqn-toolbar-button:hover,
 .rqn-toolbar-button:focus-visible {
   background-color: rgb(20 184 166 / 1);

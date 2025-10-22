@@ -1,9 +1,11 @@
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
   type MutableRefObject,
 } from "react";
 
@@ -131,6 +133,7 @@ const ReactQuillNew = forwardRef<ImperativeApi, ReactQuillNewProps>(
   ) => {
     const editorRef = useRef<HTMLDivElement | null>(null);
     const toolbarConfig = useMemo(() => modules?.toolbar ?? DEFAULT_TOOLBAR, [modules]);
+    const [activeFormats, setActiveFormats] = useState<Record<string, boolean>>({});
 
     const editorApi = useMemo<EditorApi>(
       () => ({
@@ -150,12 +153,72 @@ const ReactQuillNew = forwardRef<ImperativeApi, ReactQuillNewProps>(
       [editorApi],
     );
 
+    const getItemKey = useCallback((item: ToolbarItem) => {
+      if (typeof item === "string") {
+        return item;
+      }
+      return item.list === "ordered" ? "ordered" : "bullet";
+    }, []);
+
+    const updateActiveFormats = useCallback(() => {
+      if (typeof document === "undefined") return;
+      const editorEl = editorRef.current;
+      if (!editorEl) return;
+
+      const selection = document.getSelection();
+      const anchorNode = selection?.anchorNode ?? null;
+
+      const isWithinEditor = (node: Node | null): boolean => {
+        if (!node) return false;
+        if (node === editorEl) return true;
+        const elementNode = node instanceof Element ? node : node.parentElement;
+        return !!elementNode && editorEl.contains(elementNode);
+      };
+
+      if (!isWithinEditor(anchorNode)) {
+        setActiveFormats((prev) => (Object.keys(prev).length ? {} : prev));
+        return;
+      }
+
+      const nextState: Record<string, boolean> = {};
+
+      toolbarConfig.forEach((group) => {
+        group.forEach((item) => {
+          const mapping = commandForItem(item);
+          if (!mapping) return;
+          const command = mapping.command;
+          let isActive = false;
+          try {
+            isActive = !!document.queryCommandState(command);
+          } catch {
+            isActive = false;
+          }
+          nextState[getItemKey(item)] = isActive;
+        });
+      });
+
+      setActiveFormats((prev) => {
+        const keys = new Set([...Object.keys(prev), ...Object.keys(nextState)]);
+        let changed = false;
+        const merged: Record<string, boolean> = {};
+        keys.forEach((key) => {
+          const value = nextState[key] ?? false;
+          merged[key] = value;
+          if (prev[key] !== value) {
+            changed = true;
+          }
+        });
+        return changed ? merged : prev;
+      });
+    }, [getItemKey, toolbarConfig]);
+
     useEffect(() => {
       if (!editorRef.current) return;
       const sanitized = sanitizeHtml(value);
       if (editorRef.current.innerHTML === sanitized) return;
       editorRef.current.innerHTML = sanitized;
-    }, [value]);
+      updateActiveFormats();
+    }, [updateActiveFormats, value]);
 
     useEffect(() => {
       if (!editorRef.current || !placeholder) return;
@@ -183,6 +246,7 @@ const ReactQuillNew = forwardRef<ImperativeApi, ReactQuillNewProps>(
         editorRef.current.innerHTML = sanitized;
       }
       onChange(sanitized, undefined, "user", editorApi);
+      updateActiveFormats();
     };
 
     const applyCommand = (item: ToolbarItem) => {
@@ -206,6 +270,27 @@ const ReactQuillNew = forwardRef<ImperativeApi, ReactQuillNewProps>(
       return () => toolbarNode.removeEventListener("mousedown", preventMouseDown);
     }, []);
 
+    useEffect(() => {
+      if (typeof document === "undefined") return;
+      const editorEl = editorRef.current;
+      if (!editorEl) return;
+
+      const handleSelectionChange = () => updateActiveFormats();
+      const handleInteraction = () => updateActiveFormats();
+
+      document.addEventListener("selectionchange", handleSelectionChange);
+      editorEl.addEventListener("keyup", handleInteraction);
+      editorEl.addEventListener("mouseup", handleInteraction);
+
+      updateActiveFormats();
+
+      return () => {
+        document.removeEventListener("selectionchange", handleSelectionChange);
+        editorEl.removeEventListener("keyup", handleInteraction);
+        editorEl.removeEventListener("mouseup", handleInteraction);
+      };
+    }, [updateActiveFormats]);
+
     return (
       <div className={`rqn-root ${className ?? ""}`} data-read-only={readOnly ? "true" : "false"}>
         <div className="rqn-toolbar" ref={toolbarRef}>
@@ -215,6 +300,7 @@ const ReactQuillNew = forwardRef<ImperativeApi, ReactQuillNewProps>(
                 const label = labelForItem(item);
                 const modifier =
                   typeof item === "string" ? `rqn-${item}` : `rqn-${item.list}`;
+                const itemKey = getItemKey(item);
                 return (
                   <button
                     key={`${groupIndex}-${itemIndex}`}
@@ -222,6 +308,7 @@ const ReactQuillNew = forwardRef<ImperativeApi, ReactQuillNewProps>(
                     className={`rqn-toolbar-button ${modifier}`}
                     onClick={() => applyCommand(item)}
                     aria-label={typeof item === "string" ? item : `${item.list} list`}
+                    data-active={activeFormats[itemKey] ? "true" : "false"}
                   >
                     {label}
                   </button>
