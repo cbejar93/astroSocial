@@ -1,149 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import PostCard from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
-import { fetchFeed } from "../lib/api";
-import type { PostCardProps } from '../components/PostCard/PostCard';
-import { useNavigate } from "react-router-dom";
-
-
-// const dummyPosts = [
-//   {
-//     id: 1,
-//     username: "astro_nerd",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA04921/PIA04921~orig.jpg",
-//     caption: "The Orion Nebula at 3AM 🌌",
-//     timestamp: "2025-07-03T03:00:00Z",
-//     stars: 12,
-//     comments: 3,
-//     shares: 5,
-//   },
-//   {
-//     id: 2,
-//     username: "galaxyhunter",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA12235/PIA12235~orig.jpg",
-//     caption: "Milky Way glowing above the Atacama Desert 🔭",
-//     timestamp: "2025-07-02T23:15:00Z",
-//     stars: 8,
-//     comments: 2,
-//     shares: 1,
-//   },
-//   {
-//     id: 3,
-//     username: "cosmicdreamer",
-//     imageUrl: "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001478/GSFC_20171208_Archive_e001478~orig.jpg",
-//     caption: "Edge of the galaxy — deep space haze ✨",
-//     timestamp: "2025-07-01T18:42:00Z",
-//     stars: 15,
-//     comments: 5,
-//     shares: 4,
-//   },
-//   {
-//     id: 4,
-//     username: "nebula_chaser",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA09178/PIA09178~orig.jpg",
-//     caption: "Carina Nebula looking unreal tonight 💫",
-//     timestamp: "2025-06-30T22:00:00Z",
-//     stars: 9,
-//     comments: 1,
-//     shares: 2,
-//   },
-//   {
-//     id: 5,
-//     username: "starlord",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA19806/PIA19806~orig.jpg",
-//     caption: "A peek into the Pillars of Creation 🌀",
-//     timestamp: "2025-06-28T20:10:00Z",
-//     stars: 20,
-//     comments: 7,
-//     shares: 6,
-//   },
-//   {
-//     id: 6,
-//     username: "darkmatter",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA21087/PIA21087~orig.jpg",
-//     caption: "Caught a distant supernova remnant 🌠",
-//     timestamp: "2025-06-25T11:30:00Z",
-//     stars: 11,
-//     comments: 2,
-//     shares: 3,
-//   },
-//   {
-//     id: 7,
-//     username: "orbitjunkie",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA12046/PIA12046~orig.jpg",
-//     caption: "Star cluster hidden behind a veil of dust 🌌",
-//     timestamp: "2025-06-24T14:00:00Z",
-//     stars: 7,
-//     comments: 1,
-//     shares: 0,
-//   },
-//   {
-//     id: 8,
-//     username: "stellarvista",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA21425/PIA21425~orig.jpg",
-//     caption: "Staring into the Tarantula Nebula 🕷️✨",
-//     timestamp: "2025-06-22T10:45:00Z",
-//     stars: 18,
-//     comments: 4,
-//     shares: 5,
-//   },
-//   {
-//     id: 9,
-//     username: "lunarlurker",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA00342/PIA00342~orig.jpg",
-//     caption: "Moonrise over Earth’s horizon 🌖",
-//     timestamp: "2025-06-20T08:15:00Z",
-//     stars: 6,
-//     comments: 0,
-//     shares: 1,
-//   },
-//   {
-//     id: 10,
-//     username: "deepfield",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA12348/PIA12348~orig.jpg",
-//     caption: "Hubble’s deep field never ceases to amaze 🔍🌌",
-//     timestamp: "2025-06-24T16:45:00Z",
-//     stars: 66,
-//     comments: 5,
-//     shares: 7,
-//   },
-//   {
-//     id: 11,
-//     username: "moonrider",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA13562/PIA13562~orig.jpg",
-//     caption: "First quarter moonrise over the mountains 🌙",
-//     timestamp: "2025-06-22T21:20:00Z",
-//     stars: 24,
-//     comments: 3,
-//     shares: 2,
-//   },
-//   {
-//     id: 12,
-//     username: "auroraholic",
-//     imageUrl: "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001274/GSFC_20171208_Archive_e001274~orig.jpg",
-//     caption: "Northern lights were electric tonight! 💚💜",
-//     timestamp: "2025-06-21T02:10:00Z",
-//     stars: 57,
-//     comments: 9,
-//     shares: 6,
-//   },
-//   {
-//     id: 13,
-//     username: "venusgazer",
-//     imageUrl: "https://images-assets.nasa.gov/image/PIA18184/PIA18184~orig.jpg",
-//     caption: "Venus in retrograde looking like a gem ✨",
-//     timestamp: "2025-06-20T04:00:00Z",
-//     stars: 31,
-//     comments: 4,
-//     shares: 3,
-    
-//   },
-// ];
-
+import { fetchFeed, search, type SearchResponse } from "../lib/api";
+import type { PostCardProps } from "../components/PostCard/PostCard";
 
 const PAGE_SIZE = 20;
 
+// Toggle these if you have a fixed top navbar (~64px tall):
+const NAV_PUSH_CLASS = "pt-0";    // change to "pt-16" if your nav is fixed
+const STICKY_TOP_CLASS = "top-0"; // change to "top-16" to sit right under a fixed nav
+
 const Feed: React.FC = () => {
+  // ---- FEED STATE ----
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [page, setPage] = useState(0);
@@ -152,40 +21,69 @@ const Feed: React.FC = () => {
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const loadPage = useCallback(async (nextPage: number) => {
-    if (nextPage === 1) {
-      setLoading(true);
-    }
+  // ---- SEARCH STATE ----
+  const [query, setQuery] = useState("");
+  const [searchPage, setSearchPage] = useState(1);
+  const [results, setResults] = useState<SearchResponse | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
+  async function performSearch(newPage: number) {
+    if (!query.trim()) return;
+    setSearchLoading(true);
+    setSearchError(null);
+    try {
+      const data = await search(query, newPage);
+      setResults(data);
+      setSearchPage(newPage);
+    } catch (err) {
+      setSearchError((err as Error).message);
+      setResults(null);
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
+  const onSearchSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    await performSearch(1);
+  };
+
+  const hasSearchResults =
+    !!results &&
+    (((results.users?.results.length ?? 0) > 0) ||
+      ((results.lounges?.results.length ?? 0) > 0));
+
+  const hasPrev = searchPage > 1;
+  const hasNext =
+    !!results &&
+    (((results.users &&
+      results.users.total > results.users.page * results.users.limit) ||
+      (results.lounges &&
+        results.lounges.total >
+          results.lounges.page * results.lounges.limit)));
+
+  // ---- FEED LOGIC ----
+  const loadPage = useCallback(async (nextPage: number) => {
+    if (nextPage === 1) setLoading(true);
     setIsFetchingNext(true);
 
     try {
       const response = await fetchFeed<PostCardProps>(nextPage, PAGE_SIZE);
 
       setPosts((prev) => {
-        if (nextPage === 1) {
-          return response.posts;
-        }
-
+        if (nextPage === 1) return response.posts;
         const existingIds = new Set(prev.map((post) => post.id));
-        const appendedPosts = response.posts.filter(
-          (post) => !existingIds.has(post.id)
-        );
-
+        const appendedPosts = response.posts.filter((post) => !existingIds.has(post.id));
         return [...prev, ...appendedPosts];
       });
 
       setPage(nextPage);
-      setHasMore(
-        response.posts.length > 0 && nextPage * PAGE_SIZE < response.total
-      );
+      setHasMore(response.posts.length > 0 && nextPage * PAGE_SIZE < response.total);
     } catch (error) {
       console.error(error);
     } finally {
-      if (nextPage === 1) {
-        setLoading(false);
-      }
-
+      if (nextPage === 1) setLoading(false);
       setIsFetchingNext(false);
     }
   }, []);
@@ -196,58 +94,161 @@ const Feed: React.FC = () => {
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-
-    if (!sentinel) {
-      return;
-    }
+    if (!sentinel) return;
 
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-
       if (entry.isIntersecting && hasMore && !isFetchingNext) {
         loadPage(page + 1);
       }
     });
 
     observer.observe(sentinel);
-
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [hasMore, isFetchingNext, loadPage, page]);
 
   return (
-    <div className="w-full py-8 flex justify-center">
+    <div className={`w-full ${NAV_PUSH_CLASS} pb-0 flex justify-center`}>
       <div className="w-full max-w-3xl px-0 sm:px-4">
+        {/* Sticky search header (solid background prevents posts showing behind) */}
+        <div className={`sticky ${STICKY_TOP_CLASS} z-30 bg-[#0A0F1F] border-b border-white/10`}>
+          {/* NEW: inner padding wrapper for left/right spacing */}
+          <div className="px-2 sm:px-4">
+            <form onSubmit={onSearchSubmit} className="flex gap-2 py-2">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search users & lounges…"
+                className="flex-grow rounded-lg bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 px-3 py-1.5 text-xs sm:py-2 sm:text-sm"
+                aria-label="Search"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70 sm:px-4 sm:py-2 sm:text-sm"
+                disabled={searchLoading}
+              >
+                {searchLoading ? "Searching…" : "Search"}
+              </button>
+
+              {results && (
+                <button
+                  type="button"
+                  onClick={() => setResults(null)}
+                  className="px-3 py-1.5 text-xs sm:py-2 sm:text-sm rounded-md bg-gray-700 hover:bg-gray-600 text-gray-100"
+                  title="Clear results"
+                >
+                  Clear
+                </button>
+              )}
+            </form>
+
+            {searchLoading && <p className="mt-1 text-sm text-gray-300">Loading…</p>}
+            {searchError && <p className="mt-1 text-sm text-red-500">{searchError}</p>}
+
+            {results && (
+              <div className="mt-2 rounded-2xl border border-white/10 bg-[#0E1626] text-white p-4">
+                {hasSearchResults ? (
+                  <div className="space-y-6">
+                    {results.users?.results.length ? (
+                      <div>
+                        <h2 className="text-base font-semibold mb-2">Users</h2>
+                        <ul className="space-y-2">
+                          {results.users.results.map((u) => (
+                            <li key={u.id} className="flex items-center gap-2">
+                              <img
+                                src={u.avatarUrl ?? "/defaultPfp.png"}
+                                alt={u.username ?? "user"}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                              <span className="text-sm">@{u.username}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    {results.lounges?.results.length ? (
+                      <div>
+                        <h2 className="text-base font-semibold mb-2">Lounges</h2>
+                        <ul className="space-y-2">
+                          {results.lounges.results.map((l) => (
+                            <li key={l.id} className="flex items-center gap-2">
+                              {l.bannerUrl && (
+                                <img
+                                  src={l.bannerUrl}
+                                  alt={l.name}
+                                  className="w-8 h-8 rounded object-cover"
+                                />
+                              )}
+                              <Link
+                                to={`/lounge/${encodeURIComponent(l.name)}`}
+                                className="text-sm text-sky-300 hover:underline"
+                              >
+                                {l.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    {(hasPrev || hasNext) && (
+                      <div className="flex justify-between pt-1">
+                        <button
+                          onClick={() => performSearch(searchPage - 1)}
+                          disabled={!hasPrev || searchLoading}
+                          className="px-3 py-1 rounded bg-gray-700 disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => performSearch(searchPage + 1)}
+                          disabled={!hasNext || searchLoading}
+                          className="px-3 py-1 rounded bg-gray-700 disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  !searchLoading && <p className="text-sm text-gray-300">No results found</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Space between the sticky search and posts */}
+        <div className="h-4" />
+
+        {/* Feed list */}
         <div className="w-full max-w-3xl space-y-4">
           {loading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <PostSkeleton key={i} />
-              ))
+            ? Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
             : (
-                <>
-                  {posts.map((post) => (
-                    <div
-                      key={post.id}
-                      className=" animate-fadeIn cursor-pointer"
-                      onClick={() => navigate(`/posts/${post.id}`)}
-                    >
-                      <PostCard
-                        {...post}
-                        onDeleted={(id) =>
-                          setPosts((ps) => ps.filter((p) => p.id !== id))
-                        }
-                      />
-                    </div>
-                  ))}
-                  <div ref={sentinelRef} />
-                  {isFetchingNext && (
-                    <div className="py-4 text-center text-sm text-gray-500">
-                      Loading more...
-                    </div>
-                  )}
-                </>
-              )}
+              <>
+                {posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="animate-fadeIn cursor-pointer"
+                    onClick={() => navigate(`/posts/${post.id}`)}
+                  >
+                    <PostCard
+                      {...post}
+                      onDeleted={(id) => setPosts((ps) => ps.filter((p) => p.id !== id))}
+                    />
+                  </div>
+                ))}
+                <div ref={sentinelRef} />
+                {isFetchingNext && (
+                  <div className="py-4 text-center text-sm text-gray-500">
+                    Loading more...
+                  </div>
+                )}
+              </>
+            )}
         </div>
       </div>
     </div>
@@ -255,5 +256,3 @@ const Feed: React.FC = () => {
 };
 
 export default Feed;
-
-

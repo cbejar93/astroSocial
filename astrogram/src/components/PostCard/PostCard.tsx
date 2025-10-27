@@ -1,15 +1,30 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
-import { sharePost, repostPost, apiFetch, savePost as savePostRequest, unsavePost } from '../../lib/api';
-import { useAuth } from "../../hooks/useAuth";
-import { useAnalytics } from '../../hooks/useAnalytics';
+import { Eye } from "lucide-react";
 
+import {
+  Star,
+  MessageCircle,
+  Share2,
+  Repeat2,
+  Bookmark,
+  MoreVertical,
+  Trash2,
+} from "lucide-react";
+import {
+  sharePost,
+  repostPost,
+  apiFetch,
+  savePost as savePostRequest,
+  unsavePost,
+} from "../../lib/api";
+import { useAuth } from "../../hooks/useAuth";
+import { useAnalytics } from "../../hooks/useAnalytics";
 
 export interface PostCardProps {
-  id: string
-  authorId: string
+  id: string;
+  authorId: string;
   username: string;
   title?: string;
   imageUrl?: string;
@@ -25,6 +40,8 @@ export interface PostCardProps {
   repostedBy?: string;
   savedByMe?: boolean;
   saves?: number;
+  /** UI-only: total views for the post (for the single meta item) */
+  views?: number;
   onDeleted?: (id: string) => void;
 }
 
@@ -45,9 +62,9 @@ const PostCard: React.FC<PostCardProps> = ({
   savedByMe,
   saves = 0,
   authorId,
-  onDeleted
+  views = 0,
+  onDeleted,
 }) => {
-
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
   const navigate = useNavigate();
@@ -61,6 +78,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const [repostCount, setRepostCount] = useState(reposts);
   const [saved, setSaved] = useState(Boolean(savedByMe));
   const [saveCount, setSaveCount] = useState(saves);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const encodedUsername = encodeURIComponent(username);
@@ -74,7 +92,6 @@ const PostCard: React.FC<PostCardProps> = ({
       setSaved(false);
       return;
     }
-
     setLiked(Boolean(likedByMe));
     setReposted(Boolean(repostedByMe));
     setSaved(Boolean(savedByMe));
@@ -83,14 +100,14 @@ const PostCard: React.FC<PostCardProps> = ({
   const handleLike = async () => {
     if (!user) return;
     try {
-      const res = await apiFetch(`/posts/${id}/like`, { method: 'POST' });
-      if (!res.ok) throw new Error('Like toggle failed');
+      const res = await apiFetch(`/posts/${id}/like`, { method: "POST" });
+      if (!res.ok) throw new Error("Like toggle failed");
       const { liked: nextLiked, count } = await res.json();
       setLiked(nextLiked);
       setStarCount(count);
       void trackEvent({
-        type: nextLiked ? 'post_like' : 'post_unlike',
-        targetType: 'post',
+        type: nextLiked ? "post_like" : "post_unlike",
+        targetType: "post",
         targetId: id,
         value: count,
       });
@@ -106,8 +123,8 @@ const PostCard: React.FC<PostCardProps> = ({
       const { count } = await sharePost(id);
       setShareCount(count);
       void trackEvent({
-        type: 'post_share',
-        targetType: 'post',
+        type: "post_share",
+        targetType: "post",
         targetId: id,
         value: count,
       });
@@ -126,7 +143,6 @@ const PostCard: React.FC<PostCardProps> = ({
         console.warn("User cancelled share or error:", err);
       }
     } else {
-      // fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(postUrl);
         alert("Link copied to clipboard!");
@@ -137,16 +153,14 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const handleRepost = async () => {
-    if (!user) return;
-    if (reposted) return;
+    if (!user || reposted) return;
     try {
       const { count } = await repostPost(id);
       setRepostCount(count);
       setReposted(true);
-      setShareCount((prev) => prev); // share count unaffected by repost
       void trackEvent({
-        type: 'post_repost',
-        targetType: 'post',
+        type: "post_repost",
+        targetType: "post",
         targetId: id,
         value: count,
       });
@@ -157,15 +171,14 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const toggleSave = async () => {
     if (!user) return;
-
     try {
       if (saved) {
         const { saved: isSaved, count } = await unsavePost(id);
         setSaved(isSaved);
         setSaveCount(count);
         void trackEvent({
-          type: 'post_unsave',
-          targetType: 'post',
+          type: "post_unsave",
+          targetType: "post",
           targetId: id,
           value: count,
         });
@@ -174,14 +187,14 @@ const PostCard: React.FC<PostCardProps> = ({
         setSaved(isSaved);
         setSaveCount(count);
         void trackEvent({
-          type: 'post_save',
-          targetType: 'post',
+          type: "post_save",
+          targetType: "post",
           targetId: id,
           value: count,
         });
       }
     } catch (err) {
-      console.error('Failed to toggle save:', err);
+      console.error("Failed to toggle save:", err);
     }
   };
 
@@ -200,153 +213,204 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const handleDelete = async () => {
     setMenuOpen(false);
-
     try {
       const res = await apiFetch(`/posts/delete/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || 'Failed to delete post');
+        throw new Error(body.message || "Failed to delete post");
       }
-
-      // inform parent so it can remove this post from the UI
       onDeleted?.(id);
     } catch (err: unknown) {
-      console.error('Delete post error:', err);
-      // you could show a toast here
+      console.error("Delete post error:", err);
     }
   };
 
+  // simple UI formatter like "241K"
+  const formatCount = (n: number) =>
+    n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
+    : n >= 1_000 ? `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`
+    : `${n}`;
+
   return (
     <div className="w-full py-0 sm:py-2 sm:px-2">
-      <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden border border-gray-300 dark:border-gray-700 w-full sm:max-w-2xl sm:mx-auto">
+      {/* Card */}
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0A0F1F] via-[#0F1B2E] to-[#0A0F1C] text-white shadow-[0_20px_45px_rgba(2,6,23,0.45)]">
+        {/* star field */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[.12]"
+          style={{
+            backgroundImage: `
+              radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.9) 1px, transparent 1px),
+              radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,.7) 1px, transparent 1px),
+              radial-gradient(1px 1px at 70% 30%, rgba(255,255,255,.8) 1px, transparent 1px),
+              radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,.6) 1px, transparent 1px)
+            `,
+            backgroundSize:
+              "120px 120px, 160px 160px, 140px 140px, 180px 180px",
+          }}
+        />
+
+        {/* 3-dot menu — fixed anchor */}
+        <div className="absolute right-2 top-2 z-20" onClick={stop}>
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              className="rounded-lg p-2 text-slate-300/90 hover:text-white hover:bg-white/10 transition"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label="Post options"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-[calc(100%+0.5rem)] w-44 overflow-hidden rounded-xl border border-white/10 bg-[#0E1626]/95 backdrop-blur-md shadow-2xl"
+              >
+                <button
+                  role="menuitem"
+                  onClick={toggleSave}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>Save({saveCount})</span>
+                </button>
+
+                <div className="mx-2 my-1 h-px bg-white/10" />
+
+                <button
+                  role="menuitem"
+                  onClick={handleShare}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Share({shareCount})</span>
+                </button>
+
+                {isOwn && (
+                  <>
+                    <div className="mx-2 my-1 h-px bg-white/10" />
+                    <button
+                      role="menuitem"
+                      onClick={handleDelete}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-white/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Reposted badge */}
         {repostedBy && (
-          <div className="px-4 sm:px-6 pt-4 text-xs text-gray-500 dark:text-gray-400">
+          <div className="px-4 sm:px-6 pt-4 text-xs text-slate-300/80">
             Reposted by {repostedBy}
           </div>
         )}
 
         {/* Header */}
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div className="relative z-[1] px-4 sm:px-6 pt-4 pb-3 flex justify-between items-start">
           <Link
             to={`/users/${encodedUsername}/posts`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 hover:underline"
+            className="flex items-center gap-3"
           >
             <img
-              src={avatarUrl ?? '/defaultPfp.png'}
+              src={avatarUrl ?? "/defaultPfp.png"}
               alt={`${username}'s profile`}
-              className="w-8 h-8 rounded-full object-cover"
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-white/15"
             />
-            <span className="font-semibold text-teal-400 text-sm">@{username}</span>
+            <div className="leading-tight">
+              <div className="font-semibold text-white/95">@{username}</div>
+              {timestamp && (
+                <div className="text-[11px] text-slate-400">
+                  {formatDistanceToNow(new Date(timestamp), {
+                    addSuffix: true,
+                  })}
+                </div>
+              )}
+            </div>
           </Link>
-          <div className="flex items-center gap-2">
-            {timestamp && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
-              </span>
-            )}
-            {isOwn && (
-              <div ref={menuRef} className="relative" onClick={stop}>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((o) => !o)}
-                  className="p-1 text-gray-400 hover:text-gray-600"
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
-                    <button
-                      onClick={handleDelete}
-                      className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                    >
-                      Delete Post
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
         </div>
 
-        {/* Image */}
+        {/* Caption */}
+        <div className="relative z-[1] px-4 sm:px-6 pb-3 text-[15px] text-slate-200/95">
+          {caption}
+        </div>
+
+        {/* Media */}
         {imageUrl && (
-          <div className="w-full aspect-video overflow-hidden">
-            <img
-              src={imageUrl}
-              alt={`Post by ${username}: ${caption}`}
-              className="object-cover w-full h-full"
-              loading="lazy"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
-              }}
-            />
+          <div className="relative z-[1] w-full px-4 sm:px-6 pb-2">
+            <div className="overflow-hidden rounded-2xl border border-white/10">
+              <div className="aspect-video">
+                <img
+                  src={imageUrl}
+                  alt={`Post by ${username}: ${caption}`}
+                  className="object-cover w-full h-full"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "/fallback.jpg.png";
+                  }}
+                />
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Caption */}
-        <div className="px-4 sm:px-6 py-4 text-sm">{caption}</div>
+        {/* Meta row — views with eye icon */}
+<div className="relative z-[1] px-4 sm:px-6 py-2">
+  <div className="flex items-center gap-2 text-[13px] text-slate-300" aria-label="Views">
+    <Eye className="w-4 h-4 opacity-90" aria-hidden="true" />
+    <span className="tabular-nums">{formatCount(views)}</span>
+  </div>
+</div>
 
-        {/* Action Buttons */}
-        <div onClick={stop} className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex justify-evenly items-center text-gray-400 dark:text-gray-300 text-sm">
 
-            {/* Like */}
-            <button
-              type="button"
-              onClick={handleLike}
-              className="btn-unstyled btn-action text-white hover:text-gray-300"
-            >
-              <Star className="w-5 h-5" fill={user && liked ? "currentColor" : "none"} />
-              <span className="ml-1">{starCount}</span>
-            </button>
+        {/* Action buttons */}
+        <div onClick={stop} className="relative z-[1] px-3 sm:px-6 pb-5 pt-2">
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    {/* Like */}
+    <button
+      type="button"
+      onClick={handleLike}
+      className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
+    >
+      <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
+      <span className="font-medium leading-none">Like({starCount})</span>
+    </button>
 
-            {/* Repost */}
-            <button
-              type="button"
-              onClick={handleRepost}
-              className="btn-unstyled btn-action hover:text-green-400"
-            >
-              <Repeat2 className="w-5 h-5" />
-              <span>{repostCount}</span>
-            </button>
+    {/* Retweet */}
+    <button
+      type="button"
+      onClick={handleRepost}
+      className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
+    >
+      <Repeat2 className="w-4 h-4" />
+      <span className="font-medium leading-none">Retweet({repostCount})</span>
+    </button>
 
-            {/* Comment */}
-            <button
-              type="button"
-              onClick={() => navigate(`/posts/${id}`)}
-              className="btn-unstyled btn-action hover:text-violet-400"
-            >
-              <MessageCircle className="w-5 h-5" />
-              <span>{commentCount}</span>
-            </button>
+    {/* Comment */}
+    <button
+      type="button"
+      onClick={() => navigate(`/posts/${id}`)}
+      className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
+    >
+      <MessageCircle className="w-4 h-4" />
+      <span className="font-medium leading-none">Comment({commentCount})</span>
+    </button>
+  </div>
+</div>
 
-            {/* Save */}
-            <button
-              type="button"
-              onClick={toggleSave}
-              className="btn-unstyled btn-action hover:text-blue-400"
-            >
-              <Bookmark className="w-5 h-5" fill={user && saved ? "currentColor" : "none"} />
-              <span>{saveCount}</span>
-            </button>
-
-            {/* Share */}
-            <button
-              type="button"
-              onClick={handleShare}
-              className="btn-unstyled btn-action hover:text-violet-400"
-            >
-              <Share2 className="w-5 h-5" />
-              <span>{shareCount}</span>
-            </button>
-
-          </div>
-        </div>
       </div>
     </div>
   );
