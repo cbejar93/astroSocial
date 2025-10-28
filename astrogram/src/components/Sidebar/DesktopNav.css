@@ -53,3 +53,25 @@
 .desktop-nav__link--active{border-radius:.5rem}
 .desktop-nav__sublink--active{border-radius:.45rem}
 .desktop-nav__subsublink--active{border-radius:.4rem}
+/* Kill underlines on every link state inside the sidebar */
+.desktop-nav a,
+.desktop-nav a:link,
+.desktop-nav a:visited,
+.desktop-nav a:hover,
+.desktop-nav a:focus,
+.desktop-nav a:active {
+  text-decoration: none !important;
+}
+
+.desktop-nav__sublist { border-left: 0; }
+.desktop-nav__brand-link { text-decoration: none !important; }
+.desktop-nav__group-link{
+  display:inline-flex;
+  align-items:center;
+  gap:1rem;
+  color:inherit;
+  text-decoration:none;
+  white-space:nowrap;
+}
+
+.desktop-nav__group .desktop-nav__icon{ margin-right:0; }

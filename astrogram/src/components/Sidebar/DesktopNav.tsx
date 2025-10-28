@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import { NavLink, useLocation } from "react-router-dom";
 import logoUrl from "../../../public/astrolounge.svg";
 import {
@@ -54,8 +55,6 @@ const DesktopNav: React.FC = () => {
   );
   const [openLoungeId, setOpenLoungeId] = useState<string | null>(null);
   const [loungesList, setLoungesList] = useState<LoungeInfo[]>([]);
-
-  // FIX: single source of truth for collapsed state (no top-level hook)
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -84,7 +83,7 @@ const DesktopNav: React.FC = () => {
         width: collapsed ? "4.25rem" : "16rem",
         height: "92vh",
         transition: "width .25s ease",
-        zIndex: 50, // ensure above Feed sticky header (z-30)
+        zIndex: 100,
       }}
       aria-label="Primary"
     >
@@ -100,15 +99,22 @@ const DesktopNav: React.FC = () => {
         </NavLink>
 
         <button
-  type="button"
-  className="desktop-nav__collapse-inline"
-  aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-  title={collapsed ? "Expand" : "Collapse"}
-  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCollapsed(p => !p); }}
->
-  {collapsed ? <ChevronRight className="desktop-nav__collapse-icon" /> : <ChevronLeft className="desktop-nav__collapse-icon" />}
-</button>
-
+          type="button"
+          className="desktop-nav__collapse-inline"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand" : "Collapse"}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setCollapsed((p) => !p);
+          }}
+        >
+          {collapsed ? (
+            <ChevronRight className="desktop-nav__collapse-icon" />
+          ) : (
+            <ChevronLeft className="desktop-nav__collapse-icon" />
+          )}
+        </button>
       </div>
 
       <div id="desktop-nav-scroll" className="desktop-nav__scroll">
@@ -119,6 +125,26 @@ const DesktopNav: React.FC = () => {
 
           if (label === "Lounges") {
             const groupActive = isActive;
+
+            if (collapsed) {
+              return (
+                <NavLink
+                  key="lounges-collapsed"
+                  to="/lounge"
+                  className={({ isActive: a }) =>
+                    ["desktop-nav__link", a || groupActive ? "desktop-nav__link--active" : ""]
+                      .filter(Boolean)
+                      .join(" ")
+                  }
+                  aria-label="Lounges"
+                  title="Lounges"
+                >
+                  <Icon className="desktop-nav__icon" />
+                  <span className="desktop-nav__label">Lounges</span>
+                </NavLink>
+              );
+            }
+
             return (
               <div key="lounges-group" title="Lounges">
                 <div
@@ -128,14 +154,14 @@ const DesktopNav: React.FC = () => {
                     "desktop-nav__group",
                   ].join(" ")}
                 >
-                  <Icon className="desktop-nav__icon" />
                   <NavLink
                     to="/lounge"
-                    className="desktop-nav__label desktop-nav__group-label"
+                    className="desktop-nav__group-link"
                     aria-label="Lounges"
                     title="Lounges"
                   >
-                    Lounges
+                    <Icon className="desktop-nav__icon" />
+                    <span className="desktop-nav__label">Lounges</span>
                   </NavLink>
 
                   <button
@@ -147,7 +173,7 @@ const DesktopNav: React.FC = () => {
                     onClick={() => setLoungesOpen((o) => !o)}
                   >
                     {loungesOpen ? (
-                      <ChevronUp className="desktop-nav__chevron" />
+                      <ChevronDown className="desktop-nav__chevron" />
                     ) : (
                       <ChevronDown className="desktop-nav__chevron" />
                     )}

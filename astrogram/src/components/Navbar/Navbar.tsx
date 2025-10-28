@@ -1,3 +1,4 @@
+// src/components/Navbar/Navbar.tsx
 import { useEffect, useRef, useState } from "react";
 import { Bell, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -65,20 +66,17 @@ const AuthModal: React.FC<{
 
       {/* Card */}
       <div className="relative z-[101] w-[92%] max-w-md rounded-3xl border border-white/10 bg-white/5 shadow-[0_20px_80px_rgba(0,0,0,0.45)] p-6 sm:p-8 backdrop-blur-2xl">
-        {/* Back inside the card */}
         <button
           type="button"
           onClick={() => {
-            onClose();          // close the modal immediately
-            navigate("/");      // then go to Home
+            onClose();
+            navigate("/");
           }}
           className="absolute top-3 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
           aria-label="Close"
         >
           <X className="h-5 w-5" />
         </button>
-
-
 
         <div className="mt-4 sm:mt-2 text-white">
           <h1 id="auth-title" className="text-3xl font-extrabold tracking-tight">
@@ -145,15 +143,51 @@ const Navbar = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
 
-  // Close modal on route changes
-  useEffect(() => { setAuthOpen(false); }, [location.pathname]);
+  // Account popover state
+  const [accountOpen, setAccountOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const popRef = useRef<HTMLDivElement | null>(null);
+
+  // Close modal & popover on route changes
+  useEffect(() => {
+    setAuthOpen(false);
+    setAccountOpen(false);
+  }, [location.pathname]);
+
+  // Click outside for account popover
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t)) return;
+      if (popRef.current?.contains(t)) return;
+      setAccountOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAccountOpen(false);
+    };
+    document.addEventListener("click", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [accountOpen]);
+
+  // derive email robustly
+  const email =
+    (user as any)?.email ||
+    (user as any)?.profile?.email ||
+    (user as any)?.emails?.[0]?.email ||
+    (user as any)?.emails?.[0]?.value ||
+    "";
 
   return (
     <>
       <nav className="fixed top-0 left-0 z-[80] w-full bg-transparent text-white">
         <div className="flex items-center justify-end px-4 py-3 sm:px-6 sm:py-4">
           {user ? (
-            <div className="flex items-center gap-3 sm:gap-5">
+            <div className="relative flex items-center gap-3 sm:gap-5">
               <Link to="/notifications" className="btn-unstyled" aria-label="Notifications">
                 <div className="relative">
                   <Bell className="w-6 h-6" />
@@ -164,34 +198,72 @@ const Navbar = () => {
                   )}
                 </div>
               </Link>
-              <Link to="/profile" className="btn-unstyled" aria-label="Account">
+
+              {/* Avatar button toggles popover (no navigation) */}
+              <button
+                ref={btnRef}
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={accountOpen}
+                aria-controls="account-popover"
+                onClick={() => setAccountOpen((o) => !o)}
+                className="btn-unstyled"
+                title="Account"
+              >
                 <img
                   src={user?.avatarUrl ?? "/defaultPfp.png"}
                   alt="Your avatar"
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-cover ring-1 ring-white/10"
                 />
-              </Link>
+              </button>
+
+              {/* Popover */}
+              {accountOpen && (
+                <div
+                  ref={popRef}
+                  id="account-popover"
+                  role="dialog"
+                  aria-label="Account info"
+                  className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-2xl border border-white/10 bg-[#0E1626]/95 text-white shadow-[0_12px_40px_rgba(2,6,23,0.5)] p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user?.avatarUrl ?? "/defaultPfp.png"}
+                      alt="avatar"
+                      className="w-10 h-10 rounded-full object-cover ring-1 ring-white/10"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold truncate">
+                        {(user as any)?.name || (user as any)?.fullName || user.username || "User"}
+                      </div>
+                      <div className="text-xs text-sky-300 truncate">@{user.username}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 text-xs text-gray-300">
+                    <div className="text-[11px] text-gray-400 mb-0.5">Email</div>
+                    <div className="break-all">{email || "Not set"}</div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <button
               type="button"
-              onClick={() => { setAuthMode("signup"); setAuthOpen(true); }}
+              onClick={() => {
+                setAuthMode("signup");
+                setAuthOpen(true);
+              }}
               className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70 sm:px-4 sm:py-2 sm:text-sm"
               aria-label="Sign up or Log in"
             >
               Sign up/Login
             </button>
-
           )}
         </div>
       </nav>
 
-      <AuthModal
-        open={authOpen}
-        mode={authMode}
-        setMode={setAuthMode}
-        onClose={() => setAuthOpen(false)}
-      />
+      <AuthModal open={authOpen} mode={authMode} setMode={setAuthMode} onClose={() => setAuthOpen(false)} />
     </>
   );
 };

@@ -28,6 +28,7 @@ import SearchPage from './pages/SearchPage'
 import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CommunityGuidelinesPage from './pages/CommunityGuidelinesPage';
+import ProfileOverviewPage from './pages/ProfileOverviewPage';
 
 
 
@@ -81,8 +82,9 @@ const App: React.FC = () => {
                 <Route path="/lounge/:loungeName/post" element={<LoungePostPage />} />
                 <Route path="/upload" element={<UploadForm />} />
                 <Route path="/completeProfile" element={<CompleteProfilePage />} />
-                <Route path="/profile" element={<Navigate to="/profile/posts" replace />} />
+                <Route path="/profile" element={<ProfileOverviewPage />} />
                 <Route path="/profile/:tab" element={<ProfilePage />} />
+
                 <Route element={<RequireAdmin />}>
                   <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
                   <Route path="/admin/:tab" element={<AdminPage />} />
