@@ -1,72 +1,95 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Feed from './pages/Feed';
-import UploadForm from './components/UploadForm/UploadForm';
-import Navbar from './components/Navbar/Navbar';
-import BottomNavbar from './components/BottomNavbar/BottomNavbar';
-import DesktopNav from './components/Sidebar/DesktopNav';
-import WeatherPage from './pages/WeatherPage';
-import { useWeatherService } from './hooks/useWeatherService';
+// src/App.tsx
+import { Routes, Route, Navigate, useLocation, type Location } from "react-router-dom";
 import { useEffect } from "react";
-import SignupPage from './pages/SignupPage';
-import AuthSuccessPage from './pages/AuthSuccessPage';
-import CompleteProfilePage from './pages/CompleteProfilePage'
+
+import Feed from "./pages/Feed";
+import UploadForm from "./components/UploadForm/UploadForm";
+import Navbar from "./components/Navbar/Navbar";
+import BottomNavbar from "./components/BottomNavbar/BottomNavbar";
+import DesktopNav from "./components/Sidebar/DesktopNav";
+import WeatherPage from "./pages/WeatherPage";
+import { useWeatherService } from "./hooks/useWeatherService";
+
+import SignupPage from "./pages/SignupPage";
+import AuthSuccessPage from "./pages/AuthSuccessPage";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import { RequireProfileCompletion } from "./components/auth/RequireProfileCompletion";
-import RequireAdmin from './components/auth/RequireAdmin';
-import PostPage from './pages/PostPage'
-import NotificationsPage from './pages/NotificationsPage'
-import ProfilePage from './pages/ProfilePage'
-import UserPage from './pages/UserPage'
-import LoungePage from './pages/LoungePage'
-import LoungesPage from './pages/LoungesPage'
-import LoungePostPage from './pages/LoungePostPage'
-import LoungePostDetailPage from './pages/LoungePostDetailPage'
-import AdminPage from './pages/AdminPage'
-import SavedPage from './pages/SavedPage'
+import RequireAdmin from "./components/auth/RequireAdmin";
 
-import NotFoundPage from './pages/NotFoundPage'
-import SearchPage from './pages/SearchPage'
-import TermsPage from './pages/TermsPage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import CommunityGuidelinesPage from './pages/CommunityGuidelinesPage';
-import ProfileOverviewPage from './pages/ProfileOverviewPage';
+import PostPage from "./pages/PostPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import ProfilePage from "./pages/ProfilePage";
+import UserPage from "./pages/UserPage";
+import LoungePage from "./pages/LoungePage";
+import LoungesPage from "./pages/LoungesPage";
+import LoungePostPage from "./pages/LoungePostPage";
+import LoungePostDetailPage from "./pages/LoungePostDetailPage";
+import AdminPage from "./pages/AdminPage";
+import SavedPage from "./pages/SavedPage";
 
+import NotFoundPage from "./pages/NotFoundPage";
+import SearchPage from "./pages/SearchPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import CommunityGuidelinesPage from "./pages/CommunityGuidelinesPage";
+import ProfileOverviewPage from "./pages/ProfileOverviewPage";
+import SettingsPage from "./pages/SettingsPage";
 
-
-
-
+import PageModal from "./components/Modal/PageModal";
 
 const App: React.FC = () => {
-
   const { weather, loading, error, unit, setUnit } = useWeatherService();
 
+  const location = useLocation();
+  const state = location.state as { modal?: boolean; backgroundLocation?: Location } | undefined;
 
+  // Detect if we are on /settings/* and which modal slug
+  const modalSlug =
+    location.pathname.startsWith("/settings/") ? location.pathname.split("/")[2] : undefined;
+  const isSettingsModal =
+    modalSlug && ["terms", "privacy", "community-guidelines"].includes(modalSlug);
 
   useEffect(() => {
     if (weather) {
-      // You could now call your NestJS backend with this data
+      // optional: send to backend
     }
   }, [weather]);
 
-
   return (
+    <div className="flex min-h-screen flex-col text-white overflow-x-hidden">
+      {/* Global background: fixes “black box” at the bottom */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        {/* base color */}
+        <div className="absolute inset-0 bg-gray-900" />
+        {/* soft gradients pinned to viewport so they always cover screen */}
+        <div className="absolute inset-0 opacity-90 bg-[radial-gradient(1000px_600px_at_20%_-10%,rgba(90,162,255,0.14),transparent),radial-gradient(900px_560px_at_80%_110%,rgba(240,75,179,0.12),transparent)]" />
+      </div>
 
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white">
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-grow bg-gray-900">
-        <div className="mx-auto w-full max-w-7xl px-6 lg:px-8 pt-6 pb-24 md:grid md:grid-cols-[18rem,minmax(0,1fr),16rem] md:gap-8">
+      <main className="flex-1">
+        <div className="mx-auto w-full max-w-7xl px-6 lg:px-8 pt-6 pb-20 md:grid md:grid-cols-[18rem,minmax(0,1fr),16rem] md:gap-8">
           <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
             <DesktopNav />
           </aside>
+
           <section className="w-full min-w-0">
-            <Routes>
+            {/* Base routes (render behind modal if one is open via route state) */}
+            <Routes
+              location={
+                state?.modal && state.backgroundLocation ? state.backgroundLocation : location
+              }
+            >
+              {/* Public legal pages for direct linking */}
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPolicyPage />} />
               <Route path="/community-guidelines" element={<CommunityGuidelinesPage />} />
+
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/login" element={<SignupPage />} />
               <Route path="/auth/success" element={<AuthSuccessPage />} />
+
               <Route element={<RequireProfileCompletion />}>
                 <Route path="/" element={<Feed />} />
                 {/* single-post detail view */}
@@ -85,10 +108,15 @@ const App: React.FC = () => {
                 <Route path="/profile" element={<ProfileOverviewPage />} />
                 <Route path="/profile/:tab" element={<ProfilePage />} />
 
+                {/* Settings (plus slug so /settings/terms shows the page behind the modal) */}
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/settings/:slug" element={<SettingsPage />} />
+
                 <Route element={<RequireAdmin />}>
                   <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
                   <Route path="/admin/:tab" element={<AdminPage />} />
                 </Route>
+
                 <Route
                   path="/weather"
                   element={
@@ -104,10 +132,39 @@ const App: React.FC = () => {
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
             </Routes>
+
+            {/* Modal overlays for settings legal pages (protected paths) */}
+            {isSettingsModal && (
+              <Routes>
+                <Route
+                  path="/settings/terms"
+                  element={
+                    <PageModal title="Terms of Service" maxWidthClass="max-w-4xl">
+                      <TermsPage />
+                    </PageModal>
+                  }
+                />
+                <Route
+                  path="/settings/privacy"
+                  element={
+                    <PageModal title="Privacy Policy" maxWidthClass="max-w-4xl">
+                      <PrivacyPolicyPage />
+                    </PageModal>
+                  }
+                />
+                <Route
+                  path="/settings/community-guidelines"
+                  element={
+                    <PageModal title="Community Guidelines" maxWidthClass="max-w-4xl">
+                      <CommunityGuidelinesPage />
+                    </PageModal>
+                  }
+                />
+              </Routes>
+            )}
           </section>
-          <aside className="hidden lg:block lg:w-64" aria-hidden="true">
-            {/* Right sidebar placeholder */}
-          </aside>
+
+          <aside className="hidden lg:block lg:w-64" aria-hidden="true" />
         </div>
       </main>
 

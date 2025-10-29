@@ -11,6 +11,8 @@
 /* index.css (or main.css) */
 
 :root {
+  height: 100%;
+  /* background-color: #111827; */
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -238,4 +240,8 @@ main a:hover,
     color: #1a1a1a;
     background-color: #ffffff;
   }
+}
+html, body, #root {
+  height: 100%;
+  background-color: #111827; /* Tailwind gray-900 */
 }

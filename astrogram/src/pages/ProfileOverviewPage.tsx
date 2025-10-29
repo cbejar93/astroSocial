@@ -48,7 +48,6 @@ const FacebookLogo: React.FC<{ className?: string }> = ({ className }) => (
 const TikTokLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
     <rect x="2" y="2" width="20" height="20" rx="5" fill="#000" />
-    {/* simplified note w/ accent strokes */}
     <path d="M12.5 6v7.2a3.2 3.2 0 1 1-2.6-3.1v2.1a1.2 1.2 0 1 0 1.3 1.2V6h1.3Z" fill="#fff" />
     <path d="M14.8 7.3c.8 1.4 2.1 2.2 3.5 2.4v1.6c-1.6-.1-3-.8-4.3-2V7.3Z" fill="#fff" />
   </svg>
@@ -352,7 +351,7 @@ const ProfileOverviewPage: React.FC = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [avatarBust, setAvatarBust] = useState<number>(0);
-  const [showAdvanced, setShowAdvanced] = useState(false); // subtle "More actions" section
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const menuBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -370,11 +369,13 @@ const ProfileOverviewPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="relative w-full flex justify-center py-20">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(1000px_600px_at_20%_-10%,rgba(168,85,247,0.18),transparent),radial-gradient(800px_500px_at_80%_110%,rgba(59,130,246,0.12),transparent)]" />
-        <div className="rounded-2xl border border-white/10 bg-[#0E1626]/80 backdrop-blur-md px-6 py-10 text-center shadow-[0_8px_28px_rgba(2,6,23,0.45)]">
-          <h2 className="text-xl font-semibold">You’re signed out</h2>
-          <p className="mt-2 text-sm text-gray-300">Sign in to view your profile.</p>
+      <div className="fixed inset-0 overflow-hidden">
+        <div className="grid h-full w-full place-items-center px-4">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(1000px_600px_at_20%_-10%,rgba(168,85,247,0.18),transparent),radial-gradient(800px_500px_at_80%_110%,rgba(59,130,246,0.12),transparent)]" />
+          <div className="rounded-2xl border border-white/10 bg-[#0E1626]/80 backdrop-blur-md px-6 py-10 text-center shadow-[0_8px_28px_rgba(2,6,23,0.45)]">
+            <h2 className="text-xl font-semibold">You’re signed out</h2>
+            <p className="mt-2 text-sm text-gray-300">Sign in to view your profile.</p>
+          </div>
         </div>
       </div>
     );
@@ -448,12 +449,19 @@ const ProfileOverviewPage: React.FC = () => {
   const tracking = user.following?.length ?? 0;
 
   return (
-    <div className="w-full pb-12">
-      {/* Hero */}
-      <div className="relative">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(120%_80%_at_15%_-10%,rgba(240,75,179,0.22),transparent),radial-gradient(120%_80%_at_85%_110%,rgba(90,162,255,0.18),transparent)]" />
-        <div className="mx-auto w-full max-w-6xl px-4 pt-10">
-          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] overflow-hidden">
+    // Full viewport, no vertical page scroll
+    <div className="fixed inset-0 overflow-hidden">
+      {/* Background glows */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-1/2 top-[-12%] h-[36vh] w-[64vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/15 via-fuchsia-500/10 to-emerald-500/15 blur-3xl" />
+        <div className="absolute left-[-10%] bottom-[-20%] h-[30vh] w-[38vw] rounded-[999px] bg-gradient-to-tr from-emerald-500/10 via-sky-500/10 to-transparent blur-3xl" />
+      </div>
+
+      {/* Center the content card; it scrolls internally if needed */}
+      <div className="grid h-full w-full place-items-center px-4">
+        <div className="w-full max-w-6xl max-h-[92vh] overflow-y-auto overscroll-contain rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+          {/* Hero */}
+          <div className="relative">
             <div className="h-28 sm:h-36 bg-[radial-gradient(120%_80%_at_20%_0%,rgba(240,75,179,0.35),transparent),radial-gradient(120%_80%_at_90%_10%,rgba(90,162,255,0.35),transparent)]" />
             <div className="px-5 sm:px-7 pb-6 -mt-10">
               <div className="flex items-center gap-4 sm:gap-6">
@@ -479,7 +487,7 @@ const ProfileOverviewPage: React.FC = () => {
                   </button>
 
                   {avatarMenuOpen && (
-                    <div className="absolute top-24 right-0 w-44 rounded-lg border border-white/10 bg-gray-900/95 shadow-xl overflow-hidden">
+                    <div className="absolute top-24 right-0 w-44 rounded-lg border border-white/10 bg-gray-900/95 shadow-xl overflow-hidden z-10">
                       <button
                         type="button"
                         onClick={handlePickAvatar}
@@ -565,152 +573,154 @@ const ProfileOverviewPage: React.FC = () => {
           </div>
 
           {/* Main grid */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* About / Social */}
-            <div className="space-y-6 lg:col-span-1">
-              <Card title="About you">
-                <div className="p-5">
-                  <p className="text-sm text-gray-300">
-                    Add a short bio or tagline about yourself. Keep it fun and simple.
-                  </p>
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() => setEditOpen(true)}
-                      className="text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
-                    >
-                      Add bio
-                    </button>
-                  </div>
-                </div>
-              </Card>
-
-              <Card title="Social Links">
-                <div className="p-5">
-                  <div className="flex items-center gap-4">
-                    <a
-                      href="#"
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                      title="Instagram"
-                      aria-label="Instagram"
-                    >
-                      <InstagramLogo className="w-6 h-6" />
-                    </a>
-                    <a
-                      href="#"
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                      title="Facebook"
-                      aria-label="Facebook"
-                    >
-                      <FacebookLogo className="w-6 h-6" />
-                    </a>
-                    <a
-                      href="#"
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                      title="TikTok"
-                      aria-label="TikTok"
-                    >
-                      <TikTokLogo className="w-6 h-6" />
-                    </a>
-                    <div className="ml-auto">
+          <div className="px-5 sm:px-7 pb-8">
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* About / Social */}
+              <div className="space-y-6 lg:col-span-1">
+                <Card title="About you">
+                  <div className="p-5">
+                    <p className="text-sm text-gray-300">
+                      Add a short bio or tagline about yourself. Keep it fun and simple.
+                    </p>
+                    <div className="mt-3">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
-                        onClick={() => alert("Hook up fields to save social links if you have them")}
+                        onClick={() => setEditOpen(true)}
+                        className="text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
                       >
-                        Manage Links
-                        <ChevronDown className="w-3.5 h-3.5" />
+                        Add bio
                       </button>
                     </div>
                   </div>
-                </div>
-              </Card>
-            </div>
+                </Card>
 
-            {/* Account + Actions */}
-            <div className="space-y-6 lg:col-span-2">
-              <Card title="Account info" onEdit={() => setEditOpen(true)}>
-                <div className="p-5 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="text-sm text-gray-400">Name</div>
-                    <div className="sm:col-span-2 text-sm text-gray-100">{displayName}</div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="text-sm text-gray-400">Username</div>
-                    <div className="sm:col-span-2 text-sm">
-                      <span className="text-sky-300">@{username}</span>
-                    </div>
-                  </div>
-
-                  {email ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="text-sm text-gray-400">Email</div>
-                      <div className="sm:col-span-2 text-sm text-gray-100 break-all">{email}</div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="text-sm text-gray-400">Email</div>
-                      <div className="sm:col-span-2 text-sm text-gray-400 flex items-center gap-3">
-                        Not set
+                <Card title="Social Links">
+                  <div className="p-5">
+                    <div className="flex items-center gap-4">
+                      <a
+                        href="#"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
+                        title="Instagram"
+                        aria-label="Instagram"
+                      >
+                        <InstagramLogo className="w-6 h-6" />
+                      </a>
+                      <a
+                        href="#"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
+                        title="Facebook"
+                        aria-label="Facebook"
+                      >
+                        <FacebookLogo className="w-6 h-6" />
+                      </a>
+                      <a
+                        href="#"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
+                        title="TikTok"
+                        aria-label="TikTok"
+                      >
+                        <TikTokLogo className="w-6 h-6" />
+                      </a>
+                      <div className="ml-auto">
                         <button
                           type="button"
-                          onClick={() => setEditOpen(true)}
-                          className="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
+                          className="inline-flex items-center gap-1 text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
+                          onClick={() => alert("Hook up fields to save social links if you have them")}
                         >
-                          Add
+                          Manage Links
+                          <ChevronDown className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
-                  )}
-
-                  <div className="pt-3 border-t border-white/10" />
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        logout();
-                        navigate("/");
-                      }}
-                      className="inline-flex items-center gap-2 rounded-lg border border-white/10 text-gray-200 hover:text-white hover:bg-white/10 px-3 py-2 text-sm"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Log Out
-                    </button>
-
-                    {/* Subtle “More actions” discloser */}
-                    <button
-                      type="button"
-                      onClick={() => setShowAdvanced((s) => !s)}
-                      className="text-xs text-gray-400 hover:text-gray-200"
-                      aria-expanded={showAdvanced}
-                    >
-                      More actions
-                      <ChevronDown
-                        className={`ml-1 inline h-4 w-4 transition-transform ${
-                          showAdvanced ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
                   </div>
+                </Card>
+              </div>
 
-                  {/* Very low-emphasis danger area */}
-                  {showAdvanced && (
-                    <div className="mt-3 rounded-lg bg-gray-900/40 ring-1 ring-white/10 p-3">
-                      <p className="text-xs text-gray-400 mb-2">
-                        Deleting your account is permanent. This option is intentionally tucked away.
-                      </p>
+              {/* Account + Actions */}
+              <div className="space-y-6 lg:col-span-2">
+                <Card title="Account info" onEdit={() => setEditOpen(true)}>
+                  <div className="p-5 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="text-sm text-gray-400">Name</div>
+                      <div className="sm:col-span-2 text-sm text-gray-100">{displayName}</div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="text-sm text-gray-400">Username</div>
+                      <div className="sm:col-span-2 text-sm">
+                        <span className="text-sky-300">@{username}</span>
+                      </div>
+                    </div>
+
+                    {email ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="text-sm text-gray-400">Email</div>
+                        <div className="sm:col-span-2 text-sm text-gray-100 break-all">{email}</div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="text-sm text-gray-400">Email</div>
+                        <div className="sm:col-span-2 text-sm text-gray-400 flex items-center gap-3">
+                          Not set
+                          <button
+                            type="button"
+                            onClick={() => setEditOpen(true)}
+                            className="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-3 border-t border-white/10" />
+
+                    <div className="flex flex-wrap items-center gap-3">
                       <button
                         type="button"
-                        onClick={() => setShowConfirm(true)}
-                        className="text-xs text-red-300 hover:text-red-200 underline underline-offset-2"
+                        onClick={() => {
+                          logout();
+                          navigate("/");
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg border border-white/10 text-gray-200 hover:text-white hover:bg-white/10 px-3 py-2 text-sm"
                       >
-                        Delete account
+                        <LogOut className="w-4 h-4" />
+                        Log Out
+                      </button>
+
+                      {/* Subtle “More actions” discloser */}
+                      <button
+                        type="button"
+                        onClick={() => setShowAdvanced((s) => !s)}
+                        className="text-xs text-gray-400 hover:text-gray-200"
+                        aria-expanded={showAdvanced}
+                      >
+                        More actions
+                        <ChevronDown
+                          className={`ml-1 inline h-4 w-4 transition-transform ${
+                            showAdvanced ? "rotate-180" : ""
+                          }`}
+                        />
                       </button>
                     </div>
-                  )}
-                </div>
-              </Card>
+
+                    {/* Low-emphasis danger area */}
+                    {showAdvanced && (
+                      <div className="mt-3 rounded-lg bg-gray-900/40 ring-1 ring-white/10 p-3">
+                        <p className="text-xs text-gray-400 mb-2">
+                          Deleting your account is permanent. This option is intentionally tucked away.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm(true)}
+                          className="text-xs text-red-300 hover:text-red-200 underline underline-offset-2"
+                        >
+                          Delete account
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
