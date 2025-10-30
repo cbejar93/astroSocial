@@ -1,6 +1,6 @@
 // src/pages/SettingsPage.tsx
 import React, { useId, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Moon,
   Minimize2,
@@ -88,15 +88,11 @@ const Switch: React.FC<
           className,
         ].join(" ")}
         style={{
-          // Show gradient ONLY when checked (via :has is not widely supported yet),
-          // so we paint gradient track underneath and mask with an overlay when unchecked:
           backgroundImage: `linear-gradient(90deg, ${grad.from}, ${grad.to})`,
         }}
       >
         <input id={switchId} type="checkbox" className="sr-only peer" {...props} />
-        {/* Unchecked dimmer */}
         <span className="absolute inset-0 rounded-full bg-gray-700 peer-checked:bg-transparent transition-colors" />
-        {/* Thumb */}
         <span
           className={[
             "absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white",
@@ -155,8 +151,6 @@ const TileLink: React.FC<
 /* ------------------------------- Page ---------------------------------- */
 
 const SettingsPage: React.FC = () => {
-  const location = useLocation();
-
   const [darkMode, setDarkMode] = useState(true);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [compactUI, setCompactUI] = useState(false);
@@ -165,11 +159,11 @@ const SettingsPage: React.FC = () => {
   const grad = ACCENTS[accent];
 
   return (
-    <div className="w-full lg:pl-64">
-      {/* Centered content only; no full-screen overlays */}
-      <div className="mx-auto flex w-full justify-center py-8">
-        <div className="w-full max-w-4xl px-0 sm:px-4 text-gray-200 space-y-6">
-          {/* Header with subtle internal aurora */}
+    <div className="w-full">
+      {/* Center horizontally */}
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
+        <div className="text-gray-200 space-y-6">
+          {/* Header */}
           <AuroraBorder>
             <div className="px-5 py-5">
               <div className="flex items-center justify-between">
@@ -285,30 +279,19 @@ const SettingsPage: React.FC = () => {
           {/* Support & About */}
           <Card title="Support & About">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <TileLink
-                to="/settings/privacy"
-                icon={<FileText className="w-4 h-4" />}
-              >
+              <TileLink to="/settings/privacy" icon={<FileText className="w-4 h-4" />}>
                 Privacy Policy
               </TileLink>
-              <TileLink
-                to="/settings/terms"
-                icon={<BookText className="w-4 h-4" />}
-              >
+              <TileLink to="/settings/terms" icon={<BookText className="w-4 h-4" />}>
                 Terms of Service
               </TileLink>
-              <TileLink
-                to="/settings/community-guidelines"
-                icon={<FileText className="w-4 h-4" />}
-              >
+              <TileLink to="/settings/community-guidelines" icon={<FileText className="w-4 h-4" />}>
                 Community Guidelines
               </TileLink>
               <TileLink href="mailto:support@example.com" icon={<HelpCircle className="w-4 h-4" />}>
                 Contact Support
               </TileLink>
             </div>
-
-            {/* Subtle helper text */}
             <p className="mt-3 text-[11px] text-gray-400">
               Legal pages open in a modal so you don’t lose your place.
             </p>
