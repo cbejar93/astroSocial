@@ -38,6 +38,7 @@ import ProfileOverviewPage from "./pages/ProfileOverviewPage";
 import SettingsPage from "./pages/SettingsPage";
 
 import PageModal from "./components/Modal/PageModal";
+import AuroraBackground from "./components/Layout/AuroraBackground";
 
 const App: React.FC = () => {
   const { weather, loading, error, unit, setUnit } = useWeatherService();
@@ -60,12 +61,7 @@ const App: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col text-white overflow-x-hidden">
       {/* Global background: fixes “black box” at the bottom */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        {/* base color */}
-        <div className="absolute inset-0 bg-gray-900" />
-        {/* soft gradients pinned to viewport so they always cover screen */}
-        <div className="absolute inset-0 opacity-90 bg-[radial-gradient(1000px_600px_at_20%_-10%,rgba(90,162,255,0.14),transparent),radial-gradient(900px_560px_at_80%_110%,rgba(240,75,179,0.12),transparent)]" />
-      </div>
+      <AuroraBackground />
 
       <Navbar />
 
