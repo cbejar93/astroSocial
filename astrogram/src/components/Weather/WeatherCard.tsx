@@ -6,6 +6,8 @@ type WeatherCardProps = {
   day: WeatherDay;
   isToday?: boolean;
   unit?: "metric" | "us";
+  timeZone?: string;
+  utcOffsetSeconds?: number;
 };
 
 const levelColors: Record<number, string> = {
@@ -47,19 +49,24 @@ function getClosestTimeBlock(): TimeBlock {
   return blocks[0].toString() as TimeBlock;
 }
 
-const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false, unit = "metric" }) => {
+const WeatherCard: React.FC<WeatherCardProps> = ({
+  day,
+  isToday = false,
+  unit = "metric",
+  timeZone,
+  utcOffsetSeconds,
+}) => {
   const activeTime = isToday ? getClosestTimeBlock() : null;
+  const dateLabel = React.useMemo(
+    () => formatWeatherDate(day.date, timeZone, utcOffsetSeconds),
+    [day.date, timeZone, utcOffsetSeconds],
+  );
 
   return (
     <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden border border-gray-300 dark:border-gray-700 w-full">
       {/* Date Header */}
       <h3 className="text-lg font-semibold px-4 pt-4 pb-2 text-white">
-        {new Date(day.date).toLocaleDateString(undefined, {
-          weekday: "short",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}
+        {dateLabel}
       </h3>
 
       {/* Grid */}
@@ -112,6 +119,60 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ day, isToday = false, unit = 
 };
 
 export default WeatherCard;
+
+const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+  weekday: "short",
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+};
+
+function formatWeatherDate(
+  isoDate: string,
+  timeZone?: string,
+  utcOffsetSeconds?: number,
+): string {
+  if (!isoDate) return "";
+
+  const fallbackDate = new Date(`${isoDate}T00:00:00Z`);
+  const formatWithZone = (tz?: string) => {
+    const opts: Intl.DateTimeFormatOptions = { ...DATE_FORMAT_OPTIONS };
+    if (tz) {
+      opts.timeZone = tz;
+    }
+    return new Intl.DateTimeFormat(undefined, opts).format(fallbackDate);
+  };
+
+  try {
+    if (typeof utcOffsetSeconds !== "number" || Number.isNaN(utcOffsetSeconds)) {
+      return formatWithZone("UTC");
+    }
+
+    const offset = formatOffset(utcOffsetSeconds);
+    const zonedDate = new Date(`${isoDate}T00:00:00${offset}`);
+    const formatOptions: Intl.DateTimeFormatOptions = { ...DATE_FORMAT_OPTIONS };
+    if (timeZone) {
+      formatOptions.timeZone = timeZone;
+    }
+
+    return new Intl.DateTimeFormat(undefined, formatOptions).format(zonedDate);
+  } catch (err) {
+    console.error("Failed to format weather date", err);
+    return formatWithZone("UTC");
+  }
+}
+
+function formatOffset(seconds: number): string {
+  const sign = seconds >= 0 ? "+" : "-";
+  const absSeconds = Math.abs(seconds);
+  const hours = Math.floor(absSeconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const minutes = Math.floor((absSeconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  return `${sign}${hours}:${minutes}`;
+}
 
 export function mapValueToLevel(condition: string, value: number): number {
   if (value == null || isNaN(value)) return 1;
