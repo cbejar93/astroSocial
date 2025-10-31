@@ -65,7 +65,7 @@ export class PostsController {
                 if (allowed.includes(file.mimetype)) cb(null, true)
                 else cb(new Error('Invalid file type'), false)
             },
-            limits: { fileSize: 10 * 1024 * 1024 }, // optional 10MB limit
+            limits: { fileSize: 32 * 1024 * 1024 }, 
         }),
     )
     @Post()
