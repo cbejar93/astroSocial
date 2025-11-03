@@ -8,7 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import PostCard from "../components/PostCard/PostCard";
+import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
 import {
   fetchFeed,
@@ -19,48 +19,41 @@ import {
   fetchMyComments,
   toggleCommentLike,
 } from "../lib/api";
-import type { PostCardProps } from "../components/PostCard/PostCard";
-import { UploadCloud, Image as ImageIcon, X, Star, Search as SearchIcon } from "lucide-react";
+import {
+  UploadCloud,
+  Image as ImageIcon,
+  X,
+  Star,
+  Search as SearchIcon,
+} from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { trackEvent } from "../lib/analytics";
 
 const PAGE_SIZE = 20;
-// If you have a fixed top navbar (~64px), switch these:
-// const NAV_PUSH_CLASS = "pt-16";
-// const STICKY_TOP_CLASS = "top-16";
 const NAV_PUSH_CLASS = "pt-0";
 const STICKY_TOP_CLASS = "top-0";
 
-/* =========================================
-   Hook: only render the right panel on desktop
-   ========================================= */
+/* ---------------------------------
+   Desktop detection for right panel
+----------------------------------- */
 function useIsDesktop(minWidth = 1024) {
   const [isDesktop, setIsDesktop] = useState(false);
-
   useEffect(() => {
     const mql = window.matchMedia(`(min-width: ${minWidth}px)`);
     const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-
-    // initial
     setIsDesktop(mql.matches);
-
-    // add listener (modern + fallback)
     if (mql.addEventListener) mql.addEventListener("change", handler);
     else mql.addListener(handler);
-
     return () => {
       if (mql.removeEventListener) mql.removeEventListener("change", handler);
       else mql.removeListener(handler);
     };
   }, [minWidth]);
-
   return isDesktop;
 }
 
-/* =========================
-   Types (right panel)
-   ========================= */
+/* ---------- Right-panel types ---------- */
 interface CommentItem {
   id: string;
   text: string;
@@ -77,24 +70,23 @@ interface MyPost extends PostCardProps {
   title?: string;
 }
 
-/* =========================================================
-   RIGHT SIDEBAR: Profile + Tabs (desktop only, Instagram-ish)
-   ========================================================= */
+/* ---------------------------------
+   RIGHT SIDEBAR (desktop only)
+----------------------------------- */
 const RightProfilePanel: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState<"posts" | "comments">("posts");
   const [postSubTab, setPostSubTab] = useState<"all" | "posts" | "lounges">(
     "all"
   );
 
-  // data
   const [myPosts, setMyPosts] = useState<MyPost[]>([]);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [loadingComments, setLoadingComments] = useState(true);
 
-  // UI state
   const [showMorePosts, setShowMorePosts] = useState(false);
   const [showMoreLounge, setShowMoreLounge] = useState(false);
   const [openLoungeGroups, setOpenLoungeGroups] = useState<Set<string>>(
@@ -103,19 +95,12 @@ const RightProfilePanel: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-
     fetchMyPosts<MyPost>()
-      .then((data) => {
-        if (mounted) setMyPosts(data ?? []);
-      })
+      .then((data) => mounted && setMyPosts(data ?? []))
       .finally(() => mounted && setLoadingPosts(false));
-
     fetchMyComments<CommentItem>()
-      .then((data) => {
-        if (mounted) setComments(data ?? []);
-      })
+      .then((data) => mounted && setComments(data ?? []))
       .finally(() => mounted && setLoadingComments(false));
-
     return () => {
       mounted = false;
     };
@@ -154,7 +139,6 @@ const RightProfilePanel: React.FC = () => {
       return next;
     });
 
-  // tiny regular post (reuses PostCard, scaled)
   const TinyPost: React.FC<{ post: MyPost }> = ({ post }) => (
     <div className="rounded-xl border border-white/10 overflow-hidden bg-gray-900/30 hover:bg-gray-900/50 transition">
       <div
@@ -169,7 +153,6 @@ const RightProfilePanel: React.FC = () => {
     </div>
   );
 
-  // compact lounge post row
   const LoungeRow: React.FC<{ post: MyPost }> = ({ post }) => (
     <div
       className="rounded-lg border border-white/10 bg-gray-900/30 hover:bg-gray-900/50 transition cursor-pointer p-3"
@@ -280,7 +263,7 @@ const RightProfilePanel: React.FC = () => {
           <div className="mt-3 space-y-3">
             {activeTab === "posts" ? (
               <>
-                {/* Sub-tabs for categorization */}
+                {/* Sub-tabs */}
                 <div className="flex items-center gap-2 text-xs">
                   <button
                     onClick={() => setPostSubTab("all")}
@@ -301,7 +284,7 @@ const RightProfilePanel: React.FC = () => {
                     }`}
                   >
                     Posts{" "}
-                    <span className="ml-1 text-[10px] opacity-75">({postsCount})</span>
+                    <span className="ml-1 text-[10px] opacity-75">({generalPosts.length})</span>
                   </button>
                   <button
                     onClick={() => setPostSubTab("lounges")}
@@ -316,7 +299,7 @@ const RightProfilePanel: React.FC = () => {
                   </button>
                 </div>
 
-                {/* ALL: Your Posts + Lounge Posts sections with show more/less */}
+                {/* ALL */}
                 {postSubTab === "all" && (
                   <>
                     <section className="space-y-2">
@@ -324,7 +307,7 @@ const RightProfilePanel: React.FC = () => {
                         <h4 className="text-xs uppercase tracking-wide text-gray-400">
                           Your Posts
                         </h4>
-                        {postsCount > 3 && (
+                        {generalPosts.length > 3 && (
                           <button
                             className="text-xs text-sky-300 hover:underline"
                             onClick={() => setShowMorePosts((s) => !s)}
@@ -335,7 +318,7 @@ const RightProfilePanel: React.FC = () => {
                       </div>
                       {loadingPosts ? (
                         <div className="text-sm text-gray-400">Loading…</div>
-                      ) : postsCount === 0 ? (
+                      ) : generalPosts.length === 0 ? (
                         <div className="text-sm text-gray-400">No posts yet.</div>
                       ) : (
                         (showMorePosts ? generalPosts : generalPosts.slice(0, 3)).map((p) => (
@@ -376,7 +359,7 @@ const RightProfilePanel: React.FC = () => {
                   <section className="space-y-2">
                     {loadingPosts ? (
                       <div className="text-sm text-gray-400">Loading…</div>
-                    ) : postsCount === 0 ? (
+                    ) : generalPosts.length === 0 ? (
                       <div className="text-sm text-gray-400">No posts yet.</div>
                     ) : (
                       generalPosts.map((p) => <TinyPost key={p.id} post={p} />)
@@ -384,7 +367,7 @@ const RightProfilePanel: React.FC = () => {
                   </section>
                 )}
 
-                {/* LOUNGES only — grouped by lounge with accordions */}
+                {/* LOUNGES only */}
                 {postSubTab === "lounges" && (
                   <section className="space-y-2">
                     {loadingPosts ? (
@@ -473,9 +456,9 @@ const RightProfilePanel: React.FC = () => {
   );
 };
 
-/* =========================
-   Sticky Post Composer (left column)
-   ========================= */
+/* ---------------------------------
+   Composer (left column) — GLASS UI
+----------------------------------- */
 const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
   const { user } = useAuth();
   const [caption, setCaption] = useState("");
@@ -529,7 +512,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
       form.append("body", caption);
       if (file) form.append("image", file);
 
-      const res = await apiFetch("/posts", { method: "POST", body: form });
+    const res = await apiFetch("/posts", { method: "POST", body: form });
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || "Upload failed");
@@ -545,7 +528,6 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
         });
       } catch {}
 
-      // reset and refresh feed
       setCaption("");
       setFile(null);
       if (preview) URL.revokeObjectURL(preview);
@@ -564,11 +546,21 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
   return (
     <form
       onSubmit={onSubmit}
-      className="mt-2 rounded-2xl border border-white/10 bg-[#0E1626]/95 text-white p-3 sm:p-4 shadow-[0_8px_28px_rgba(2,6,23,0.45)]"
+      className="group mt-3 relative rounded-3xl
+                 bg-white/[0.06] hover:bg-white/[0.08]
+                 backdrop-blur-xl
+                 border border-white/10
+                 text-white p-3 sm:p-4
+                 shadow-[0_8px_28px_rgba(2,6,23,0.45)]
+                 transition"
       aria-label="Create post"
     >
-      {/* Top row: avatar + input */}
-      <div className="flex items-start gap-3">
+      {/* glow hairline on hover / focus */}
+      <div className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-40 group-focus-within:opacity-60 transition">
+        <div className="h-full w-full rounded-3xl bg-gradient-to-r from-fuchsia-500/30 via-sky-500/30 to-emerald-500/30 blur-[6px]" />
+      </div>
+
+      <div className="flex items-start gap-3 relative">
         <img
           src={user.avatarUrl ?? "/defaultPfp.png"}
           alt="Your avatar"
@@ -583,7 +575,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
               setCaption(e.target.value);
               if (captionError && e.target.value.trim()) setCaptionError(null);
             }}
-            className="w-full resize-y rounded-lg bg-gray-800/70 border border-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 px-3 py-2 text-sm"
+            className="w-full resize-y rounded-2xl bg-white/[0.06] border border-white/10 text-gray-100 placeholder-gray-300/70 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 focus:border-white/20 px-3 py-2 text-sm"
           />
           {captionError && (
             <p className="mt-1 text-xs text-red-400">{captionError}</p>
@@ -595,7 +587,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
               <img
                 src={preview}
                 alt="preview"
-                className="max-h-52 rounded-lg object-cover border border-white/10"
+                className="max-h-52 rounded-xl object-cover border border-white/10"
               />
               <button
                 type="button"
@@ -614,7 +606,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
             {/* Image picker */}
             <label
               htmlFor="composer-image"
-              className="inline-flex items-center gap-2 cursor-pointer rounded-lg border border-white/10 bg-gray-800/70 hover:bg-gray-700/70 px-3 py-1.5 text-xs sm:text-sm"
+              className="inline-flex items-center gap-2 cursor-pointer rounded-full border border-white/10 bg-white/[0.07] hover:bg-white/[0.12] px-4 py-1.5 text-xs sm:text-sm transition"
               title="Add image"
             >
               <ImageIcon className="w-4 h-4" />
@@ -634,7 +626,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-1.5 text-xs sm:text-sm font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-5 py-1.5 text-xs sm:text-sm font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
             >
               {loading ? (
                 <span className="inline-flex items-center">
@@ -662,20 +654,23 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
   );
 };
 
-/* =========================
-   Feed (two columns on lg+: Feed + Right Profile)
-   ========================= */
+/* ---------------------------------
+   FEED PAGE with desktop-fixed shell
+----------------------------------- */
 const Feed: React.FC = () => {
-  // ---- FEED STATE ----
+  // feed state
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingNext, setIsFetchingNext] = useState(false);
   const navigate = useNavigate();
+
+  // scrolling refs
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // ---- SEARCH STATE ----
+  // search state
   const [query, setQuery] = useState("");
   const [searchPage, setSearchPage] = useState(1);
   const [results, setResults] = useState<SearchResponse | null>(null);
@@ -683,16 +678,23 @@ const Feed: React.FC = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  // header scroll effect
+  // sticky header shadow (still reacts to window on mobile, to scroller on desktop)
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 0);
+    // On desktop, listen to the scroller; on mobile, listen to window
+    const node = scrollerRef.current ?? window;
+    const onScroll = () => {
+      const y =
+        scrollerRef.current ? scrollerRef.current.scrollTop : window.scrollY;
+      setScrolled(y > 0);
+    };
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    (node as any).addEventListener("scroll", onScroll, { passive: true });
+    return () =>
+      (node as any).removeEventListener("scroll", onScroll, { passive: true } as any);
   }, []);
 
-  // Quick focus shortcuts
+  // focus shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const isCmdK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k";
@@ -706,10 +708,9 @@ const Feed: React.FC = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Layout knowledge
-  const isDesktop = useIsDesktop(); // ← only render right panel when true
-  const { user } = useAuth();       // ← know if signed in
-  const showRightPanel = isDesktop && !!user; // ← only show & allocate space when signed in
+  const isDesktop = useIsDesktop();
+  const { user } = useAuth();
+  const showRightPanel = isDesktop && !!user;
 
   async function performSearch(newPage: number) {
     if (!query.trim()) return;
@@ -732,39 +733,22 @@ const Feed: React.FC = () => {
     await performSearch(1);
   };
 
-  const hasSearchResults =
-    !!results &&
-    (((results.users?.results.length ?? 0) > 0) ||
-      ((results.lounges?.results.length ?? 0) > 0));
-
-  const hasPrev = searchPage > 1;
-  const hasNext =
-    !!results &&
-    (((results.users &&
-      results.users.total > results.users.page * results.users.limit) ||
-      (results.lounges &&
-        results.lounges.total >
-          results.lounges.page * results.lounges.limit)));
-
-  // ---- FEED LOGIC ----
+  // feed pagination
   const loadPage = useCallback(async (nextPage: number) => {
     if (nextPage === 1) setLoading(true);
     setIsFetchingNext(true);
-
     try {
       const response = await fetchFeed<PostCardProps>(nextPage, PAGE_SIZE);
-
       setPosts((prev) => {
         if (nextPage === 1) return response.posts;
-        const existingIds = new Set(prev.map((post) => post.id));
-        const appendedPosts = response.posts.filter((post) => !existingIds.has(post.id));
-        return [...prev, ...appendedPosts];
+        const existingIds = new Set(prev.map((p) => String(p.id)));
+        const appended = response.posts.filter((p) => !existingIds.has(String(p.id)));
+        return [...prev, ...appended];
       });
-
       setPage(nextPage);
       setHasMore(response.posts.length > 0 && nextPage * PAGE_SIZE < response.total);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
     } finally {
       if (nextPage === 1) setLoading(false);
       setIsFetchingNext(false);
@@ -775,56 +759,113 @@ const Feed: React.FC = () => {
     loadPage(1);
   }, [loadPage]);
 
+  // IntersectionObserver uses LEFT SCROLLER as root on desktop
   useEffect(() => {
     const sentinel = sentinelRef.current;
+    const root = scrollerRef.current ?? null;
     if (!sentinel) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      const entry = entries[0];
-      if (entry.isIntersecting && hasMore && !isFetchingNext) {
-        loadPage(page + 1);
-      }
-    });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasMore && !isFetchingNext) {
+          loadPage(page + 1);
+        }
+      },
+      { root } // root null => viewport on mobile; left scroller on desktop
+    );
 
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore, isFetchingNext, loadPage, page]);
 
+  // Remove a post if deleted from card
+  const handleDeleted = (id: string | number) => {
+    setPosts((prev) => prev.filter((p) => String(p.id) !== String(id)));
+  };
+
+  const hasSearchResults =
+    !!results &&
+    (((results.users?.results.length ?? 0) > 0) ||
+      ((results.lounges?.results.length ?? 0) > 0));
+
+  const hasNext =
+    !!results &&
+    (((results.users &&
+      results.users.total > results.users.page * results.users.limit) ||
+      (results.lounges &&
+        results.lounges.total >
+          results.lounges.page * results.lounges.limit)));
+
   return (
-    <div className={`w-full ${NAV_PUSH_CLASS} pb-0 flex justify-center`}>
-      {/* Container width depends on whether right panel is shown */}
-      <div className={`w-full ${showRightPanel ? "max-w-6xl" : "max-w-3xl"} px-0 sm:px-4 lg:px-6`}>
-        {/* Desktop: two columns ONLY when right panel is shown; otherwise single column centered */}
-        <div className={showRightPanel ? "lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6" : ""}>
-          {/* LEFT COLUMN */}
-          <div className="min-w-0">
-            {/* Sticky search header */}
+    <div className={`relative ${NAV_PUSH_CLASS}`}>
+      {/* Hide scrollbar on the left scroller only (desktop) */}
+      <style>{`
+        @media (min-width: 1024px) {
+          #feedScroll { scrollbar-width: none; -ms-overflow-style: none; }
+          #feedScroll::-webkit-scrollbar { display: none; }
+        }
+      `}</style>
+
+      {/* subtle background glow */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-1/2 top-[-12%] h-[38vh] w-[65vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/12 via-fuchsia-500/10 to-emerald-500/12 blur-3xl" />
+      </div>
+
+      {/* Desktop shell: fixed + overflow-hidden prevents page scroll on lg+ */}
+      <div className="w-full flex justify-center lg:fixed lg:inset-0 lg:overflow-hidden">
+        <div
+          className={`w-full ${showRightPanel ? "max-w-6xl" : "max-w-3xl"} mx-auto
+                      px-0 sm:px-4 lg:px-6
+                      lg:h-full lg:grid ${showRightPanel ? "lg:grid-cols-[minmax(0,1fr)_360px]" : "lg:grid-cols-1"} lg:gap-6`}
+        >
+          {/* LEFT SCROLLER ONLY (desktop) */}
+          <div
+            id="feedScroll"
+            ref={scrollerRef}
+            className="min-w-0 lg:h-full lg:overflow-y-auto lg:pt-6 pb-16"
+          >
+            {/* Sticky search header (sticks inside left scroller) */}
             <div
               className={`sticky ${STICKY_TOP_CLASS} z-30 border-b border-white/10 transition-shadow ${
                 scrolled ? "shadow-[0_8px_28px_rgba(2,6,23,0.35)]" : "shadow-none"
               } bg-[#101828]/90 backdrop-blur-xl`}
             >
-              {/* subtle background glow */}
               <div className="pointer-events-none select-none absolute inset-0 opacity-[0.35] bg-[radial-gradient(90%_60%_at_20%_0%,rgba(240,75,179,0.18),transparent),radial-gradient(90%_60%_at_90%_10%,rgba(90,162,255,0.18),transparent)]" />
-
               <div className="relative px-2 sm:px-4">
-                {/* SEARCH */}
+                {/* SEARCH — glass, rounded-full */}
                 <form onSubmit={onSearchSubmit} className="flex gap-2 py-2">
                   <div className="relative flex-1">
-                    <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-fuchsia-500/30 via-sky-500/30 to-emerald-500/30 opacity-0 blur-md transition-opacity duration-300 ease-out
+                                 focus-within:opacity-70"
+                    />
+                    <SearchIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300/80" />
                     <input
                       ref={searchInputRef}
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder="Search users & lounges…  ( /  or  ⌘K / Ctrl+K )"
-                      className="w-full pl-9 pr-3 rounded-lg bg-gray-800/80 border border-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 px-3 py-2 text-sm"
+                      className="w-full pl-10 pr-4 rounded-full
+                                 bg-white/[0.07] backdrop-blur-md
+                                 border border-white/10
+                                 text-gray-100 placeholder-gray-400
+                                 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-white/20
+                                 py-2 text-sm transition"
                       aria-label="Search"
                     />
                   </div>
+
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-2 text-sm font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
+                    className="inline-flex items-center justify-center rounded-full
+                               bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff]
+                               px-5 py-2 text-sm font-semibold text-white whitespace-nowrap
+                               shadow-[0_12px_28px_rgba(15,23,42,0.45)]
+                               ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px
+                               disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
                     disabled={searchLoading}
                   >
                     {searchLoading ? "Searching…" : "Search"}
@@ -834,7 +875,7 @@ const Feed: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setResults(null)}
-                      className="px-3 py-2 text-sm rounded-md bg-gray-700 hover:bg-gray-600 text-gray-100"
+                      className="px-4 py-2 text-sm rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-gray-100 border border-white/10 transition"
                       title="Clear results"
                     >
                       Clear
@@ -845,7 +886,7 @@ const Feed: React.FC = () => {
                 {searchLoading && <p className="mt-1 text-sm text-gray-300">Loading…</p>}
                 {searchError && <p className="mt-1 text-sm text-red-500">{searchError}</p>}
 
-                {/* Sticky Post Composer (right under search) */}
+                {/* Composer — glass card */}
                 <PostComposer onPosted={() => loadPage(1)} />
 
                 {/* Optional: Search results card */}
@@ -895,25 +936,6 @@ const Feed: React.FC = () => {
                             </ul>
                           </div>
                         ) : null}
-
-                        {(hasPrev || hasNext) && (
-                          <div className="flex justify-between pt-1">
-                            <button
-                              onClick={() => performSearch(searchPage - 1)}
-                              disabled={!hasPrev || searchLoading}
-                              className="px-3 py-1 rounded bg-gray-700 disabled:opacity-50"
-                            >
-                              Previous
-                            </button>
-                            <button
-                              onClick={() => performSearch(searchPage + 1)}
-                              disabled={!hasNext || searchLoading}
-                              className="px-3 py-1 rounded bg-gray-700 disabled:opacity-50"
-                            >
-                              Next
-                            </button>
-                          </div>
-                        )}
                       </div>
                     ) : (
                       !searchLoading && <p className="text-sm text-gray-300">No results found</p>
@@ -923,53 +945,49 @@ const Feed: React.FC = () => {
               </div>
             </div>
 
-            {/* Space between the sticky header and posts */}
+            {/* spacer under sticky header */}
             <div className="h-2" />
 
-            {/* Feed list */}
+            {/* Feed list inside LEFT scroller */}
             <div className="space-y-4">
-              {loading
-                ? Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
-                : (
-                  <>
-                    {posts.map((post) => (
-                      <div
-                        key={post.id}
-                        className="animate-fadeIn cursor-pointer rounded-2xl transition hover:bg-white/5"
-                        onClick={() => navigate(`/posts/${post.id}`)}
-                      >
-                        <PostCard
-                          {...post}
-                          onDeleted={(id) => setPosts((ps) => ps.filter((p) => p.id !== id))}
-                        />
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
+              ) : (
+                <>
+                  {posts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="animate-fadeIn cursor-pointer rounded-2xl transition hover:bg-white/5"
+                      onClick={() => navigate(`/posts/${post.id}`)}
+                    >
+                      <PostCard
+                        {...post}
+                        onDeleted={handleDeleted}
+                      />
+                    </div>
+                  ))}
+                  <div ref={sentinelRef} />
+                  {isFetchingNext && (
+                    <div className="py-4 text-center text-sm text-gray-500">Loading more...</div>
+                  )}
+                  {!hasMore && posts.length > 0 && (
+                    <div className="py-8 text-center">
+                      <div className="inline-flex items-center rounded-full border border-white/10 bg-gray-800/60 px-4 py-2 text-xs text-gray-300">
+                        You’re all caught up ✨
                       </div>
-                    ))}
-                    <div ref={sentinelRef} />
-                    {isFetchingNext && (
-                      <div className="py-4 text-center text-sm text-gray-500">
-                        Loading more...
-                      </div>
-                    )}
-                    {!hasMore && posts.length > 0 && (
-                      <div className="py-8 text-center">
-                        <div className="inline-flex items-center rounded-full border border-white/10 bg-gray-800/60 px-4 py-2 text-xs text-gray-300">
-                          You’re all caught up ✨
-                        </div>
-                      </div>
-                    )}
-                    {!loading && posts.length === 0 && (
-                      <div className="py-12 text-center text-gray-400">
-                        No posts yet.
-                      </div>
-                    )}
-                  </>
-                )}
+                    </div>
+                  )}
+                  {!loading && posts.length === 0 && (
+                    <div className="py-12 text-center text-gray-400">No posts yet.</div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          {/* RIGHT COLUMN (desktop only) — only shown when signed in */}
+          {/* RIGHT COLUMN (desktop only) — stays put; no scrolling needed */}
           {showRightPanel && (
-            <div className="mt-4 lg:mt-0">
+            <div className="hidden lg:block lg:h-full lg:overflow-hidden lg:pt-6">
               <RightProfilePanel />
             </div>
           )}

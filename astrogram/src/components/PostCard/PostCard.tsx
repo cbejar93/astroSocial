@@ -1,8 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+// src/components/PostCard/PostCard.tsx
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { Eye } from "lucide-react";
-
 import {
   Star,
   MessageCircle,
@@ -11,10 +10,11 @@ import {
   Bookmark,
   MoreVertical,
   Trash2,
+  Eye,
 } from "lucide-react";
 import {
   sharePost,
-  repostPost,
+  repostPost, // POST creates a repost; server returns 409 if already reposted
   apiFetch,
   savePost as savePostRequest,
   unsavePost,
@@ -23,7 +23,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useAnalytics } from "../../hooks/useAnalytics";
 
 export interface PostCardProps {
-  id: string;
+  id: string | number;
   authorId: string;
   username: string;
   title?: string;
@@ -40,9 +40,11 @@ export interface PostCardProps {
   repostedBy?: string;
   savedByMe?: boolean;
   saves?: number;
-  /** UI-only: total views for the post (for the single meta item) */
   views?: number;
-  onDeleted?: (id: string) => void;
+  onDeleted?: (id: string | number) => void;
+  onSavedChange?: (id: string | number, saved: boolean, count: number) => void;
+  onLikeChange?: (id: string | number, liked: boolean, count: number) => void;
+  onRepostChange?: (id: string | number, reposted: boolean, count: number) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -64,13 +66,16 @@ const PostCard: React.FC<PostCardProps> = ({
   authorId,
   views = 0,
   onDeleted,
+  onSavedChange,
+  onLikeChange,
+  onRepostChange,
 }) => {
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
   const navigate = useNavigate();
   const isOwn = user?.id === authorId;
 
-  const [liked, setLiked] = useState(likedByMe);
+  const [liked, setLiked] = useState(Boolean(likedByMe));
   const [starCount, setStarCount] = useState(stars);
   const [commentCount] = useState(comments);
   const [shareCount, setShareCount] = useState(shares);
@@ -80,12 +85,12 @@ const PostCard: React.FC<PostCardProps> = ({
   const [saveCount, setSaveCount] = useState(saves);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [repostPending, setRepostPending] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const encodedUsername = encodeURIComponent(username);
 
   useEffect(() => {
     setSaveCount(saves ?? 0);
-
     if (!user) {
       setLiked(false);
       setReposted(false);
@@ -97,7 +102,17 @@ const PostCard: React.FC<PostCardProps> = ({
     setSaved(Boolean(savedByMe));
   }, [user, likedByMe, repostedByMe, savedByMe, saves]);
 
-  const handleLike = async () => {
+  const safeTrack = (payload: Parameters<NonNullable<typeof trackEvent>>[0]) => {
+    try {
+      trackEvent?.(payload);
+    } catch {}
+  };
+
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  /* ---------------- Like ---------------- */
+  const handleLike = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!user) return;
     try {
       const res = await apiFetch(`/posts/${id}/like`, { method: "POST" });
@@ -105,10 +120,11 @@ const PostCard: React.FC<PostCardProps> = ({
       const { liked: nextLiked, count } = await res.json();
       setLiked(nextLiked);
       setStarCount(count);
-      void trackEvent({
+      onLikeChange?.(id, nextLiked, count);
+      safeTrack({
         type: nextLiked ? "post_like" : "post_unlike",
         targetType: "post",
-        targetId: id,
+        targetId: String(id),
         value: count,
       });
     } catch (err) {
@@ -116,32 +132,26 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  const handleShare = async () => {
+  /* ---------------- Share ---------------- */
+  const handleShare = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const postUrl = `${window.location.origin}/posts/${id}`;
-
     try {
-      const { count } = await sharePost(id);
+      const { count } = await sharePost(String(id));
       setShareCount(count);
-      void trackEvent({
+      safeTrack({
         type: "post_share",
         targetType: "post",
-        targetId: id,
+        targetId: String(id),
         value: count,
       });
     } catch (err) {
       console.error("Failed to share:", err);
     }
-
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: `${username}'s post`,
-          text: caption,
-          url: postUrl,
-        });
-      } catch (err) {
-        console.warn("User cancelled share or error:", err);
-      }
+        await navigator.share({ title: `${username}'s post`, text: caption, url: postUrl });
+      } catch {}
     } else {
       try {
         await navigator.clipboard.writeText(postUrl);
@@ -152,44 +162,93 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  const handleRepost = async () => {
-    if (!user || reposted) return;
+  /* ---------------- Repost (handle 409 Already Reposted) ---------------- */
+  const handleRepost = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!user || repostPending) return;
+
+    setRepostPending(true);
     try {
-      const { count } = await repostPost(id);
-      setRepostCount(count);
-      setReposted(true);
-      void trackEvent({
+      // Your backend: POST /posts/:id/repost creates a repost. If already exists -> 409.
+      const data: any = await repostPost(String(id));
+
+      const nextReposted =
+        typeof data?.reposted === "boolean"
+          ? data.reposted
+          : typeof data?.repostedByMe === "boolean"
+          ? data.repostedByMe
+          : true;
+
+      const nextCount =
+        typeof data?.count === "number"
+          ? data.count
+          : typeof data?.reposts === "number"
+          ? data.reposts
+          : repostCount + (reposted ? 0 : 1);
+
+      setReposted(nextReposted);
+      setRepostCount(nextCount);
+      onRepostChange?.(id, nextReposted, nextCount);
+      safeTrack({
         type: "post_repost",
         targetType: "post",
-        targetId: id,
-        value: count,
+        targetId: String(id),
+        value: nextCount,
       });
-    } catch (err: unknown) {
-      console.error("Failed to repost:", err);
+    } catch (e: unknown) {
+      // Parse status safely (works with different error shapes)
+      type WithResponse = { response?: { status?: number } };
+      const err = e as (Error & { statusCode?: number; status?: number }) & WithResponse;
+      const msg = typeof err?.message === "string" ? err.message : "";
+      const match = msg.match(/\b(\d{3})\b/);
+      const status =
+        (typeof err?.statusCode === "number" ? err.statusCode : undefined) ??
+        (typeof err?.status === "number" ? err.status : undefined) ??
+        (typeof err?.response?.status === "number" ? err.response.status : undefined) ??
+        (match ? parseInt(match[1], 10) : 0);
+
+      if (status === 409) {
+        // Already reposted — reflect correct UI instead of throwing
+        if (!reposted) {
+          setReposted(true);
+          onRepostChange?.(id, true, repostCount);
+        }
+        console.info("Already reposted — updating UI.");
+      } else if (status === 401) {
+        alert("Please sign in again to repost.");
+      } else {
+        console.error("Failed to toggle repost:", err);
+      }
+    } finally {
+      setRepostPending(false);
     }
   };
 
-  const toggleSave = async () => {
+  /* ---------------- Save ---------------- */
+  const toggleSave = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!user) return;
     try {
       if (saved) {
-        const { saved: isSaved, count } = await unsavePost(id);
+        const { saved: isSaved, count } = await unsavePost(String(id));
         setSaved(isSaved);
         setSaveCount(count);
-        void trackEvent({
+        onSavedChange?.(id, isSaved, count);
+        safeTrack({
           type: "post_unsave",
           targetType: "post",
-          targetId: id,
+          targetId: String(id),
           value: count,
         });
       } else {
-        const { saved: isSaved, count } = await savePostRequest(id);
+        const { saved: isSaved, count } = await savePostRequest(String(id));
         setSaved(isSaved);
         setSaveCount(count);
-        void trackEvent({
+        onSavedChange?.(id, isSaved, count);
+        safeTrack({
           type: "post_save",
           targetType: "post",
-          targetId: id,
+          targetId: String(id),
           value: count,
         });
       }
@@ -198,62 +257,38 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  // close menu on outside click
+  // Close menu on outside click
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+    const handler = (ev: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(ev.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const stop = (e: React.MouseEvent) => e.stopPropagation();
-
   const handleDelete = async () => {
     setMenuOpen(false);
     try {
-      const res = await apiFetch(`/posts/delete/${id}`, {
-        method: "DELETE",
-      });
+      const res = await apiFetch(`/posts/delete/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.message || "Failed to delete post");
       }
       onDeleted?.(id);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Delete post error:", err);
     }
   };
 
-  // simple UI formatter like "241K"
-  const formatCount = (n: number) =>
+  const formatK = (n: number) =>
     n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
     : n >= 1_000 ? `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`
     : `${n}`;
 
   return (
     <div className="w-full py-0 sm:py-2 sm:px-2">
-      {/* Card */}
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0A0F1F] via-[#0F1B2E] to-[#0A0F1C] text-white shadow-[0_20px_45px_rgba(2,6,23,0.45)]">
-        {/* star field */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[.12]"
-          style={{
-            backgroundImage: `
-              radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.9) 1px, transparent 1px),
-              radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,.7) 1px, transparent 1px),
-              radial-gradient(1px 1px at 70% 30%, rgba(255,255,255,.8) 1px, transparent 1px),
-              radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,.6) 1px, transparent 1px)
-            `,
-            backgroundSize:
-              "120px 120px, 160px 160px, 140px 140px, 180px 180px",
-          }}
-        />
-
-        {/* 3-dot menu — fixed anchor */}
+        {/* 3-dot menu */}
         <div className="absolute right-2 top-2 z-20" onClick={stop}>
           <div ref={menuRef} className="relative">
             <button
@@ -266,7 +301,6 @@ const PostCard: React.FC<PostCardProps> = ({
             >
               <MoreVertical className="w-5 h-5" />
             </button>
-
             {menuOpen && (
               <div
                 role="menu"
@@ -278,7 +312,7 @@ const PostCard: React.FC<PostCardProps> = ({
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
                 >
                   <Bookmark className="w-4 h-4" />
-                  <span>Save({saveCount})</span>
+                  <span>{saved ? "Unsave" : "Save"}({saveCount})</span>
                 </button>
 
                 <div className="mx-2 my-1 h-px bg-white/10" />
@@ -333,9 +367,7 @@ const PostCard: React.FC<PostCardProps> = ({
               <div className="font-semibold text-white/95">@{username}</div>
               {timestamp && (
                 <div className="text-[11px] text-slate-400">
-                  {formatDistanceToNow(new Date(timestamp), {
-                    addSuffix: true,
-                  })}
+                  {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
                 </div>
               )}
             </div>
@@ -358,8 +390,7 @@ const PostCard: React.FC<PostCardProps> = ({
                   className="object-cover w-full h-full"
                   loading="lazy"
                   onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src =
-                      "/fallback.jpg.png";
+                    (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
                   }}
                 />
               </div>
@@ -367,50 +398,48 @@ const PostCard: React.FC<PostCardProps> = ({
           </div>
         )}
 
-        {/* Meta row — views with eye icon */}
-<div className="relative z-[1] px-4 sm:px-6 py-2">
-  <div className="flex items-center gap-2 text-[13px] text-slate-300" aria-label="Views">
-    <Eye className="w-4 h-4 opacity-90" aria-hidden="true" />
-    <span className="tabular-nums">{formatCount(views)}</span>
-  </div>
-</div>
+        {/* Views */}
+        <div className="relative z-[1] px-4 sm:px-6 py-2">
+          <div className="flex items-center gap-2 text-[13px] text-slate-300" aria-label="Views">
+            <Eye className="w-4 h-4 opacity-90" aria-hidden="true" />
+            <span className="tabular-nums">{formatK(views)}</span>
+          </div>
+        </div>
 
-
-        {/* Action buttons */}
+        {/* Actions */}
         <div onClick={stop} className="relative z-[1] px-3 sm:px-6 pb-5 pt-2">
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-    {/* Like */}
-    <button
-      type="button"
-      onClick={handleLike}
-      className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
-    >
-      <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
-      <span className="font-medium leading-none">Like({starCount})</span>
-    </button>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={handleLike}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
+            >
+              <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
+              <span className="font-medium leading-none">Like({starCount})</span>
+            </button>
 
-    {/* Retweet */}
-    <button
-      type="button"
-      onClick={handleRepost}
-      className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
-    >
-      <Repeat2 className="w-4 h-4" />
-      <span className="font-medium leading-none">Retweet({repostCount})</span>
-    </button>
+            <button
+              type="button"
+              onClick={handleRepost}
+              disabled={repostPending}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition disabled:opacity-60"
+            >
+              <Repeat2 className="w-4 h-4" />
+              <span className="font-medium leading-none">
+                {reposted ? "Retweeted" : "Retweet"}({repostCount})
+              </span>
+            </button>
 
-    {/* Comment */}
-    <button
-      type="button"
-      onClick={() => navigate(`/posts/${id}`)}
-      className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
-    >
-      <MessageCircle className="w-4 h-4" />
-      <span className="font-medium leading-none">Comment({commentCount})</span>
-    </button>
-  </div>
-</div>
-
+            <button
+              type="button"
+              onClick={() => navigate(`/posts/${id}`)}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="font-medium leading-none">Comment({commentCount})</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

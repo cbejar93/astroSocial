@@ -1,4 +1,3 @@
-// src/pages/WeatherPage.tsx
 import React, {
   useCallback,
   useEffect,
@@ -85,12 +84,14 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   const [savingPreference, setSavingPreference] = useState(false);
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
 
+  // Respect saved preference
   useEffect(() => {
     if (!user?.temperature) return;
     const preferredUnit = user.temperature === "F" ? "us" : "metric";
     setUnit((current) => (current === preferredUnit ? current : preferredUnit));
   }, [user?.temperature, setUnit]);
 
+  // Toggle handler (unchanged UI/UX)
   const handleToggleUnit = useCallback(async () => {
     if (savingPreference) return;
 
@@ -98,7 +99,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     const nextUnit = unit === "metric" ? "us" : "metric";
     setPreferenceError(null);
     setSavingPreference(true);
-    setUnit(nextUnit);
+    setUnit(nextUnit); // optimistic
 
     if (!user) {
       setSavingPreference(false);
@@ -109,7 +110,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       await updateTemperaturePreference(nextUnit === "metric" ? "C" : "F");
     } catch (err) {
       console.error(err);
-      setUnit(previousUnit);
+      setUnit(previousUnit); // rollback
       setPreferenceError("Unable to save temperature preference. Please try again.");
     } finally {
       setSavingPreference(false);
@@ -122,41 +123,20 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       : "UTC";
   const timeZone = weather?.timezone ?? resolvedLocalZone ?? "UTC";
 
+  // ---- All hooks BEFORE any early return (fixes hook-order crash) ----
   const zonedNow = useMemo(() => getZonedDateInfo(timeZone), [timeZone]);
   const todayStr = zonedNow.isoDate;
-
-  if (loading) return <WeatherSkeleton />;
-  if (error) return <div className="text-red-500 text-center py-6">{error}</div>;
-  if (!weather?.data?.length)
-    return <div className="text-center text-gray-400 py-6">No weather data available.</div>;
 
   const todayData = useMemo(
     () => (weather?.data ?? []).find((day) => day.date === todayStr),
     [weather, todayStr],
   );
 
-  const futureWeatherData = useMemo(
-    () => (weather?.data ?? []).filter((day) => day.date >= todayStr),
-    [weather, todayStr],
-  );
-
-  const sunrise = todayData?.astro?.sunrise;
-  const sunset = todayData?.astro?.sunset;
-
-  const isDaytime = todayData?.astro
-    ? isWithinDaylight(
-        todayData.astro.sunrise,
-        todayData.astro.sunset,
-        zonedNow.hour,
-        zonedNow.minute,
-      )
-    : zonedNow.hour >= 6 && zonedNow.hour < 18;
-
+  // Prepare maps even when data is missing; they’ll just be {}.
   const speedMap: HourlyNumberMap = todayData?.conditions?.windspeed ?? EMPTY_NUM_MAP;
   const directionMap: HourlyNumberMap = todayData?.conditions?.winddirection ?? EMPTY_NUM_MAP;
   const tempMap: HourlyNumberMap = todayData?.conditions?.temperature ?? EMPTY_NUM_MAP;
   const conditionMap: HourlyNumberMap = todayData?.conditions?.cloudcover ?? EMPTY_NUM_MAP;
-  // const precipitationMap: HourlyNumberMap = todayData?.conditions?.precipitation ?? EMPTY_NUM_MAP;
 
   const hourKeys = useMemo(() => {
     const arrays = [
@@ -176,6 +156,30 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
 
     return intersection.length ? intersection : arrays[0];
   }, [tempMap, conditionMap, speedMap, directionMap]);
+
+  const futureWeatherData = useMemo(
+    () => (weather?.data ?? []).filter((day) => day.date >= todayStr),
+    [weather, todayStr],
+  );
+  // -------------------------------------------------------------------
+
+  // Early returns occur AFTER all hooks
+  if (loading) return <WeatherSkeleton />;
+  if (error) return <div className="text-red-500 text-center py-6">{error}</div>;
+  if (!weather?.data?.length)
+    return <div className="text-center text-gray-400 py-6">No weather data available.</div>;
+
+  const sunrise = todayData?.astro?.sunrise;
+  const sunset = todayData?.astro?.sunset;
+
+  const isDaytime = todayData?.astro
+    ? isWithinDaylight(
+        todayData.astro.sunrise,
+        todayData.astro.sunset,
+        zonedNow.hour,
+        zonedNow.minute,
+      )
+    : zonedNow.hour >= 6 && zonedNow.hour < 18;
 
   const circularDiff = (a: number, b: number) =>
     Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
@@ -200,8 +204,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     /**
      * Desktop (lg+):
      * - Fixed, full-viewport canvas (no body scroll).
-     * - Both columns vertically centered.
-     * - Only the right panel scrolls internally (with pretty scrollbar).
+     * - Left column centered; right column scrolls internally.
      */
     <div className="relative">
       {/* background glow */}
@@ -213,8 +216,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       {/* fixed shell */}
       <div className="w-full flex justify-center py-8 lg:py-0 lg:fixed lg:inset-0 lg:overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-0 sm:px-4 lg:px-6 lg:h-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
-          {/* LEFT column — vertically centered, no scroll */}
-          <div className="lg:h-full lg:min-h-0 lg:flex lg:flex-col lg:justify-center">
+          {/* LEFT column */}
+          <div className="lg:h-full lg:min_h-0 lg:flex lg:flex-col lg:justify-center">
             <CurrentWeatherCard
               className="max-w-none"
               location={String(weather.coordinates)}
@@ -228,7 +231,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
               onToggle={handleToggleUnit}
             />
 
-            {/* Secondary cards — same height, stretched */}
+            {/* Secondary cards — same height */}
             {todayData?.astro && (
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
                 <MoonPhaseCard
@@ -239,7 +242,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                   moonset={todayData.astro.moonset}
                   unit={unit}
                 />
-
                 <WindCard
                   className={`h-full ${SECONDARY_CARD_HEIGHT}`}
                   speed={currentWindSpeed}
@@ -254,7 +256,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
             )}
           </div>
 
-          {/* RIGHT column — centered, scrolls inside with pretty scrollbar */}
+          {/* RIGHT column — scrolls inside */}
           <aside
             aria-label="Upcoming forecast"
             className="hidden lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:justify-center"
@@ -267,7 +269,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                 p-3 pr-2 w-full nice-scrollbar
                 before:pointer-events-none before:absolute before:inset-x-3 before:top-3 before:h-6
                 before:bg-gradient-to-b before:from-slate-900/60 before:to-transparent
-                after:pointer-events-none  after:absolute  after:inset-x-3  after:bottom-3 after:h-6
+                after:pointer-events-none after:absolute after:inset-x-3 after:bottom-3 after:h-6
                 after:bg-gradient-to-t after:from-slate-900/60 after:to-transparent
               "
             >
@@ -308,4 +310,3 @@ function getWeatherIcon(condition: string, isDay: boolean): string {
 }
 
 export default WeatherPage;
-
