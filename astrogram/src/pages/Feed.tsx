@@ -512,7 +512,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
       form.append("body", caption);
       if (file) form.append("image", file);
 
-    const res = await apiFetch("/posts", { method: "POST", body: form });
+      const res = await apiFetch("/posts", { method: "POST", body: form });
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || "Upload failed");
@@ -546,11 +546,11 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
   return (
     <form
       onSubmit={onSubmit}
-      className="group mt-3 relative rounded-3xl
+      className="group mt-1 relative rounded-3xl
                  bg-white/[0.06] hover:bg-white/[0.08]
                  backdrop-blur-xl
                  border border-white/10
-                 text-white p-3 sm:p-4
+                 text-white p-2 sm:p-3
                  shadow-[0_8px_28px_rgba(2,6,23,0.45)]
                  transition"
       aria-label="Create post"
@@ -568,14 +568,14 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
         />
         <div className="flex-1">
           <textarea
-            rows={2}
+            rows={1}
             placeholder={`What's on your mind${user.username ? `, @${user.username}` : ""}?`}
             value={caption}
             onChange={(e) => {
               setCaption(e.target.value);
               if (captionError && e.target.value.trim()) setCaptionError(null);
             }}
-            className="w-full resize-y rounded-2xl bg-white/[0.06] border border-white/10 text-gray-100 placeholder-gray-300/70 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 focus:border-white/20 px-3 py-2 text-sm"
+            className="w-full resize-y rounded-2xl bg-white/[0.06] border border-white/10 text-gray-100 placeholder-gray-300/70 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 focus:border-white/20 px-3 py-1.5 text-sm"
           />
           {captionError && (
             <p className="mt-1 text-xs text-red-400">{captionError}</p>
@@ -602,11 +602,11 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
           )}
 
           {/* Actions */}
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-2 flex items-center gap-2">
             {/* Image picker */}
             <label
               htmlFor="composer-image"
-              className="inline-flex items-center gap-2 cursor-pointer rounded-full border border-white/10 bg-white/[0.07] hover:bg-white/[0.12] px-4 py-1.5 text-xs sm:text-sm transition"
+              className="inline-flex items-center gap-2 cursor-pointer rounded-full border border-white/10 bg-white/[0.07] hover:bg-white/[0.12] px-3 py-1 text-xs sm:text-sm transition"
               title="Add image"
             >
               <ImageIcon className="w-4 h-4" />
@@ -626,7 +626,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-5 py-1.5 text-xs sm:text-sm font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-1 text-xs sm:text-sm font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
             >
               {loading ? (
                 <span className="inline-flex items-center">
@@ -825,16 +825,13 @@ const Feed: React.FC = () => {
             ref={scrollerRef}
             className="min-w-0 lg:h-full lg:overflow-y-auto lg:pt-6 pb-16"
           >
-            {/* Sticky search header (sticks inside left scroller) */}
+            {/* Sticky search header — OUTER WRAPPER MADE TRANSPARENT */}
             <div
-              className={`sticky ${STICKY_TOP_CLASS} z-30 border-b border-white/10 transition-shadow ${
-                scrolled ? "shadow-[0_8px_28px_rgba(2,6,23,0.35)]" : "shadow-none"
-              } bg-[#101828]/90 backdrop-blur-xl`}
+              className={`sticky ${STICKY_TOP_CLASS} z-30 bg-transparent backdrop-blur-0 border-b-0 shadow-none`}
             >
-              <div className="pointer-events-none select-none absolute inset-0 opacity-[0.35] bg-[radial-gradient(90%_60%_at_20%_0%,rgba(240,75,179,0.18),transparent),radial-gradient(90%_60%_at_90%_10%,rgba(90,162,255,0.18),transparent)]" />
               <div className="relative px-2 sm:px-4">
-                {/* SEARCH — glass, rounded-full */}
-                <form onSubmit={onSearchSubmit} className="flex gap-2 py-2">
+                {/* SEARCH — keep its own box; reduced height */}
+                <form onSubmit={onSearchSubmit} className="flex gap-2 py-1">
                   <div className="relative flex-1">
                     <div
                       aria-hidden
@@ -853,7 +850,7 @@ const Feed: React.FC = () => {
                                  border border-white/10
                                  text-gray-100 placeholder-gray-400
                                  focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-white/20
-                                 py-2 text-sm transition"
+                                 py-1.5 text-sm transition"
                       aria-label="Search"
                     />
                   </div>
@@ -862,7 +859,7 @@ const Feed: React.FC = () => {
                     type="submit"
                     className="inline-flex items-center justify-center rounded-full
                                bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff]
-                               px-5 py-2 text-sm font-semibold text-white whitespace-nowrap
+                               px-4 py-1.5 text-sm font-semibold text-white whitespace-nowrap
                                shadow-[0_12px_28px_rgba(15,23,42,0.45)]
                                ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px
                                disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
@@ -875,7 +872,7 @@ const Feed: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setResults(null)}
-                      className="px-4 py-2 text-sm rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-gray-100 border border-white/10 transition"
+                      className="px-3 py-1.5 text-sm rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-gray-100 border border-white/10 transition"
                       title="Clear results"
                     >
                       Clear
@@ -886,7 +883,7 @@ const Feed: React.FC = () => {
                 {searchLoading && <p className="mt-1 text-sm text-gray-300">Loading…</p>}
                 {searchError && <p className="mt-1 text-sm text-red-500">{searchError}</p>}
 
-                {/* Composer — glass card */}
+                {/* Composer — keep its own box; compact */}
                 <PostComposer onPosted={() => loadPage(1)} />
 
                 {/* Optional: Search results card */}

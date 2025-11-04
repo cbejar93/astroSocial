@@ -246,3 +246,17 @@ html, body, #root {
  
 }
 
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { 0% { opacity: 0; transform: translateX(40px); } 100% { opacity: 1; transform: translateX(0); } }
+@keyframes bgShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+.animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+.animate-scaleIn { animation: scaleIn 0.35s ease-out forwards; }
+.animate-floatUp { animation: floatUp 0.6s ease-out forwards; }
+.animate-slideIn { animation: slideIn 0.6s ease-out forwards; }
+.animate-bgShift {
+  animation: bgShift 10s ease-in-out infinite alternate;
+  background-size: 200% 200%;
+}

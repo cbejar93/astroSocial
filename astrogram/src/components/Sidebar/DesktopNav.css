@@ -75,3 +75,39 @@
 }
 
 .desktop-nav__group .desktop-nav__icon{ margin-right:0; }
+/* === OVERRIDES: make AstroLounge text white and enlarge logo === */
+
+.desktop-nav__brand-name {
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* Increase logo size */
+.desktop-nav__brand-icon {
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+}
+.desktop-nav__icon {
+  color: #ffffff !important;
+}
+.desktop-nav__link:hover .desktop-nav__icon,
+.desktop-nav__link:focus-visible .desktop-nav__icon,
+.desktop-nav__link--active .desktop-nav__icon {
+  color: #ffffff !important;
+}
+.desktop-nav__brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .25rem .25rem .5rem;
+  z-index: 5;
+  overflow: visible !important; /* ✅ ensures collapse icon isn’t clipped */
+}
+.desktop-nav__collapse-inline {
+  z-index: 10 !important;
+}
+

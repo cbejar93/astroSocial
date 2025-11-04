@@ -1,17 +1,15 @@
-// src/components/Sidebar/DesktopNav.tsx
 import React, { useEffect, useState } from "react";
-
 import { NavLink, useLocation } from "react-router-dom";
-import logoUrl from "../../../public/astrolounge.svg";
+import logoUrl from "../../../public/logo.png";
 import {
   CloudSun,
   Home,
   Settings,
   User,
-  ChevronDown,
-  ChevronUp,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
 import { fetchLounges } from "../../lib/api";
@@ -50,7 +48,6 @@ const BRAND_NAME = "AstroLounge";
 
 const DesktopNav: React.FC = () => {
   const location = useLocation();
-
   const [loungesOpen, setLoungesOpen] = useState<boolean>(
     location.pathname.startsWith("/lounge")
   );
@@ -88,36 +85,43 @@ const DesktopNav: React.FC = () => {
       }}
       aria-label="Primary"
     >
+      {/* BRAND AREA */}
       <div className="desktop-nav__brand">
         <NavLink
           to="/"
           className="desktop-nav__brand-link"
           aria-label={`${BRAND_NAME} Home`}
           title={BRAND_NAME}
-        >
-          <img src={logoUrl} alt={BRAND_NAME} className="desktop-nav__brand-icon" />
-          <span className="desktop-nav__brand-name">{BRAND_NAME}</span>
-        </NavLink>
-
-        <button
-          type="button"
-          className="desktop-nav__collapse-inline"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand" : "Collapse"}
           onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setCollapsed((p) => !p);
+            if (collapsed) {
+              e.preventDefault();
+              setCollapsed(false);
+            }
           }}
         >
-          {collapsed ? (
-            <ChevronRight className="desktop-nav__collapse-icon" />
-          ) : (
+          <img src={logoUrl} alt={BRAND_NAME} className="desktop-nav__brand-icon" />
+          {!collapsed && <span className="desktop-nav__brand-name">{BRAND_NAME}</span>}
+        </NavLink>
+
+        {/* Show collapse icon only when expanded */}
+        {!collapsed && (
+          <button
+            type="button"
+            className="desktop-nav__collapse-inline"
+            aria-label="Collapse sidebar"
+            title="Collapse"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setCollapsed(true);
+            }}
+          >
             <ChevronLeft className="desktop-nav__collapse-icon" />
-          )}
-        </button>
+          </button>
+        )}
       </div>
 
+      {/* NAVIGATION LINKS */}
       <div id="desktop-nav-scroll" className="desktop-nav__scroll">
         {navItems.map(({ label, to, icon: Icon, matchStartsWith }) => {
           const isActive = matchStartsWith
@@ -126,7 +130,6 @@ const DesktopNav: React.FC = () => {
 
           if (label === "Lounges") {
             const groupActive = isActive;
-
             if (collapsed) {
               return (
                 <NavLink
@@ -141,7 +144,6 @@ const DesktopNav: React.FC = () => {
                   title="Lounges"
                 >
                   <Icon className="desktop-nav__icon" />
-                  <span className="desktop-nav__label">Lounges</span>
                 </NavLink>
               );
             }
@@ -174,7 +176,7 @@ const DesktopNav: React.FC = () => {
                     onClick={() => setLoungesOpen((o) => !o)}
                   >
                     {loungesOpen ? (
-                      <ChevronDown className="desktop-nav__chevron" />
+                      <ChevronUp className="desktop-nav__chevron" />
                     ) : (
                       <ChevronDown className="desktop-nav__chevron" />
                     )}
@@ -190,7 +192,6 @@ const DesktopNav: React.FC = () => {
                         loungesList.map((l) => {
                           const slug = slugFromName(l.name);
                           const open = openLoungeId === l.id;
-
                           return (
                             <li key={l.id} className="desktop-nav__subitem">
                               <div className="desktop-nav__sublounge">
@@ -202,17 +203,13 @@ const DesktopNav: React.FC = () => {
                                       isActive ? "desktop-nav__sublink--active" : "",
                                     ].join(" ")
                                   }
-                                  aria-label={l.name}
-                                  title={l.name}
                                 >
                                   <span className="desktop-nav__dot" aria-hidden="true" />
                                   {l.name}
                                 </NavLink>
-
                                 <button
                                   type="button"
                                   className="desktop-nav__mini-toggle"
-                                  aria-label={`Toggle ${l.name} sub categories`}
                                   aria-expanded={open}
                                   onClick={() => setOpenLoungeId(open ? null : l.id)}
                                 >
@@ -292,7 +289,7 @@ const DesktopNav: React.FC = () => {
               title={label}
             >
               <Icon className="desktop-nav__icon" />
-              <span className="desktop-nav__label">{label}</span>
+              {!collapsed && <span className="desktop-nav__label">{label}</span>}
             </NavLink>
           );
         })}

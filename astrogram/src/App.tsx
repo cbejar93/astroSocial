@@ -1,7 +1,7 @@
 // src/App.tsx
 import { Routes, Route, Navigate, useLocation, type Location } from "react-router-dom";
 import { useEffect } from "react";
-import LoungePostModal from "./components/Modal/LoungePostModal";
+// import LoungePostModal from "./components/Modal/LoungePostModal";
 
 import Feed from "./pages/Feed";
 import UploadForm from "./components/UploadForm/UploadForm";
@@ -100,7 +100,7 @@ const App: React.FC = () => {
                 <Route path="/lounge/:loungeName" element={<LoungePage />} />
                 <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
                 <Route path="/search" element={<SearchPage />} />
-                <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} />
+                {/* <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} /> */}
                 <Route path="/upload" element={<UploadForm />} />
                 <Route path="/completeProfile" element={<CompleteProfilePage />} />
                 <Route path="/profile" element={<ProfileOverviewPage />} />

@@ -37,10 +37,12 @@ const AuroraBorder: React.FC<React.PropsWithChildren<{ className?: string }>> = 
     className={[
       "rounded-2xl p-[1px]",
       "bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]",
+      "min-w-0", /* NEW: allow child to shrink */
       className,
     ].join(" ")}
   >
-    <div className="rounded-2xl bg-[#0E1626]/80 ring-1 ring-white/10 backdrop-blur-md shadow-[0_16px_60px_rgba(2,6,23,.55)] h-full flex flex-col">
+    <div className="rounded-2xl bg-[#0E1626]/80 ring-1 ring-white/10 backdrop-blur-md shadow-[0_16px_60px_rgba(2,6,23,.55)] h-full flex flex-col min-w-0 overflow-hidden">
+      {/* NEW: min-w-0 & overflow-hidden block sideways creep */}
       {children}
     </div>
   </div>
@@ -155,12 +157,13 @@ const LoungePostDetailPage: React.FC = () => {
 
   /* ---------------------- Render ---------------------- */
   return (
-    <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full">
+    <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+      {/* NEW: overflow-x-hidden at page level */}
       <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN */}
-        <div className="lg:h-full lg:flex lg:flex-col lg:justify-center">
+        <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">{/* NEW */}
           <AuroraBorder>
-            <div className="relative flex flex-col justify-between h-full">
+            <div className="relative flex flex-col justify-between h-full min-w-0">{/* NEW */}
               <button
                 onClick={handleBack}
                 className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
@@ -172,14 +175,16 @@ const LoungePostDetailPage: React.FC = () => {
 
               <div className="p-5 pt-14 space-y-5 overflow-hidden">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">{/* NEW */}
                     <img
                       src={post.avatarUrl ?? "/defaultPfp.png"}
                       alt={post.username}
-                      className="w-10 h-10 rounded-full ring-1 ring-white/10"
+                      className="w-10 h-10 rounded-full ring-1 ring-white/10 shrink-0"
                     />
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-100">@{post.username}</h3>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-100 truncate">
+                        @{post.username}
+                      </h3>
                       <p className="text-xs text-gray-400">
                         Joined {authorJoined ?? "—"} • {post.authorPostCount ?? 0} posts
                       </p>
@@ -209,9 +214,11 @@ const LoungePostDetailPage: React.FC = () => {
                   )}
                 </div>
 
-                <div>
-                  <h1 className="text-lg font-bold text-gray-100 mb-2">{post.title}</h1>
-                  <p className="text-sm text-gray-300 leading-relaxed">
+                <div className="min-w-0">
+                  <h1 className="text-lg font-bold text-gray-100 mb-2 break-words">
+                    {post.title}
+                  </h1>
+                  <p className="text-sm text-gray-300 leading-relaxed break-words [overflow-wrap:anywhere]">
                     <span dangerouslySetInnerHTML={{ __html: post.caption }} />
                   </p>
                 </div>
@@ -247,9 +254,10 @@ const LoungePostDetailPage: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN — Enhanced look */}
-        <aside className="hidden lg:flex lg:h-full lg:flex-col lg:justify-center">
+        <aside className="hidden lg:flex lg:h-full lg:flex-col lg:justify-center lg:min-w-0">
+          {/* NEW: min-w-0 to let the panel shrink within the grid */}
           <AuroraBorder>
-            <div className="flex flex-col h-[80vh]">
+            <div className="flex flex-col h-[80vh] min-w-0">{/* NEW */}
               {/* Header */}
               <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
@@ -258,8 +266,12 @@ const LoungePostDetailPage: React.FC = () => {
               </div>
 
               {/* Scrollable Comments */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+              <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 min-w-0">
+                {/* NEW: overflow-x-hidden & min-w-0 on scroller */}
+                <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
+                  {/* NEW: force inner content to wrap, images to fit, code to scroll internally */}
+                  <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+                </div>
               </div>
 
               {/* Footer */}

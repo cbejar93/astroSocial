@@ -169,7 +169,6 @@ const PostCard: React.FC<PostCardProps> = ({
 
     setRepostPending(true);
     try {
-      // Your backend: POST /posts/:id/repost creates a repost. If already exists -> 409.
       const data: any = await repostPost(String(id));
 
       const nextReposted =
@@ -196,7 +195,6 @@ const PostCard: React.FC<PostCardProps> = ({
         value: nextCount,
       });
     } catch (e: unknown) {
-      // Parse status safely (works with different error shapes)
       type WithResponse = { response?: { status?: number } };
       const err = e as (Error & { statusCode?: number; status?: number }) & WithResponse;
       const msg = typeof err?.message === "string" ? err.message : "";
@@ -208,7 +206,6 @@ const PostCard: React.FC<PostCardProps> = ({
         (match ? parseInt(match[1], 10) : 0);
 
       if (status === 409) {
-        // Already reposted — reflect correct UI instead of throwing
         if (!reposted) {
           setReposted(true);
           onRepostChange?.(id, true, repostCount);
@@ -286,7 +283,7 @@ const PostCard: React.FC<PostCardProps> = ({
     : `${n}`;
 
   return (
-    <div className="w-full py-0 sm:py-2 sm:px-2">
+    <div className="w-full py-0 sm:py-1 sm:px-1">
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0A0F1F] via-[#0F1B2E] to-[#0A0F1C] text-white shadow-[0_20px_45px_rgba(2,6,23,0.45)]">
         {/* 3-dot menu */}
         <div className="absolute right-2 top-2 z-20" onClick={stop}>
@@ -346,13 +343,13 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Reposted badge */}
         {repostedBy && (
-          <div className="px-4 sm:px-6 pt-4 text-xs text-slate-300/80">
+          <div className="px-4 sm:px-6 pt-3 text-xs text-slate-300/80">
             Reposted by {repostedBy}
           </div>
         )}
 
         {/* Header */}
-        <div className="relative z-[1] px-4 sm:px-6 pt-4 pb-3 flex justify-between items-start">
+        <div className="relative z-[1] px-4 sm:px-6 pt-3 pb-2 flex justify-between items-start">
           <Link
             to={`/users/${encodedUsername}/posts`}
             onClick={(e) => e.stopPropagation()}
@@ -361,7 +358,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <img
               src={avatarUrl ?? "/defaultPfp.png"}
               alt={`${username}'s profile`}
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-white/15"
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-white/15"
             />
             <div className="leading-tight">
               <div className="font-semibold text-white/95">@{username}</div>
@@ -375,15 +372,16 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
 
         {/* Caption */}
-        <div className="relative z-[1] px-4 sm:px-6 pb-3 text-[15px] text-slate-200/95">
+        <div className="relative z-[1] px-4 sm:px-6 pb-2 text-[14px] leading-snug text-slate-200/95">
           {caption}
         </div>
 
-        {/* Media */}
+        {/* Media (shorter aspect) */}
         {imageUrl && (
-          <div className="relative z-[1] w-full px-4 sm:px-6 pb-2">
+          <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
             <div className="overflow-hidden rounded-2xl border border-white/10">
-              <div className="aspect-video">
+              {/* shorter than 16:9 to reduce height */}
+              <div className="aspect-[2/1] md:aspect-[21/9]">
                 <img
                   src={imageUrl}
                   alt={`Post by ${username}: ${caption}`}
@@ -399,7 +397,7 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
 
         {/* Views */}
-        <div className="relative z-[1] px-4 sm:px-6 py-2">
+        <div className="relative z-[1] px-4 sm:px-6 py-1">
           <div className="flex items-center gap-2 text-[13px] text-slate-300" aria-label="Views">
             <Eye className="w-4 h-4 opacity-90" aria-hidden="true" />
             <span className="tabular-nums">{formatK(views)}</span>
@@ -407,12 +405,12 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
 
         {/* Actions */}
-        <div onClick={stop} className="relative z-[1] px-3 sm:px-6 pb-5 pt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div onClick={stop} className="relative z-[1] px-3 sm:px-6 pb-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
               type="button"
               onClick={handleLike}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3 py-2 text-xs sm:text-sm hover:bg-white/10 transition"
             >
               <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
               <span className="font-medium leading-none">Like({starCount})</span>
@@ -422,7 +420,7 @@ const PostCard: React.FC<PostCardProps> = ({
               type="button"
               onClick={handleRepost}
               disabled={repostPending}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3 py-2 text-xs sm:text-sm hover:bg-white/10 transition disabled:opacity-60"
             >
               <Repeat2 className="w-4 h-4" />
               <span className="font-medium leading-none">
@@ -433,7 +431,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <button
               type="button"
               onClick={() => navigate(`/posts/${id}`)}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3.5 py-2.5 text-xs sm:text-sm hover:bg-white/10 transition"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3 py-2 text-xs sm:text-sm hover:bg-white/10 transition"
             >
               <MessageCircle className="w-4 h-4" />
               <span className="font-medium leading-none">Comment({commentCount})</span>
