@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -14,8 +15,8 @@ import WeatherSkeleton from "../components/Weather/WeatherSkeleton";
 import WindCard from "../components/Weather/WindCard";
 import { isWithinDaylight } from "../lib/time";
 import type { WeatherData } from "../types/weather";
+import type { TimeBlock } from "../types/weather";
 import { useAuth } from "../hooks/useAuth";
-// import PrecipitationChart from "../components/Weather/PrecipitationChart";
 
 export { parseTimeParts } from "../lib/time";
 
@@ -34,6 +35,7 @@ export interface ZonedDateInfo {
   formattedDate: string;
 }
 
+/* --------------------------- Timezone helper --------------------------- */
 export const getZonedDateInfo = (
   timeZone: string,
   referenceDate: Date = new Date(),
@@ -73,6 +75,19 @@ const SECONDARY_CARD_HEIGHT = "h-[248px] sm:h-[268px]";
 type HourlyNumberMap = Record<string, number>;
 const EMPTY_NUM_MAP: HourlyNumberMap = {};
 
+const SLOTS_24 = [0, 3, 6, 12, 18, 21] as const;
+const circularDiff = (a: number, b: number) =>
+  Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
+
+/* ---------------------------- Local converters ---------------------------- */
+// Assume backend stores Celsius and km/h. Convert on the fly for display.
+const toDisplayTemp = (c: number, unit: "metric" | "us") =>
+  unit === "us" ? Math.round(c * 9 / 5 + 32) : Math.round(c);
+
+const toDisplaySpeed = (kmh: number, unit: "metric" | "us") =>
+  unit === "us" ? Math.round(kmh / 1.60934) : Math.round(kmh);
+
+/* --------------------------------- Page ---------------------------------- */
 const WeatherPage: React.FC<WeatherPageProps> = ({
   weather,
   loading,
@@ -84,22 +99,36 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   const [savingPreference, setSavingPreference] = useState(false);
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
 
-  // Respect saved preference
+  // right-panel scroller (preserve position on unit switch)
+  const asideScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Respect saved preference on mount/changes
   useEffect(() => {
     if (!user?.temperature) return;
     const preferredUnit = user.temperature === "F" ? "us" : "metric";
     setUnit((current) => (current === preferredUnit ? current : preferredUnit));
   }, [user?.temperature, setUnit]);
 
-  // Toggle handler (unchanged UI/UX)
   const handleToggleUnit = useCallback(async () => {
     if (savingPreference) return;
+
+    // snapshot scroll before changing unit
+    const prevScrollTop = asideScrollRef.current?.scrollTop ?? 0;
 
     const previousUnit = unit;
     const nextUnit = unit === "metric" ? "us" : "metric";
     setPreferenceError(null);
     setSavingPreference(true);
-    setUnit(nextUnit); // optimistic
+
+    // instant local toggle (optimistic) — no refetch, just convert numbers
+    setUnit(nextUnit);
+
+    // restore scroll on next frame to avoid “refresh” feel
+    requestAnimationFrame(() => {
+      if (asideScrollRef.current) {
+        asideScrollRef.current.scrollTop = prevScrollTop;
+      }
+    });
 
     if (!user) {
       setSavingPreference(false);
@@ -110,8 +139,14 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       await updateTemperaturePreference(nextUnit === "metric" ? "C" : "F");
     } catch (err) {
       console.error(err);
-      setUnit(previousUnit); // rollback
+      // rollback if saving failed — keep it smooth
+      setUnit(previousUnit);
       setPreferenceError("Unable to save temperature preference. Please try again.");
+      requestAnimationFrame(() => {
+        if (asideScrollRef.current) {
+          asideScrollRef.current.scrollTop = prevScrollTop;
+        }
+      });
     } finally {
       setSavingPreference(false);
     }
@@ -123,7 +158,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       : "UTC";
   const timeZone = weather?.timezone ?? resolvedLocalZone ?? "UTC";
 
-  // ---- All hooks BEFORE any early return (fixes hook-order crash) ----
+  // ---- Hooks before early returns ----
   const zonedNow = useMemo(() => getZonedDateInfo(timeZone), [timeZone]);
   const todayStr = zonedNow.isoDate;
 
@@ -132,11 +167,10 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     [weather, todayStr],
   );
 
-  // Prepare maps even when data is missing; they’ll just be {}.
-  const speedMap: HourlyNumberMap = todayData?.conditions?.windspeed ?? EMPTY_NUM_MAP;
+  const speedMap: HourlyNumberMap = todayData?.conditions?.windspeed ?? EMPTY_NUM_MAP;       // km/h
   const directionMap: HourlyNumberMap = todayData?.conditions?.winddirection ?? EMPTY_NUM_MAP;
-  const tempMap: HourlyNumberMap = todayData?.conditions?.temperature ?? EMPTY_NUM_MAP;
-  const conditionMap: HourlyNumberMap = todayData?.conditions?.cloudcover ?? EMPTY_NUM_MAP;
+  const tempMap: HourlyNumberMap = todayData?.conditions?.temperature ?? EMPTY_NUM_MAP;      // °C
+  const conditionMap: HourlyNumberMap = todayData?.conditions?.cloudcover ?? EMPTY_NUM_MAP;  // %
 
   const hourKeys = useMemo(() => {
     const arrays = [
@@ -161,9 +195,19 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     () => (weather?.data ?? []).filter((day) => day.date >= todayStr),
     [weather, todayStr],
   );
-  // -------------------------------------------------------------------
 
-  // Early returns occur AFTER all hooks
+  // Decide the active slot once (timezone-aware)
+  const activeSlot24 = useMemo(
+    () =>
+      SLOTS_24.reduce(
+        (best, cur) =>
+          circularDiff(cur, zonedNow.hour) < circularDiff(best, zonedNow.hour) ? cur : best,
+        SLOTS_24[0]
+      ),
+    [zonedNow.hour]
+  );
+
+  // ---- Early returns ----
   if (loading) return <WeatherSkeleton />;
   if (error) return <div className="text-red-500 text-center py-6">{error}</div>;
   if (!weather?.data?.length)
@@ -181,7 +225,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       )
     : zonedNow.hour >= 6 && zonedNow.hour < 18;
 
-  const circularDiff = (a: number, b: number) =>
+  const circ = (a: number, b: number) =>
     Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
 
   const chosenKey =
@@ -189,23 +233,43 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       ? hourKeys.reduce((best, cur) => {
           const b = Number(best);
           const c = Number(cur);
-          return circularDiff(c, zonedNow.hour) < circularDiff(b, zonedNow.hour) ? cur : best;
+          return circ(c, zonedNow.hour) < circ(b, zonedNow.hour) ? cur : best;
         }, hourKeys[0]!)
       : "0";
 
-  const currentWindSpeed = speedMap[chosenKey] ?? 0;
-  const currentWindDirection = directionMap[chosenKey] ?? 0;
-  const currentTemp = tempMap[chosenKey] ?? 0;
-  const currentCondition = getConditionFromClouds(conditionMap[chosenKey]);
+  // Raw values from backend (°C, km/h)
+  const rawWindSpeedKmh = speedMap[chosenKey] ?? 0;
+  const rawWindDirection = directionMap[chosenKey] ?? 0;
+  const rawTempC = tempMap[chosenKey] ?? 0;
 
-  const icon = getWeatherIcon(currentCondition, isDaytime);
+  const currentCondition = (() => {
+    const v = conditionMap[chosenKey];
+    if (v === undefined || Number.isNaN(v)) return "Unknown";
+    if (v < 20) return "Clear";
+    if (v < 50) return "Partly Cloudy";
+    if (v < 80) return "Cloudy";
+    return "Overcast";
+  })();
+
+  const icon = (() => {
+    switch (currentCondition) {
+      case "Clear": return isDaytime ? "☀️" : "🌕";
+      case "Partly Cloudy": return isDaytime ? "⛅️" : "🌥️";
+      case "Cloudy": return "☁️";
+      case "Overcast": return "🌫️";
+      default: return "❓";
+    }
+  })();
+
+  // Cast numeric slot to TimeBlock union safely
+  const toTimeBlock = (n: number): TimeBlock => String(n) as TimeBlock;
+
+  // Display values (converted instantly when unit toggles)
+  const displayTemp = toDisplayTemp(rawTempC, unit);
+  const displayWind = toDisplaySpeed(rawWindSpeedKmh, unit);
+  const windUnitLabel = unit === "us" ? "mph" : "km/h";
 
   return (
-    /**
-     * Desktop (lg+):
-     * - Fixed, full-viewport canvas (no body scroll).
-     * - Left column centered; right column scrolls internally.
-     */
     <div className="relative">
       {/* background glow */}
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -217,17 +281,17 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       <div className="w-full flex justify-center py-8 lg:py-0 lg:fixed lg:inset-0 lg:overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-0 sm:px-4 lg:px-6 lg:h-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
           {/* LEFT column */}
-          <div className="lg:h-full lg:min_h-0 lg:flex lg:flex-col lg:justify-center">
+          <div className="lg:h-full lg:min-h-0 lg:flex lg:flex-col lg:justify-center">
             <CurrentWeatherCard
               className="max-w-none"
               location={String(weather.coordinates)}
               date={zonedNow.formattedDate}
-              temperature={currentTemp}
+              temperature={displayTemp}             // ← converted instantly
               condition={currentCondition}
               icon={icon}
               sunrise={sunrise}
               sunset={sunset}
-              unit={unit}
+              unit={unit}                            // component decides symbol
               onToggle={handleToggleUnit}
             />
 
@@ -244,9 +308,9 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                 />
                 <WindCard
                   className={`h-full ${SECONDARY_CARD_HEIGHT}`}
-                  speed={currentWindSpeed}
-                  direction={currentWindDirection}
-                  unit={unit === "us" ? "mph" : "km/h"}
+                  speed={displayWind}                 // ← converted instantly
+                  direction={rawWindDirection}
+                  unit={windUnitLabel}
                 />
               </div>
             )}
@@ -262,20 +326,27 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
             className="hidden lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:justify-center"
           >
             <div
+              ref={asideScrollRef}
               className="
                 relative max-h-[78vh] overflow-y-auto overscroll-contain
                 rounded-2xl bg-slate-900/30 ring-1 ring-white/10
                 shadow-[inset_0_1px_0_rgba(255,255,255,.04),0_10px_30px_rgba(2,6,23,.35)]
                 p-3 pr-2 w-full nice-scrollbar
-                before:pointer-events-none before:absolute before:inset-x-3 before:top-3 before:h-6
-                before:bg-gradient-to-b before:from-slate-900/60 before:to-transparent
-                after:pointer-events-none after:absolute after:inset-x-3 after:bottom-3 after:h-6
-                after:bg-gradient-to-t after:from-slate-900/60 after:to-transparent
+                [scrollbar-gutter:stable]
+                [--fade:16px]
+                [mask-image:linear-gradient(to_bottom,transparent,black_var(--fade),black_calc(100%-var(--fade)),transparent)]
+                supports-[-webkit-mask-image:linear-gradient(#000,#000)]:[-webkit-mask-image:linear-gradient(to_bottom,transparent,black_var(--fade),black_calc(100%-var(--fade)),transparent)]
               "
             >
               <div className="flex flex-col gap-3 pr-1">
                 {futureWeatherData.map((day, index) => (
-                  <WeatherCard key={day.date} day={day} isToday={index === 0} unit={unit} />
+                  <WeatherCard
+                    key={day.date} // keep stable to avoid remounts on unit switch
+                    day={day}
+                    isToday={index === 0}
+                    unit={unit}
+                    forcedActiveBlock={index === 0 ? toTimeBlock(activeSlot24) : undefined}
+                  />
                 ))}
               </div>
             </div>
@@ -285,28 +356,5 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     </div>
   );
 };
-
-function getConditionFromClouds(cloudCover?: number): string {
-  if (cloudCover === undefined || Number.isNaN(cloudCover)) return "Unknown";
-  if (cloudCover < 20) return "Clear";
-  if (cloudCover < 50) return "Partly Cloudy";
-  if (cloudCover < 80) return "Cloudy";
-  return "Overcast";
-}
-
-function getWeatherIcon(condition: string, isDay: boolean): string {
-  switch (condition) {
-    case "Clear":
-      return isDay ? "☀️" : "🌕";
-    case "Partly Cloudy":
-      return isDay ? "⛅️" : "🌥️";
-    case "Cloudy":
-      return "☁️";
-    case "Overcast":
-      return "🌫️";
-    default:
-      return "❓";
-  }
-}
 
 export default WeatherPage;

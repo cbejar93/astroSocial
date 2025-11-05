@@ -7,10 +7,10 @@ type WeatherCardProps = {
   isToday?: boolean;
   unit?: "metric" | "us";
   className?: string;
+  forcedActiveBlock?: TimeBlock;
 };
 
 /* ------------------------------ Styling Maps ------------------------------ */
-
 const levelColors: Record<number, string> = {
   1: "bg-red-600",
   2: "bg-orange-500",
@@ -19,10 +19,7 @@ const levelColors: Record<number, string> = {
   5: "bg-green-500",
 };
 
-// No effects: pure circles (no shadows/inner glows)
-
 /* ---------------------------- Time/Condition Data ------------------------- */
-
 const timeBlocks: TimeBlock[] = ["0", "3", "6", "12", "18", "21"];
 const conditions: Array<keyof WeatherDay["conditions"]> = [
   "cloudcover",
@@ -37,7 +34,6 @@ const conditionLabels: Record<string, string> = {
 };
 
 /* --------------------------------- Icons ---------------------------------- */
-
 const CloudIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
     <path d="M7 18h9a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.8A3.5 3.5 0 0 0 7 18Z" fill="currentColor" />
@@ -65,23 +61,34 @@ function ConditionIcon({ name }: { name: string }) {
 }
 
 /* ---------------------------- Time Block Helper --------------------------- */
-
 function getClosestTimeBlock(): TimeBlock {
   const now = new Date().getHours();
   const blocks = timeBlocks.map((tb) => parseInt(tb, 10)).sort((a, b) => a - b);
-  for (const block of blocks) if (now <= block) return block.toString() as TimeBlock;
-  return blocks[0].toString() as TimeBlock;
+  let best = blocks[0];
+  const circ = (a: number, b: number) => Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
+  for (const b of blocks) if (circ(b, now) < circ(best, now)) best = b;
+  return String(best) as TimeBlock;
 }
 
 /* --------------------------------- Card ----------------------------------- */
-
 const WeatherCard: React.FC<WeatherCardProps> = ({
   day,
   isToday = false,
   unit = "metric",
   className = "",
+  forcedActiveBlock,
 }) => {
-  const activeTime = isToday ? getClosestTimeBlock() : null;
+  const activeTime: TimeBlock | null = isToday
+    ? (forcedActiveBlock ?? getClosestTimeBlock())
+    : null;
+
+  // Responsive track size: shrinks on small screens to avoid horizontal overflow.
+  const maxTrackPx = unit === "us" ? 52 : 40; // upper cap for larger screens
+  const timeTrack = `clamp(28px, 8vw, ${maxTrackPx}px)`; // min 28px on tiny screens
+  const pillMinW =
+    unit === "us"
+      ? "min-w-[36px] sm:min-w-[52px]"
+      : "min-w-[32px] sm:min-w-[40px]";
 
   const dateLabel = new Date(day.date).toLocaleDateString(undefined, {
     weekday: "short",
@@ -93,34 +100,26 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   return (
     <div
       className={[
-        "group relative w-full",
-        // Aurora gradient border
+        "group relative w-full overflow-x-hidden",
         "rounded-2xl p-[1px] bg-[conic-gradient(at_30%_10%,rgba(34,211,238,.35),rgba(168,85,247,.28),rgba(16,185,129,.35),rgba(34,211,238,.35))]",
-        "transition-transform duration-300 hover:scale-[1.01]",
+        // hover shadow (no transform -> prevents blur seam)
+        "transition-shadow duration-300 hover:shadow-[0_10px_36px_rgba(2,6,23,.55)]",
+        // wider feel (override via className if needed)
+        "max-w-[820px] sm:max-w-[880px]",
         className,
       ].join(" ")}
     >
       {/* Inner glass panel */}
       <div
         className={[
-          "relative rounded-2xl overflow-hidden",
-          "bg-slate-900/60 backdrop-blur-md",
-          "text-slate-100",
+          "relative rounded-2xl box-border overflow-hidden", // ← critical to avoid seams with blur
+          "bg-slate-900/75 supports-[backdrop-filter]:backdrop-blur-md text-slate-100",
           "ring-1 ring-white/10 shadow-[0_8px_28px_rgba(2,6,23,.44)]",
+          "px-5 pb-4 pt-3", // extra right padding to prevent clipping
         ].join(" ")}
       >
-        {/* Subtle star texture */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[.08] rounded-2xl"
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(255,255,255,.45) 1px, transparent 1.4px)",
-            backgroundSize: "22px 22px",
-          }}
-        />
-
         {/* Header */}
-        <div className="relative flex items-center justify-between px-3 pt-3">
+        <div className="relative flex items-center justify-between">
           <h3 className="text-sm sm:text-base font-semibold">{dateLabel}</h3>
           {isToday && (
             <span className="inline-flex items-center gap-1 rounded-full bg-cyan-400/12 text-cyan-300 px-2 py-0.5 text-[10px] font-medium ring-1 ring-cyan-400/30">
@@ -131,20 +130,25 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
         </div>
 
         {/* Grid */}
-        <div className="px-3 pb-3 mt-1.5">
-          <div className="grid grid-cols-[88px_repeat(6,40px)] gap-x-1.5 gap-y-2 items-center">
+        <div className="mt-2 min-w-0">
+          <div
+            className="grid gap-x-1.5 gap-y-2 items-center w-full"
+            style={{ gridTemplateColumns: `minmax(72px,auto) repeat(6, minmax(${timeTrack}, 1fr))` }}
+          >
             {/* Time headers */}
             <div className="text-[11px] text-slate-300/85 font-medium">Time</div>
             {timeBlocks.map((time) => {
               const hour = Number.parseInt(time, 10);
-              const label = formatHourLabel(hour, unit);
+              const raw = formatHourLabel(hour, unit);
+              const label = unit === "us" ? raw.replace(" ", "\u202F") : raw; // keep 0H/AM labels tight
               const isActive = time === activeTime && isToday;
 
               return (
-                <div key={time} className="flex justify-center">
+                <div key={time} className="flex justify-center min-w-0">
                   <div
                     className={[
-                      "text-[10px] px-1.5 py-0.5 rounded-full",
+                      "text-[10px] px-2 py-0.5 rounded-full text-center leading-4 whitespace-nowrap",
+                      pillMinW,
                       "transition-colors duration-200",
                       isActive
                         ? "bg-sky-500/15 text-sky-200 ring-1 ring-sky-400/30"
@@ -177,17 +181,17 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
                   const isActive = time === activeTime && isToday;
 
                   const hour = Number.parseInt(time, 10);
-                  const label = formatHourLabel(hour, unit);
+                  const raw = formatHourLabel(hour, unit);
+                  const label = unit === "us" ? raw.replace(" ", "\u202F") : raw;
 
                   return (
-                    <div key={`${String(condition)}-${time}`} className="flex justify-center">
+                    <div key={`${String(condition)}-${time}`} className="flex justify-center min-w-0">
                       <div
                         className={[
-                          "w-5 h-5 rounded-full",
+                          "w-5 h-5 shrink-0 rounded-full",
                           colorClass,
                           "transition-transform duration-150",
                           "group-hover:scale-[1.05]",
-                          // Active uses a subtle outline ONLY (no shadows)
                           isActive ? "outline outline-2 outline-sky-300" : "",
                         ].join(" ")}
                         title={`${String(condition)} at ${label} = ${rawValue ?? "N/A"}`}
@@ -201,7 +205,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           </div>
 
           {/* Mini legend */}
-          <div className="mt-2.5 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between">
             <span className="text-[10px] text-slate-300/80">Worst</span>
             <div className="relative mx-2 h-1.5 w-full rounded-full overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-yellow-500 to-green-600 opacity-95" />
@@ -217,7 +221,6 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
 export default WeatherCard;
 
 /* ---------------------------- Value → Level Map --------------------------- */
-
 export function mapValueToLevel(condition: string, value: number): number {
   if (value == null || isNaN(value)) return 1;
 

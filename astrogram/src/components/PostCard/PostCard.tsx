@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   sharePost,
-  repostPost, // POST creates a repost; server returns 409 if already reposted
+  repostPost,
   apiFetch,
   savePost as savePostRequest,
   unsavePost,
@@ -110,7 +110,6 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
-  /* ---------------- Like ---------------- */
   const handleLike = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!user) return;
@@ -132,7 +131,6 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  /* ---------------- Share ---------------- */
   const handleShare = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     const postUrl = `${window.location.origin}/posts/${id}`;
@@ -162,7 +160,6 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  /* ---------------- Repost (handle 409 Already Reposted) ---------------- */
   const handleRepost = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!user || repostPending) return;
@@ -221,7 +218,6 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  /* ---------------- Save ---------------- */
   const toggleSave = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!user) return;
@@ -254,7 +250,6 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  // Close menu on outside click
   useEffect(() => {
     const handler = (ev: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(ev.target as Node)) setMenuOpen(false);
@@ -284,14 +279,23 @@ const PostCard: React.FC<PostCardProps> = ({
 
   return (
     <div className="w-full py-0 sm:py-1 sm:px-1">
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0A0F1F] via-[#0F1B2E] to-[#0A0F1C] text-white shadow-[0_20px_45px_rgba(2,6,23,0.45)]">
+      <div
+        className={[
+          "relative overflow-hidden rounded-lg",
+          "border border-white/10",
+          // Medium-contrast card (between earlier dark and light)
+          "bg-gradient-to-br from-slate-900/80 via-slate-900/70 to-slate-900/60",
+          "backdrop-blur-sm text-slate-100",
+          "shadow-[0_16px_36px_rgba(2,6,23,0.35)]",
+        ].join(" ")}
+      >
         {/* 3-dot menu */}
         <div className="absolute right-2 top-2 z-20" onClick={stop}>
           <div ref={menuRef} className="relative">
             <button
               type="button"
               onClick={() => setMenuOpen((o) => !o)}
-              className="rounded-lg p-2 text-slate-300/90 hover:text-white hover:bg-white/10 transition"
+              className="rounded-md p-2 text-slate-200/90 hover:text-white hover:bg-white/10 transition"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-label="Post options"
@@ -301,12 +305,12 @@ const PostCard: React.FC<PostCardProps> = ({
             {menuOpen && (
               <div
                 role="menu"
-                className="absolute right-0 top-[calc(100%+0.5rem)] w-44 overflow-hidden rounded-xl border border-white/10 bg-[#0E1626]/95 backdrop-blur-md shadow-2xl"
+                className="absolute right-0 top-[calc(100%+0.5rem)] w-44 overflow-hidden rounded-md border border-white/10 bg-slate-900/85 backdrop-blur-xl shadow-2xl"
               >
                 <button
                   role="menuitem"
                   onClick={toggleSave}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-100 hover:bg-white/10"
                 >
                   <Bookmark className="w-4 h-4" />
                   <span>{saved ? "Unsave" : "Save"}({saveCount})</span>
@@ -317,7 +321,7 @@ const PostCard: React.FC<PostCardProps> = ({
                 <button
                   role="menuitem"
                   onClick={handleShare}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-100 hover:bg-white/10"
                 >
                   <Share2 className="w-4 h-4" />
                   <span>Share({shareCount})</span>
@@ -329,7 +333,7 @@ const PostCard: React.FC<PostCardProps> = ({
                     <button
                       role="menuitem"
                       onClick={handleDelete}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-white/10"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-300 hover:bg-white/10"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Delete</span>
@@ -343,7 +347,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Reposted badge */}
         {repostedBy && (
-          <div className="px-4 sm:px-6 pt-3 text-xs text-slate-300/80">
+          <div className="px-4 sm:px-6 pt-3 text-xs text-slate-300">
             Reposted by {repostedBy}
           </div>
         )}
@@ -376,11 +380,10 @@ const PostCard: React.FC<PostCardProps> = ({
           {caption}
         </div>
 
-        {/* Media (shorter aspect) */}
+        {/* Media */}
         {imageUrl && (
           <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
-            <div className="overflow-hidden rounded-2xl border border-white/10">
-              {/* shorter than 16:9 to reduce height */}
+            <div className="overflow-hidden rounded-md border border-white/10 bg-black/20">
               <div className="aspect-[2/1] md:aspect-[21/9]">
                 <img
                   src={imageUrl}
@@ -410,7 +413,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <button
               type="button"
               onClick={handleLike}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3 py-2 text-xs sm:text-sm hover:bg-white/10 transition"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition"
             >
               <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
               <span className="font-medium leading-none">Like({starCount})</span>
@@ -420,7 +423,7 @@ const PostCard: React.FC<PostCardProps> = ({
               type="button"
               onClick={handleRepost}
               disabled={repostPending}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3 py-2 text-xs sm:text-sm hover:bg-white/10 transition disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition disabled:opacity-60"
             >
               <Repeat2 className="w-4 h-4" />
               <span className="font-medium leading-none">
@@ -431,7 +434,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <button
               type="button"
               onClick={() => navigate(`/posts/${id}`)}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-[#0E1626]/80 px-3 py-2 text-xs sm:text-sm hover:bg-white/10 transition"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition"
             >
               <MessageCircle className="w-4 h-4" />
               <span className="font-medium leading-none">Comment({commentCount})</span>
