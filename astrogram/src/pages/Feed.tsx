@@ -1,3 +1,5 @@
+
+
 // src/pages/Feed.tsx
 import {
   useCallback,
@@ -20,19 +22,17 @@ import {
   toggleCommentLike,
   fetchSavedPosts, // for Saved tab
 } from "../lib/api";
-import {
-  UploadCloud,
-  Image as ImageIcon,
-  X,
-  Star,
-  Search as SearchIcon,
-} from "lucide-react";
+import { UploadCloud, Image as ImageIcon, X, Star, ChevronUp } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { trackEvent } from "../lib/analytics";
 
 const PAGE_SIZE = 20;
-const NAV_PUSH_CLASS = "pt-0";
+
+/** Push content higher on all breakpoints */
+const NAV_PUSH_CLASS = "pt-0 sm:pt-0 lg:pt-0";
+
+/** Sticky anchor */
 const STICKY_TOP_CLASS = "top-0";
 
 /* ---------------------------------
@@ -74,7 +74,7 @@ interface MyPost extends PostCardProps {
 /* ---------------------------------
    RIGHT SIDEBAR (desktop only)
 ----------------------------------- */
-const RightProfilePanel: React.FC = () => {
+function RightProfilePanel() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -186,72 +186,75 @@ const RightProfilePanel: React.FC = () => {
       return next;
     });
 
-  // TinyPost: SMALLER TEXT + SMALLER RADIUS (icons unchanged)
-  const TinyPost: React.FC<{
+  function TinyPost({
+    post,
+    onDeleted,
+  }: {
     post: MyPost;
     onDeleted?: (id: string | number) => void;
-  }> = ({ post, onDeleted }) => (
-    <div
-      className="
-        post-compact
-        rounded-md border border-white/10
-        bg-gray-900/30 hover:bg-gray-900/50 transition
-        leading-snug text-[13px]
-        /* shrink common inner text without affecting icons */
-        [&_p]:text-[12px] [&_span]:text-[12px] [&_small]:text-[11px]
-        [&_h1]:text-[14px] [&_h2]:text-[13px]
-        /* make action-row text tiny, keep icons normal */
-        [&_footer]:text-[10px] [&_footer_button]:text-[10px] [&_footer_span]:text-[10px]
-        /* force smaller rounding for any deeply nested large radii */
-        [&_.rounded-3xl]:rounded-lg [&_.rounded-2xl]:rounded-lg [&_.rounded-xl]:rounded-lg
-      "
-    >
-      <div className="w-full" onClick={() => navigate(`/posts/${post.id}`)}>
-        <PostCard
-          {...post}
-          onDeleted={(id) => {
-            setMyPosts((ps) => ps.filter((p) => p.id !== id));
-            onDeleted?.(id);
-          }}
-        />
+  }) {
+    return (
+      <div
+        className="
+          post-compact
+          rounded-md border border-white/10
+          bg-gray-900/30 hover:bg-gray-900/50 transition
+          leading-snug text-[13px]
+          [&_p]:text-[12px] [&_span]:text-[12px] [&_small]:text-[11px]
+          [&_h1]:text-[14px] [&_h2]:text-[13px]
+          [&_footer]:text-[10px] [&_footer_button]:text-[10px] [&_footer_span]:text-[10px]
+          [&_.rounded-3xl]:rounded-lg [&_.rounded-2xl]:rounded-lg [&_.rounded-xl]:rounded-lg
+        "
+      >
+        <div className="w-full" onClick={() => navigate(`/posts/${post.id}`)}>
+          <PostCard
+            {...post}
+            onDeleted={(id) => {
+              setMyPosts((ps) => ps.filter((p) => p.id !== id));
+              onDeleted?.(id);
+            }}
+          />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  const LoungeRow: React.FC<{ post: MyPost }> = ({ post }) => (
-    <div
-      className="rounded-lg border border-white/10 bg-gray-900/30 hover:bg-gray-900/50 transition cursor-pointer p-3"
-      onClick={() =>
-        navigate(
-          `/lounge/${encodeURIComponent(post.loungeName ?? "")}/posts/${post.id}`
-        )
-      }
-    >
-      <div className="flex items-center gap-2 text-xs text-gray-400">
-        <img
-          src={post.avatarUrl ?? "/defaultPfp.png"}
-          alt={`${post.username} avatar`}
-          className="w-6 h-6 rounded-full object-cover"
-        />
+  function LoungeRow({ post }: { post: MyPost }) {
+    return (
+      <div
+        className="rounded-lg border border-white/10 bg-gray-900/30 hover:bg-gray-900/50 transition cursor-pointer p-3"
+        onClick={() =>
+          navigate(
+            `/lounge/${encodeURIComponent(post.loungeName ?? "")}/posts/${post.id}`
+          )
+        }
+      >
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <img
+            src={post.avatarUrl ?? "/defaultPfp.png"}
+            alt={`${post.username} avatar`}
+            className="w-6 h-6 rounded-full object-cover"
+          />
         <span className="font-medium text-gray-200">{post.username}</span>
-        <span>•</span>
-        <span>
-          {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
-        </span>
+          <span>•</span>
+          <span>
+            {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+          </span>
+        </div>
+        {post.title && (
+          <div className="mt-1 text-sm font-semibold text-gray-100 line-clamp-2">
+            {post.title}
+          </div>
+        )}
+        {"body" in post && (post as any).body && (
+          <div className="text-xs text-gray-300 line-clamp-2 mt-1">
+            {(post as any).body}
+          </div>
+        )}
+        <div className="mt-1 text-xs text-gray-400">{post.comments} replies</div>
       </div>
-      {post.title && (
-        <div className="mt-1 text-sm font-semibold text-gray-100 line-clamp-2">
-          {post.title}
-        </div>
-      )}
-      {"body" in post && (post as any).body && (
-        <div className="text-xs text-gray-300 line-clamp-2 mt-1">
-          {(post as any).body}
-        </div>
-      )}
-      <div className="mt-1 text-xs text-gray-400">{post.comments} replies</div>
-    </div>
-  );
+    );
+  }
 
   const handleToggleLike = async (id: string) => {
     try {
@@ -542,9 +545,7 @@ const RightProfilePanel: React.FC = () => {
                                 type="button"
                                 onClick={() => handleToggleLike(c.id)}
                                 className={`inline-flex items-center gap-1 ${
-                                  c.likedByMe
-                                    ? "text-white"
-                                    : "text-gray-300"
+                                  c.likedByMe ? "text-white" : "text-gray-300"
                                 } hover:text-white`}
                                 title={c.likedByMe ? "Unlike" : "Like"}
                               >
@@ -625,12 +626,12 @@ const RightProfilePanel: React.FC = () => {
       </div>
     </aside>
   );
-};
+}
 
 /* ---------------------------------
    Composer (left column)
 ----------------------------------- */
-const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
+function PostComposer({ onPosted }: { onPosted: () => void }) {
   const { user } = useAuth();
   const [caption, setCaption] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -717,7 +718,7 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
   return (
     <form
       onSubmit={onSubmit}
-      className="group mt-1 relative rounded-3xl
+      className="group mt-0 sm:mt-0 relative rounded-3xl
                  bg-white/[0.06] hover:bg-white/[0.08]
                  backdrop-blur-xl
                  border border-white/10
@@ -739,14 +740,11 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
         <div className="flex-1">
           <textarea
             rows={1}
-            placeholder={`What's on your mind${
-              user.username ? `, @${user.username}` : ""
-            }?`}
+            placeholder={`What's on your mind${user.username ? `, @${user.username}` : ""}?`}
             value={caption}
             onChange={(e) => {
               setCaption(e.target.value);
-              if (captionError && e.target.value.trim())
-                setCaptionError(null);
+              if (captionError && e.target.value.trim()) setCaptionError(null);
             }}
             className="w-full resize-y rounded-2xl bg-white/[0.06] border border-white/10 text-gray-100 placeholder-gray-300/70 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 focus:border-white/20 px-3 py-1.5 text-sm"
           />
@@ -820,17 +818,19 @@ const PostComposer: React.FC<{ onPosted: () => void }> = ({ onPosted }) => {
       </div>
     </form>
   );
-};
+}
 
 /* ---------------------------------
    FEED PAGE with desktop-fixed shell
 ----------------------------------- */
-const Feed: React.FC = () => {
+function Feed() {
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingNext, setIsFetchingNext] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   const navigate = useNavigate();
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -841,7 +841,6 @@ const Feed: React.FC = () => {
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const isDesktop = useIsDesktop();
   const { user } = useAuth();
@@ -863,10 +862,18 @@ const Feed: React.FC = () => {
     }
   }
 
-  const onSearchSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    await performSearch(1);
-  };
+  // Listen for navbar search events
+  useEffect(() => {
+    const handler = (e: any) => {
+      const q = e?.detail?.query ?? "";
+      if (!q) return;
+      setQuery(q);
+      performSearch(1);
+    };
+    window.addEventListener("app:search", handler as any);
+    return () => window.removeEventListener("app:search", handler as any);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadPage = useCallback(async (nextPage: number) => {
     if (nextPage === 1) setLoading(true);
@@ -915,6 +922,37 @@ const Feed: React.FC = () => {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore, isFetchingNext, loadPage, page]);
+
+  // Scroll-to-top visibility controller
+  useEffect(() => {
+    const container = isDesktop ? scrollerRef.current : window;
+    if (!container) return;
+
+    const handler = () => {
+      const y = isDesktop
+        ? (scrollerRef.current?.scrollTop ?? 0)
+        : window.scrollY;
+      setShowScrollTop(y > 260);
+    };
+
+    handler();
+    if (isDesktop && scrollerRef.current) {
+      scrollerRef.current.addEventListener("scroll", handler, { passive: true });
+      return () =>
+        scrollerRef.current?.removeEventListener("scroll", handler as any);
+    } else {
+      window.addEventListener("scroll", handler, { passive: true });
+      return () => window.removeEventListener("scroll", handler as any);
+    }
+  }, [isDesktop]);
+
+  const scrollToTop = () => {
+    if (isDesktop && scrollerRef.current) {
+      scrollerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const handleDeleted = (id: string | number) => {
     setPosts((prev) => prev.filter((p) => String(p.id) !== String(id)));
@@ -967,11 +1005,10 @@ const Feed: React.FC = () => {
         <div className="absolute left-1/2 top-[-12%] h-[38vh] w-[65vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/12 via-fuchsia-500/10 to-emerald-500/12 blur-3xl" />
       </div>
 
-      <div className="w-full flex justify-center lg:fixed lg:inset-0 lg:overflow-hidden">
+      {/* Desktop: start the fixed shell below the (shorter) navbar */}
+      <div className="w-full flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:top-[48px] lg:overflow-hidden">
         <div
-          className={`w-full ${
-            showRightPanel ? "max-w-6xl" : "max-w-3xl"
-          } mx-auto
+          className={`w-full ${showRightPanel ? "max-w-6xl" : "max-w-3xl"} mx-auto
                       px-0 sm:px-4 lg:px-6
                       lg:h-full lg:grid ${
                         showRightPanel
@@ -983,75 +1020,16 @@ const Feed: React.FC = () => {
           <div
             id="feedScroll"
             ref={scrollerRef}
-            className="pretty-scroll min-w-0 lg:h-full lg:overflow-y-auto lg:pt-6 pb-16"
+            className="pretty-scroll min-w-0 lg:h-full lg:overflow-y-auto lg:pt-4 pb-16"
           >
-            <div
-              className={`sticky ${STICKY_TOP_CLASS} z-30 bg-transparent backdrop-blur-0 border-b-0 shadow-none`}
-            >
+            <div className={`sticky ${STICKY_TOP_CLASS} z-30 bg-transparent`}>
               <div className="relative px-2 sm:px-4">
-                <form onSubmit={onSearchSubmit} className="flex gap-2 py-1">
-                  <div className="relative flex-1">
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-fuchsia-500/30 via-sky-500/30 to-emerald-500/30 opacity-0 blur-md transition-opacity duration-300 ease-out
-                                 focus-within:opacity-70"
-                    />
-                    <SearchIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300/80" />
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search users & lounges…  ( /  or  ⌘K / Ctrl+K )"
-                      className="w-full pl-10 pr-4 rounded-full
-                                 bg-white/[0.07] backdrop-blur-md
-                                 border border-white/10
-                                 text-gray-100 placeholder-gray-400
-                                 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-white/20
-                                 py-1.5 text-sm transition"
-                      aria-label="Search"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center rounded-full
-                               bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff]
-                               px-4 py-1.5 text-sm font-semibold text-white whitespace-nowrap
-                               shadow-[0_12px_28px_rgba(15,23,42,0.45)]
-                               ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px
-                               disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
-                    disabled={searchLoading}
-                  >
-                    {searchLoading ? "Searching…" : "Search"}
-                  </button>
-
-                  {results && (
-                    <button
-                      type="button"
-                      onClick={() => setResults(null)}
-                      className="px-3 py-1.5 text-sm rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-gray-100 border border-white/10 transition"
-                      title="Clear results"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </form>
-
-                {searchLoading && (
-                  <p className="mt-1 text-sm text-gray-300">Loading…</p>
-                )}
-                {searchError && (
-                  <p className="mt-1 text-sm text-red-500">{searchError}</p>
-                )}
-
                 <PostComposer onPosted={() => loadPage(1)} />
 
+                {/* Optional: show results panel when Navbar triggers a search */}
                 {results && (
                   <div className="mt-2 rounded-2xl border border-white/10 bg-[#0E1626] text-white p-4">
-                    {!!results &&
-                    (((results.users?.results.length ?? 0) > 0) ||
-                      ((results.lounges?.results.length ?? 0) > 0)) ? (
+                    {hasSearchResults ? (
                       <div className="space-y-6">
                         {results.users?.results.length ? (
                           <div>
@@ -1060,18 +1038,13 @@ const Feed: React.FC = () => {
                             </h2>
                             <ul className="space-y-2">
                               {results.users.results.map((u) => (
-                                <li
-                                  key={u.id}
-                                  className="flex items-center gap-2"
-                                >
+                                <li key={u.id} className="flex items-center gap-2">
                                   <img
                                     src={u.avatarUrl ?? "/defaultPfp.png"}
                                     alt={u.username ?? "user"}
                                     className="w-8 h-8 rounded-full object-cover"
                                   />
-                                  <span className="text-sm">
-                                    @{u.username}
-                                  </span>
+                                  <span className="text-sm">@{u.username}</span>
                                 </li>
                               ))}
                             </ul>
@@ -1085,10 +1058,7 @@ const Feed: React.FC = () => {
                             </h2>
                             <ul className="space-y-2">
                               {results.lounges.results.map((l) => (
-                                <li
-                                  key={l.id}
-                                  className="flex items-center gap-2"
-                                >
+                                <li key={l.id} className="flex items-center gap-2">
                                   {l.bannerUrl && (
                                     <img
                                       src={l.bannerUrl}
@@ -1097,9 +1067,7 @@ const Feed: React.FC = () => {
                                     />
                                   )}
                                   <Link
-                                    to={`/lounge/${encodeURIComponent(
-                                      l.name
-                                    )}`}
+                                    to={`/lounge/${encodeURIComponent(l.name)}`}
                                     className="text-sm text-sky-300 hover:underline"
                                   >
                                     {l.name}
@@ -1112,12 +1080,17 @@ const Feed: React.FC = () => {
                       </div>
                     ) : (
                       !searchLoading && (
-                        <p className="text-sm text-gray-300">
-                          No results found
-                        </p>
+                        <p className="text-sm text-gray-300">No results found</p>
                       )
                     )}
                   </div>
+                )}
+
+                {searchLoading && (
+                  <p className="mt-1 text-sm text-gray-300">Loading…</p>
+                )}
+                {searchError && (
+                  <p className="mt-1 text-sm text-red-500">{searchError}</p>
                 )}
               </div>
             </div>
@@ -1126,9 +1099,7 @@ const Feed: React.FC = () => {
 
             <div className="space-y-4">
               {loading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <PostSkeleton key={i} />
-                ))
+                Array.from({ length: 4 }).map((_, i) => <PostSkeleton key={i} />)
               ) : (
                 <>
                   {posts.map((post) => (
@@ -1172,8 +1143,34 @@ const Feed: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile-only "Scroll to top" FAB (above bottom nav) */}
+      {showScrollTop && !isDesktop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="lg:hidden group fixed right-4 z-[70] h-12 w-12 rounded-full
+                     border border-white/15 bg-white/10 backdrop-blur-xl
+                     shadow-[0_8px_30px_rgba(0,0,0,0.35)]
+                     ring-1 ring-white/10
+                     hover:ring-white/30 hover:bg-white/15
+                     active:scale-95 transition"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}
+          aria-label="Scroll to top"
+          title="Scroll to top"
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -inset-px rounded-full
+                       bg-gradient-to-tr from-fuchsia-500/25 to-sky-500/25
+                       opacity-60 blur-sm transition-opacity
+                       group-hover:opacity-90"
+          />
+          <ChevronUp className="relative mx-auto h-5 w-5 text-white drop-shadow-sm" />
+        </button>
+      )}
     </div>
   );
-};
+}
 
 export default Feed;

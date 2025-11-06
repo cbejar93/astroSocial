@@ -58,7 +58,7 @@ const PillButton: React.FC<
     "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition focus:outline-none";
   const styles =
     variant === "primary"
-      ? "text-white border-0 bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:shadow-lg hover:brightness-[1.05]]"
+      ? "text-white border-0 bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:shadow-lg hover:brightness-[1.05]"
       : variant === "danger"
       ? "text-red-300 border border-red-500/30 hover:bg-red-500/10"
       : "text-gray-200 border border-white/10 hover:bg-white/10";
@@ -173,6 +173,7 @@ const PostPage: React.FC = () => {
   /* ---------------------- Render ---------------------- */
   return (
     <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+      {/* On mobile it's a single column; on desktop it's a 2-col grid */}
       <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">
@@ -265,9 +266,30 @@ const PostPage: React.FC = () => {
               </div>
             </div>
           </AuroraBorder>
+
+          {/* MOBILE THREAD (stacked under the post) */}
+          <div className="mt-4 lg:hidden">
+            <AuroraBorder>
+              <div className="flex flex-col min-w-0">
+                <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
+                    Thread Replies
+                  </h2>
+                </div>
+                <div className="px-5 py-4 space-y-4">
+                  <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
+                    <Comments ref={commentsRef} postId={String(post.id)} pageSize={10} />
+                  </div>
+                </div>
+                <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
+                  Be kind and respectful in your replies 💬
+                </div>
+              </div>
+            </AuroraBorder>
+          </div>
         </div>
 
-        {/* RIGHT COLUMN (Thread) */}
+        {/* RIGHT COLUMN (desktop thread) */}
         <aside className="hidden lg:flex lg:h-full lg:flex-col lg:justify-center lg:min-w-0">
           <AuroraBorder>
             <div className="flex flex-col h-[80vh] min-w-0">
@@ -311,7 +333,7 @@ const PostPage: React.FC = () => {
                   <button
                     onClick={() => setShowReportModal(false)}
                     disabled={reporting}
-                    className="px-4 py-2 rounded-lg text-gray-300 bg.white/10 hover:bg-white/20 transition text-sm"
+                    className="px-4 py-2 rounded-lg text-gray-300 bg-white/10 hover:bg-white/20 transition text-sm"
                   >
                     Cancel
                   </button>

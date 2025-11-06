@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { Bell, X } from "lucide-react";
+// src/components/Navbar/Navbar.tsx
+import React, { useEffect, useRef, useState } from "react";
+import { Bell, X, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -7,16 +8,31 @@ import { useNotifications } from "../../hooks/useNotifications";
 /* ---- Brand Icons ---- */
 const GoogleG: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-    <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.25-1.67 3.67-5.5 3.67A6.35 6.35 0 0 1 5.6 11.9 6.35 6.35 0 0 1 12 5.56c1.82 0 3.05.78 3.75 1.44l2.56-2.56C16.86 2.68 14.63 1.8 12 1.8 6.98 1.8 2.9 5.88 2.9 11S6.98 20.2 12 20.2c6.04 0 9.1-4.24 9.1-8.56 0-.58-.06-1.02-.14-1.44H12z" />
-    <path fill="#34A853" d="M3.96 7.35l3.2 2.34A6.35 6.35 0 0 1 12 5.56c1.82 0 3.05.78 3.75 1.44l2.56-2.56C16.86 2.68 14.63 1.8 12 1.8 8.45 1.8 5.36 3.82 3.96 7.35z" />
-    <path fill="#FBBC05" d="M12 22.2c3.18 0 5.85-1.04 7.8-2.82l-3.6-2.95c-1 .68-2.3 1.13-4.2 1.13a6.35 6.35 0 0 1-5.88-4.47l-3.2 2.34A9.98 9.98 0 0 0 12 22.2z" />
-    <path fill="#4285F4" d="M21.1 11.64c0-.58-.06-1.02-.14-1.44H12v3.9h5.5c-.24 1.25-1.67 3.67-5.5 3.67-2.65 0-4.88-1.8-5.67-4.2l-3.2 2.34A9.98 9.98 0 0 0 12 22.2c6.04 0 9.1-4.24 9.1-8.56z" />
+    <path
+      fill="#EA4335"
+      d="M12 10.2v3.9h5.5c-.24 1.25-1.67 3.67-5.5 3.67A6.35 6.35 0 0 1 5.6 11.9 6.35 6.35 0 0 1 12 5.56c1.82 0 3.05.78 3.75 1.44l2.56-2.56C16.86 2.68 14.63 1.8 12 1.8 6.98 1.8 2.9 5.88 2.9 11S6.98 20.2 12 20.2c6.04 0 9.1-4.24 9.1-8.56 0-.58-.06-1.02-.14-1.44H12z"
+    />
+    <path
+      fill="#34A853"
+      d="M3.96 7.35l3.2 2.34A6.35 6.35 0 0 1 12 5.56c1.82 0 3.05.78 3.75 1.44l2.56-2.56C16.86 2.68 14.63 1.8 12 1.8 8.45 1.8 5.36 3.82 3.96 7.35z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M12 22.2c3.18 0 5.85-1.04 7.8-2.82l-3.6-2.95c-1 .68-2.3 1.13-4.2 1.13a6.35 6.35 0 0 1-5.88-4.47l-3.2 2.34A9.98 9.98 0 0 0 12 22.2z"
+    />
+    <path
+      fill="#4285F4"
+      d="M21.1 11.64c0-.58-.06-1.02-.14-1.44H12v3.9h5.5c-.24 1.25-1.67 3.67-5.5 3.67-2.65 0-4.88-1.8-5.67-4.2l-3.2 2.34A9.98 9.98 0 0 0 12 22.2c6.04 0 9.1-4.24 9.1-8.56z"
+    />
   </svg>
 );
 
 const FacebookF: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-    <path fill="currentColor" d="M22 12.06C22 6.55 17.52 2.08 12 2.08S2 6.55 2 12.06c0 4.98 3.66 9.11 8.44 9.88v-6.99H7.9V12.1h2.55V9.83c0-2.52 1.5-3.92 3.8-3.92 1.1 0 2.25.2 2.25.2v2.47h-1.27c-1.25 0-1.64.78-1.64 1.58v1.94h2.79l-.45 2.85h-2.34v6.99C18.34 21.17 22 17.04 22 12.06z" />
+    <path
+      fill="currentColor"
+      d="M22 12.06C22 6.55 17.52 2.08 12 2.08S2 6.55 2 12.06c0 4.98 3.66 9.11 8.44 9.88v-6.99H7.9V12.1h2.55V9.83c0-2.52 1.5-3.92 3.8-3.92 1.1 0 2.25.2 2.25.2v2.47h-1.27c-1.25 0-1.64.78-1.64 1.58v1.94h2.79l-.45 2.85h-2.34v6.99C18.34 21.17 22 17.04 22 12.06z"
+    />
   </svg>
 );
 
@@ -129,17 +145,24 @@ const AuthModal: React.FC<{
 };
 
 /* ---- Navbar ---- */
-const Navbar = () => {
+const Navbar: React.FC = () => {
   const { user } = useAuth();
   const { count } = useNotifications();
   const location = useLocation();
+  const navigate = useNavigate();
+
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
   const [accountOpen, setAccountOpen] = useState(false);
+
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const popRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ Handles closing popover when clicking outside
+  // Search state
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Close account popover on outside click and on route change
   useEffect(() => {
     setAuthOpen(false);
 
@@ -165,6 +188,30 @@ const Navbar = () => {
     };
   }, [location.pathname, accountOpen]);
 
+  // Keyboard shortcut: / or Cmd/Ctrl+K focuses search
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTyping =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          (target as any).isContentEditable);
+
+      if (isTyping) return;
+
+      if (e.key === "/") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const email =
     (user as any)?.email ||
     (user as any)?.profile?.email ||
@@ -172,77 +219,141 @@ const Navbar = () => {
     (user as any)?.emails?.[0]?.value ||
     "";
 
+  const onSubmitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("app:search", { detail: { query: q } }));
+      }, 0);
+    } else {
+      window.dispatchEvent(new CustomEvent("app:search", { detail: { query: q } }));
+    }
+  };
+
   return (
     <>
-      <nav className="fixed top-0 right-0 z-[80] px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-end gap-4 text-white">
-        {user ? (
-          <div className="relative flex items-center gap-4">
-            <Link to="/notifications" aria-label="Notifications">
+      {/* Unified translucent, blurred strip across ALL breakpoints */}
+      <nav className="fixed inset-x-0 top-0 z-[80] text-white">
+        <div
+          className="
+            px-3 sm:px-6 py-2
+            border-b border-white/10
+            bg-[#0E1626]/60 backdrop-blur-xl
+            shadow-[0_10px_30px_rgba(2,6,23,0.25)]
+            flex items-center gap-3 justify-between
+          "
+        >
+          {/* Search (left; constrained width on large screens) */}
+          <form onSubmit={onSubmitSearch} className="flex-1 min-w-0" aria-label="Search">
+            <div className="mx-auto w-full lg:max-w-[520px] xl:max-w-[640px]">
               <div className="relative">
-                <Bell className="w-6 h-6" />
-                {count > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {count}
-                  </span>
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300/80" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search users & lounges…  ( /  or  ⌘K / Ctrl+K )"
+                  className="w-full pl-9 pr-9 rounded-full
+                             bg-white/[0.07] backdrop-blur-md
+                             border border-white/10
+                             text-gray-100 placeholder-gray-400
+                             focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-white/20
+                             py-1.5 text-sm transition"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-white/15 border border-white/10"
+                    aria-label="Clear search"
+                    title="Clear"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
               </div>
-            </Link>
+            </div>
+          </form>
 
-            {/* Avatar */}
-            <button
-              ref={btnRef}
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded={accountOpen}
-              onClick={() => setAccountOpen((o) => !o)}
-              className="btn-unstyled"
-            >
-              <img
-                src={user?.avatarUrl ?? "/defaultPfp.png"}
-                alt="Your avatar"
-                className="w-8 h-8 rounded-full object-cover ring-1 ring-white/10"
-              />
-            </button>
+          {/* Right controls */}
+          {user ? (
+            <div className="relative flex items-center gap-4">
+              <Link to="/notifications" aria-label="Notifications">
+                <div className="relative">
+                  <Bell className="w-6 h-6" />
+                  {count > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {count}
+                    </span>
+                  )}
+                </div>
+              </Link>
 
-            {/* Popover */}
-            {accountOpen && (
-              <div
-                ref={popRef}
-                className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-2xl border border-white/10 bg-[#0E1626]/95 text-white shadow-[0_12px_40px_rgba(2,6,23,0.5)] p-4"
+              {/* Avatar button */}
+              <button
+                ref={btnRef}
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={accountOpen}
+                onClick={() => setAccountOpen((o) => !o)}
+                className="btn-unstyled"
               >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={user?.avatarUrl ?? "/defaultPfp.png"}
-                    alt="avatar"
-                    className="w-10 h-10 rounded-full object-cover ring-1 ring-white/10"
-                  />
-                  <div>
-                    <div className="text-sm font-semibold">
-                      {(user as any)?.name || user.username || "User"}
+                <img
+                  src={user?.avatarUrl ?? "/defaultPfp.png"}
+                  alt="Your avatar"
+                  className="w-8 h-8 rounded-full object-cover ring-1 ring-white/10"
+                />
+              </button>
+
+              {/* Popover */}
+              {accountOpen && (
+                <div
+                  ref={popRef}
+                  className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-2xl border border-white/10 bg-[#0E1626]/95 text-white shadow-[0_12px_40px_rgba(2,6,23,0.5)] p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user?.avatarUrl ?? "/defaultPfp.png"}
+                      alt="avatar"
+                      className="w-10 h-10 rounded-full object-cover ring-1 ring-white/10"
+                    />
+                    <div>
+                      <div className="text-sm font-semibold">
+                        {(user as any)?.name || (user as any)?.username || "User"}
+                      </div>
+                      <div className="text-xs text-sky-300">
+                        @{(user as any)?.username ?? "username"}
+                      </div>
                     </div>
-                    <div className="text-xs text-sky-300">@{user.username}</div>
+                  </div>
+                  <div className="mt-3 text-xs text-gray-300">
+                    <div className="text-[11px] text-gray-400 mb-0.5">Email</div>
+                    <div className="break-all">{email || "Not set"}</div>
                   </div>
                 </div>
-                <div className="mt-3 text-xs text-gray-300">
-                  <div className="text-[11px] text-gray-400 mb-0.5">Email</div>
-                  <div className="break-all">{email || "Not set"}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMode("signup");
-              setAuthOpen(true);
-            }}
-            className="rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-2 text-sm font-semibold text-white shadow ring-1 ring-white/20 hover:brightness-110"
-          >
-            Sign up / Login
-          </button>
-        )}
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode("signup");
+                setAuthOpen(true);
+              }}
+              className="rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-2 text-sm font-semibold text-white shadow ring-1 ring-white/20 hover:brightness-110"
+            >
+              Sign up / Login
+            </button>
+          )}
+        </div>
       </nav>
+
+      {/* Spacer so content isn't hidden under the fixed bar on mobile */}
+      <div className="block sm:hidden h-12" aria-hidden />
 
       <AuthModal
         open={authOpen}

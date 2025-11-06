@@ -1,3 +1,4 @@
+// src/components/Comments/Comments.tsx
 import {
   MoreVertical,
   Star,
@@ -43,7 +44,6 @@ interface CommentsProps {
 }
 
 type QuoteSource = { id?: string; username: string; text: string; parentId?: string | null };
-
 type CommentsState = PaginatedCommentsResponse<CommentItem> | null;
 
 const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
@@ -63,10 +63,12 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
     const [submitting, setSubmitting] = useState(false);
     const editorRef = useRef<HTMLDivElement>(null);
 
+    /* Reset page when post changes */
     useEffect(() => {
       setCurrentPage(initialPage);
     }, [initialPage, postId]);
 
+    /* Fetch comments page */
     useEffect(() => {
       let cancelled = false;
       setLoading(true);
@@ -104,12 +106,14 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       };
     }, [postId, currentPage, pageSize, refreshKey]);
 
+    /* Close any open menu on outside click */
     useEffect(() => {
       const closeMenu = () => setMenuOpenId(null);
       document.addEventListener('click', closeMenu);
       return () => document.removeEventListener('click', closeMenu);
     }, []);
 
+    /* Build map of replies by parent */
     const repliesByParent = useMemo(() => {
       const map = new Map<string, CommentItem[]>();
       pageData?.replies.forEach((reply) => {
@@ -131,6 +135,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       return Math.max(1, Math.ceil(Math.max(pageData.total, 0) / pageData.limit));
     }, [pageData]);
 
+    /* Editor helpers */
     const focusEditor = () => {
       const editor = editorRef.current;
       if (!editor) return;
@@ -160,9 +165,8 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       const parser = new DOMParser();
       const doc = parser.parseFromString(value, 'text/html');
       const body = doc.body;
-      if (!body) {
-        return '';
-      }
+      if (!body) return '';
+
       const allowedTags = new Set([
         'a',
         'blockquote',
@@ -179,12 +183,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       ]);
       const allowedAttrs = new Set(['href', 'title', 'rel', 'target']);
 
-      const walker = doc.createTreeWalker(
-        body,
-        NodeFilter.SHOW_ELEMENT,
-        null,
-      );
-
+      const walker = doc.createTreeWalker(body, NodeFilter.SHOW_ELEMENT, null);
       const nodesToRemove: Element[] = [];
       const nodesToUnwrap: Element[] = [];
 
@@ -220,9 +219,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       nodesToRemove.forEach((node) => node.remove());
       nodesToUnwrap.forEach((node) => {
         const fragment = document.createDocumentFragment();
-        while (node.firstChild) {
-          fragment.appendChild(node.firstChild);
-        }
+        while (node.firstChild) fragment.appendChild(node.firstChild);
         node.replaceWith(fragment);
       });
 
@@ -238,6 +235,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       const quoteHtml =
         `<blockquote><p><strong>@${escapeHtml(source.username)}</strong> wrote:</p>` +
         `<div>${sanitizedBody}</div></blockquote><p><br></p>`;
+
       try {
         if (document.queryCommandSupported('insertHTML')) {
           document.execCommand('insertHTML', false, quoteHtml);
@@ -247,6 +245,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       } catch {
         editor.innerHTML += quoteHtml;
       }
+
       setReplyParentId(parentId);
       setReplyContext({ username: source.username, commentId: source.id, parentId });
       setEditorPlain(editor.textContent ?? '');
@@ -416,28 +415,34 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       setReplyParentId(null);
     };
 
+    /* ---------- RENDER SINGLE COMMENT (avatar fix here) ---------- */
     const renderComment = (comment: CommentItem, depth = 0): JSX.Element => {
       const replies = repliesByParent.get(comment.id) ?? [];
       const isOwn = user?.id === comment.authorId;
       const containerClasses = [
         'rounded-xl border border-white/10 bg-gray-900/70 p-4 backdrop-blur',
       ];
-      if (depth > 0) {
-        containerClasses.push('ml-6');
-      }
+      if (depth > 0) containerClasses.push('ml-6');
+
       const encodedUsername = encodeURIComponent(comment.username);
 
       return (
         <div key={comment.id} className={containerClasses.join(' ')}>
-          <div className="flex items-start gap-3">
-            <img
-              src={comment.avatarUrl ?? '/defaultPfp.png'}
-              alt={`${comment.username} avatar`}
-              className="h-10 w-10 rounded-full object-cover"
-            />
-            <div className="flex-1 space-y-3">
+          <div className="flex items-start gap-3 min-w-0">
+            {/* ✅ Perfect circle avatar: wrapper is the mask, can't shrink */}
+            <div className="w-10 h-10 shrink-0 rounded-full overflow-hidden ring-1 ring-white/10">
+              <img
+                src={comment.avatarUrl ?? '/defaultPfp.png'}
+                alt={`${comment.username} avatar`}
+                className="block w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+
+            {/* Allow text to wrap instead of pushing avatar */}
+            <div className="flex-1 min-w-0 space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <Link
                     to={`/users/${encodedUsername}/posts`}
                     className="text-sm font-semibold text-teal-400 hover:underline"
@@ -450,6 +455,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                     })}
                   </div>
                 </div>
+
                 {isOwn && (
                   <div className="relative">
                     <button
@@ -479,10 +485,12 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                   </div>
                 )}
               </div>
+
               <div
                 className="prose prose-invert max-w-none text-sm leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: comment.text }}
               />
+
               <div className="flex flex-wrap items-center gap-4 text-xs">
                 <button
                   type="button"
@@ -495,6 +503,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                   />
                   <span>{comment.likes}</span>
                 </button>
+
                 {depth === 0 && (
                   <button
                     type="button"
@@ -505,6 +514,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                     Reply
                   </button>
                 )}
+
                 <button
                   type="button"
                   onClick={() => void handleQuoteComment(comment.id)}
@@ -516,6 +526,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
               </div>
             </div>
           </div>
+
           {replies.length > 0 && (
             <div className="mt-4 space-y-4 border-l border-white/10 pl-4">
               {replies.map((reply) => renderComment(reply, depth + 1))}
@@ -525,6 +536,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       );
     };
 
+    /* ---------- Pagination ---------- */
     const PaginationControls = () => {
       if (!pageData) return null;
       const start = pageData.total === 0 ? 0 : (currentPage - 1) * pageData.limit + 1;
@@ -563,6 +575,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       );
     };
 
+    /* ---------- Render ---------- */
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -571,6 +584,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
             {pageData?.total ?? 0} replies
           </span>
         </div>
+
         {loading ? (
           <CommentsSkeleton />
         ) : error ? (
@@ -591,6 +605,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
           </div>
         )}
 
+        {/* Composer */}
         <div className="sticky bottom-4 z-10">
           {user ? (
             <form
@@ -617,11 +632,13 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                   </button>
                 )}
               </div>
+
               {replyContext && (
                 <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
                   Replying to <span className="font-semibold">@{replyContext.username}</span>
                 </div>
               )}
+
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -652,6 +669,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                   1.
                 </button>
               </div>
+
               <div
                 ref={editorRef}
                 contentEditable
@@ -660,6 +678,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                 onPaste={handlePaste}
                 suppressContentEditableWarning
               />
+
               <div className="flex justify-end">
                 <button
                   type="submit"
@@ -683,5 +702,4 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
 );
 
 Comments.displayName = 'Comments';
-
 export default Comments;

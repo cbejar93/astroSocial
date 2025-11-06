@@ -1,6 +1,7 @@
 // src/pages/ProfileOverviewPage.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Edit2,
   UploadCloud,
@@ -8,10 +9,22 @@ import {
   ChevronDown,
   X,
   Image as ImageIcon,
+  Star,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { updateAvatar, deleteProfile, apiFetch } from "../lib/api";
+import {
+  updateAvatar,
+  deleteProfile,
+  apiFetch,
+  fetchMyPosts,
+  fetchMyComments,
+  fetchSavedPosts,
+  toggleCommentLike,
+} from "../lib/api";
 import ConfirmModal from "../components/Modal/ConfirmModal";
+import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
+import PostSkeleton from "../components/PostCard/PostSkeleton";
+import { formatDistanceToNow } from "date-fns";
 
 /* Username validation */
 const USERNAME_PATTERN = /^[a-zA-Z0-9._]+$/;
@@ -290,20 +303,25 @@ function svgEmojiAvatar(emoji: string, a: string, b: string): Blob {
   return new Blob([svg], { type: "image/svg+xml" });
 }
 
+/* ---------- Avatar Picker (PORTALED) ---------- */
 const AvatarPickerModal: React.FC<{
   open: boolean;
   onClose: () => void;
   onPick: (file: File) => Promise<void>;
 }> = ({ open, onClose, onPick }) => {
   if (!open) return null;
-  return (
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
+      {/* Dim background */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+      {/* Modal card */}
       <div className="relative w-[92%] max-w-lg rounded-2xl border border-white/10 bg-[#0E1626] text-white shadow-2xl p-5">
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <h3 className="text-sm font-semibold tracking-wide">Choose an avatar</h3>
@@ -336,7 +354,463 @@ const AvatarPickerModal: React.FC<{
           These avatars are generated locally as SVGs and uploaded as your profile picture.
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
+  );
+};
+
+/* ---------- Activity (MOBILE-ONLY) ---------- */
+
+type ActivityComment = {
+  id: string;
+  text: string;
+  username: string;
+  timestamp: string;
+  likes: number;
+  likedByMe?: boolean;
+  avatarUrl?: string;
+  parentId?: string | null;
+  parentUsername?: string;
+};
+
+interface MyPost extends PostCardProps {
+  loungeId?: string;
+  loungeName?: string;
+  title?: string;
+}
+
+const PAGE_SIZE = 20;
+
+const MobileActivityBox: React.FC = () => {
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState<"posts" | "comments" | "saved">("posts");
+  const [postSubTab, setPostSubTab] = useState<"all" | "posts" | "lounges">("all");
+
+  const [myPosts, setMyPosts] = useState<MyPost[]>([]);
+  const [comments, setComments] = useState<ActivityComment[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loadingComments, setLoadingComments] = useState(true);
+
+  // SAVED
+  const [savedPosts, setSavedPosts] = useState<MyPost[]>([]);
+  const [savedPage, setSavedPage] = useState(0);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+  const [isFetchingSaved, setIsFetchingSaved] = useState(false);
+  const [hasMoreSaved, setHasMoreSaved] = useState(true);
+
+  const [showMorePosts, setShowMorePosts] = useState(false);
+  const [showMoreLounge, setShowMoreLounge] = useState(false);
+  const [openLoungeGroups, setOpenLoungeGroups] = useState<Set<string>>(() => new Set());
+
+  // initial loads
+  useEffect(() => {
+    let mounted = true;
+
+    fetchMyPosts<MyPost>()
+      .then((data) => mounted && setMyPosts(data ?? []))
+      .finally(() => mounted && setLoadingPosts(false));
+
+    fetchMyComments<ActivityComment>()
+      .then((data) => mounted && setComments(data ?? []))
+      .finally(() => mounted && setLoadingComments(false));
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // lazy-load saved
+  const loadSavedPage = async (nextPage: number) => {
+    if (isFetchingSaved) return;
+    if (nextPage === 1) setLoadingSaved(true);
+    setIsFetchingSaved(true);
+    try {
+      const res = await fetchSavedPosts<MyPost>(nextPage, PAGE_SIZE);
+      setSavedPosts((prev) => {
+        if (nextPage === 1) return res.posts ?? [];
+        const seen = new Set(prev.map((p) => String(p.id)));
+        const appended = (res.posts ?? []).filter((p) => !seen.has(String(p.id)));
+        return [...prev, ...appended];
+      });
+      setSavedPage(nextPage);
+      setHasMoreSaved((res.posts?.length ?? 0) > 0 && nextPage * PAGE_SIZE < (res.total ?? 0));
+    } catch (e) {
+      console.error("Failed to load saved posts", e);
+    } finally {
+      if (nextPage === 1) setLoadingSaved(false);
+      setIsFetchingSaved(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "saved" && savedPage === 0 && !loadingSaved) {
+      loadSavedPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const generalPosts = myPosts.filter((p) => !p.loungeId);
+  const loungePosts = myPosts.filter((p) => p.loungeId);
+
+  const loungeGroups = (() => {
+    const map = new Map<string, MyPost[]>();
+    for (const p of loungePosts) {
+      const name = p.loungeName ?? "Unknown";
+      if (!map.has(name)) map.set(name, []);
+      map.get(name)!.push(p);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  })();
+
+  const toggleGroup = (name: string) =>
+    setOpenLoungeGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+
+  const handleToggleLike = async (id: string) => {
+    try {
+      const { liked, count } = await toggleCommentLike(id);
+      setComments((cs) => cs.map((c) => (c.id === id ? { ...c, likes: count, likedByMe: liked } : c)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  function TinyPost({ post, onDeleted }: { post: MyPost; onDeleted?: (id: string | number) => void }) {
+    return (
+      <div className="rounded-md border border-white/10 bg-gray-900/30 hover:bg-gray-900/50 transition">
+        <div className="w-full" onClick={() => navigate(`/posts/${post.id}`)}>
+          <PostCard
+            {...post}
+            onDeleted={(id) => {
+              setMyPosts((ps) => ps.filter((p) => p.id !== id));
+              onDeleted?.(id);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  function LoungeRow({ post }: { post: MyPost }) {
+    return (
+      <div
+        className="rounded-lg border border-white/10 bg-gray-900/30 hover:bg-gray-900/50 transition cursor-pointer p-3"
+        onClick={() => navigate(`/lounge/${encodeURIComponent(post.loungeName ?? "")}/posts/${post.id}`)}
+      >
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <img
+            src={post.avatarUrl ?? "/defaultPfp.png"}
+            alt={`${post.username} avatar`}
+            className="w-6 h-6 rounded-full object-cover"
+          />
+          <span className="font-medium text-gray-200">{post.username}</span>
+          <span>•</span>
+          <span>{formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}</span>
+        </div>
+        {post.title && (
+          <div className="mt-1 text-sm font-semibold text-gray-100 line-clamp-2">{post.title}</div>
+        )}
+        {"body" in post && (post as any).body && (
+          <div className="text-xs text-gray-300 line-clamp-2 mt-1">{(post as any).body}</div>
+        )}
+        <div className="mt-1 text-xs text-gray-400">{post.comments} replies</div>
+      </div>
+    );
+  }
+
+  return (
+    <Card title="Your Activity" className="lg:hidden">
+      {/* Scrollable area for the tabs content on mobile */}
+      <div className="p-4">
+        {/* Tabs */}
+        <div className="grid grid-cols-3 rounded-lg border border-white/10 p-1 bg-gray-900/40">
+          <button
+            onClick={() => setActiveTab("posts")}
+            className={`py-1.5 rounded-md text-sm ${
+              activeTab === "posts" ? "bg-gray-800 text-white" : "text-gray-300 hover:bg-gray-800/50"
+            }`}
+          >
+            Posts
+          </button>
+          <button
+            onClick={() => setActiveTab("comments")}
+            className={`py-1.5 rounded-md text-sm ${
+              activeTab === "comments" ? "bg-gray-800 text-white" : "text-gray-300 hover:bg-gray-800/50"
+            }`}
+          >
+            Comments
+          </button>
+          <button
+            onClick={() => setActiveTab("saved")}
+            className={`py-1.5 rounded-md text-sm ${
+              activeTab === "saved" ? "bg-gray-800 text-white" : "text-gray-300 hover:bg-gray-800/50"
+            }`}
+            title="Saved posts"
+          >
+            Saved
+          </button>
+        </div>
+
+        {/* Content (mobile scroll) */}
+        <div className="pretty-scroll mt-3 max-h-[60vh] overflow-y-auto overflow-x-hidden pt-1 pb-2">
+          {/* POSTS */}
+          {activeTab === "posts" ? (
+            <>
+              {/* Sub-tabs */}
+              <div className="flex items-center justify-center gap-2 text-xs mb-2">
+                <button
+                  onClick={() => setPostSubTab("all")}
+                  className={`px-2.5 py-1 rounded-md border ${
+                    postSubTab === "all"
+                      ? "border-white/20 bg-gray-800 text-white"
+                      : "border-white/10 text-gray-300 hover:bg-gray-800/40"
+                  }`}
+                >
+                  All <span className="ml-1 text-[10px] opacity-75">({myPosts.length})</span>
+                </button>
+                <button
+                  onClick={() => setPostSubTab("posts")}
+                  className={`px-2.5 py-1 rounded-md border ${
+                    postSubTab === "posts"
+                      ? "border-white/20 bg-gray-800 text-white"
+                      : "border-white/10 text-gray-300 hover:bg-gray-800/40"
+                  }`}
+                >
+                  Posts <span className="ml-1 text-[10px] opacity-75">({generalPosts.length})</span>
+                </button>
+                <button
+                  onClick={() => setPostSubTab("lounges")}
+                  className={`px-2.5 py-1 rounded-md border ${
+                    postSubTab === "lounges"
+                      ? "border-white/20 bg-gray-800 text-white"
+                      : "border-white/10 text-gray-300 hover:bg-gray-800/40"
+                  }`}
+                >
+                  Lounges <span className="ml-1 text-[10px] opacity-75">({loungePosts.length})</span>
+                </button>
+              </div>
+
+              {/* ALL */}
+              {postSubTab === "all" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs uppercase tracking-wide text-gray-400">Your Posts</h4>
+                    {generalPosts.length > 3 && (
+                      <button
+                        className="text-xs text-sky-300 hover:underline"
+                        onClick={() => setShowMorePosts((s) => !s)}
+                      >
+                        {showMorePosts ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </div>
+                  {loadingPosts ? (
+                    <div className="space-y-2">
+                      <PostSkeleton />
+                      <PostSkeleton />
+                    </div>
+                  ) : generalPosts.length === 0 ? (
+                    <div className="text-sm text-gray-400">No posts yet.</div>
+                  ) : (
+                    (showMorePosts ? generalPosts : generalPosts.slice(0, 3)).map((p) => (
+                      <TinyPost key={p.id} post={p} />
+                    ))
+                  )}
+
+                  <div className="flex items-center justify-between mt-3">
+                    <h4 className="text-xs uppercase tracking-wide text-gray-400">Lounge Posts</h4>
+                    {loungePosts.length > 3 && (
+                      <button
+                        className="text-xs text-sky-300 hover:underline"
+                        onClick={() => setShowMoreLounge((s) => !s)}
+                      >
+                        {showMoreLounge ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </div>
+                  {loadingPosts ? (
+                    <div className="space-y-2">
+                      <PostSkeleton />
+                      <PostSkeleton />
+                    </div>
+                  ) : loungePosts.length === 0 ? (
+                    <div className="text-sm text-gray-400">No lounge posts yet.</div>
+                  ) : (
+                    (showMoreLounge ? loungePosts : loungePosts.slice(0, 3)).map((p) => (
+                      <LoungeRow key={p.id} post={p} />
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* POSTS only */}
+              {postSubTab === "posts" && (
+                <div className="space-y-2">
+                  {loadingPosts ? (
+                    <div className="space-y-2">
+                      <PostSkeleton />
+                      <PostSkeleton />
+                    </div>
+                  ) : generalPosts.length === 0 ? (
+                    <div className="text-sm text-gray-400">No posts yet.</div>
+                  ) : (
+                    generalPosts.map((p) => <TinyPost key={p.id} post={p} />)
+                  )}
+                </div>
+              )}
+
+              {/* LOUNGES only */}
+              {postSubTab === "lounges" && (
+                <div className="space-y-2">
+                  {loadingPosts ? (
+                    <div className="space-y-2">
+                      <PostSkeleton />
+                      <PostSkeleton />
+                    </div>
+                  ) : loungeGroups.length === 0 ? (
+                    <div className="text-sm text-gray-400">No lounge posts yet.</div>
+                  ) : (
+                    loungeGroups.map(([name, posts]) => {
+                      const open = openLoungeGroups.has(name);
+                      return (
+                        <div key={name} className="rounded-xl border border-white/10">
+                          <button
+                            type="button"
+                            onClick={() => toggleGroup(name)}
+                            className="w-full flex items-center justify-between px-3 py-2 bg-gray-900/40 hover:bg-gray-900/60"
+                          >
+                            <span className="text-sm font-medium">{name}</span>
+                            <span className="text-xs text-gray-400">{posts.length}</span>
+                          </button>
+                          {open && (
+                            <div className="p-2 space-y-2">
+                              {posts.map((p) => (
+                                <LoungeRow key={p.id} post={p} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </>
+          ) : activeTab === "comments" ? (
+            // COMMENTS — same look as desktop
+            <section className="space-y-2">
+              {loadingComments ? (
+                <div className="text-sm text-gray-400">Loading…</div>
+              ) : comments.length === 0 ? (
+                <div className="text-sm text-gray-400">No comments yet.</div>
+              ) : (
+                comments.slice(0, 200).map((c) => (
+                  <div key={c.id} className="rounded-xl border border-white/10 bg-gray-900/30 p-3">
+                    <div className="flex items-start gap-2">
+                      <img
+                        src={c.avatarUrl ?? "/defaultPfp.png"}
+                        alt="avatar"
+                        className="w-7 h-7 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="text-xs text-gray-400">
+                          <span className="font-medium text-gray-200">@{c.username}</span> •{" "}
+                          {formatDistanceToNow(new Date(c.timestamp), { addSuffix: true })}
+                        </div>
+                        <div className="text-sm text-gray-100 mt-1">{c.text}</div>
+                        <div className="mt-2 text-xs text-gray-400 flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLike(c.id)}
+                            className={`inline-flex items-center gap-1 ${
+                              c.likedByMe ? "text-white" : "text-gray-300"
+                            } hover:text-white`}
+                            title={c.likedByMe ? "Unlike" : "Like"}
+                          >
+                            <Star className="w-4 h-4" fill={c.likedByMe ? "currentColor" : "none"} />
+                            <span>{c.likes}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
+          ) : (
+            // SAVED
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs uppercase tracking-wide text-gray-400">Saved posts</h4>
+                <Link to="/saved" className="text-xs text-sky-300 hover:underline" title="Open full Saved page">
+                  View all
+                </Link>
+              </div>
+
+              {loadingSaved && savedPage <= 1 ? (
+                <div className="space-y-2">
+                  <PostSkeleton />
+                  <PostSkeleton />
+                </div>
+              ) : savedPosts.length === 0 ? (
+                <div className="text-sm text-gray-400">You haven’t saved any posts yet.</div>
+              ) : (
+                <>
+                  {savedPosts.map((p, i) => (
+                    <div key={p.id} className={i === savedPosts.length - 1 ? "mb-3" : ""}>
+                      <TinyPost
+                        post={p}
+                        onDeleted={(id) => setSavedPosts((prev) => prev.filter((sp) => String(sp.id) !== String(id)))}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {savedPosts.length > 0 && hasMoreSaved && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => loadSavedPage(savedPage + 1)}
+                    disabled={isFetchingSaved}
+                    className="w-full rounded-md border border-white/10 bg-gray-900/40 hover:bg-gray-900/60 px-3 py-1.5 text-xs text-gray-200 disabled:opacity-60"
+                  >
+                    {isFetchingSaved ? "Loading…" : "Load more"}
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+      </div>
+
+      {/* Pretty scrollbar */}
+      <style>{`
+        .pretty-scroll{
+          scrollbar-width: thin;
+          scrollbar-color: rgba(148,163,184,.7) rgba(2,6,23,.35);
+        }
+        .pretty-scroll::-webkit-scrollbar{ width: 10px; }
+        .pretty-scroll::-webkit-scrollbar-track{
+          background: linear-gradient(180deg, rgba(2,6,23,.4), rgba(2,6,23,.15));
+          border-radius: 9999px;
+        }
+        .pretty-scroll::-webkit-scrollbar-thumb{
+          background: linear-gradient(180deg, rgba(99,102,241,.8), rgba(244,63,94,.75));
+          border-radius: 9999px;
+          border: 3px solid transparent;
+          background-clip: content-box;
+        }
+        .pretty-scroll::-webkit-scrollbar-thumb:hover{
+          background: linear-gradient(180deg, rgba(59,130,246,.95), rgba(236,72,153,.9));
+        }
+      `}</style>
+    </Card>
   );
 };
 
@@ -353,18 +827,59 @@ const ProfileOverviewPage: React.FC = () => {
   const [avatarBust, setAvatarBust] = useState<number>(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Refs for the small avatar menu (portaled)
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const menuBtnRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
 
+  // Close menu on outside click (respect menuRef since it’s portaled)
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       if (!avatarMenuOpen) return;
-      const target = e.target as Node;
-      if (menuBtnRef.current?.contains(target)) return;
+      const t = e.target as Node;
+      if (menuBtnRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
       setAvatarMenuOpen(false);
     };
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
+  }, [avatarMenuOpen]);
+
+  // Position the small menu so it never overflows the viewport
+  const positionSmallMenu = () => {
+    const btn = menuBtnRef.current;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const GAP = 8;
+    const MENU_W = 176; // w-44
+    const prefLeft = r.right - MENU_W; // align right edges (opens left)
+    const altLeft = r.left;            // align left edges (opens right)
+    let left = prefLeft;
+    const minLeft = 8;
+    const maxLeft = window.innerWidth - MENU_W - 8;
+    // If preferred goes off-screen, use alternate; then clamp
+    if (prefLeft < minLeft) left = altLeft;
+    left = Math.max(minLeft, Math.min(left, maxLeft));
+    const top = Math.min(
+      window.innerHeight - 8 - 90, // simple bottom guard
+      r.bottom + GAP
+    );
+    setMenuPos({ top, left });
+  };
+
+  useEffect(() => {
+    if (!avatarMenuOpen) return;
+    positionSmallMenu();
+    const onResize = () => positionSmallMenu();
+    // Reposition on any scroll (capture to catch scrolling ancestors)
+    const onAnyScroll = () => positionSmallMenu();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onAnyScroll, true);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onAnyScroll, true);
+    };
   }, [avatarMenuOpen]);
 
   if (!user) {
@@ -480,35 +995,12 @@ const ProfileOverviewPage: React.FC = () => {
                       e.stopPropagation();
                       setAvatarMenuOpen((s) => !s);
                     }}
+                    onMouseDown={(e) => e.preventDefault()}
                     className="absolute -bottom-1 -right-1 inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] shadow-lg ring-2 ring-white/20"
                     title="Avatar options"
                   >
                     <Edit2 className="w-4.5 h-4.5 text-white" />
                   </button>
-
-                  {avatarMenuOpen && (
-                    <div className="absolute top-24 right-0 w-44 rounded-lg border border-white/10 bg-gray-900/95 shadow-xl overflow-hidden z-10">
-                      <button
-                        type="button"
-                        onClick={handlePickAvatar}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800/80"
-                      >
-                        <UploadCloud className="w-4 h-4" />
-                        Upload photo
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPickerOpen(true);
-                          setAvatarMenuOpen(false);
-                        }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800/80"
-                      >
-                        <ImageIcon className="w-4 h-4" />
-                        Choose avatar
-                      </button>
-                    </div>
-                  )}
 
                   <input
                     ref={fileInputRef}
@@ -720,6 +1212,9 @@ const ProfileOverviewPage: React.FC = () => {
                     )}
                   </div>
                 </Card>
+
+                {/* MOBILE-ONLY Your Activity (desktop untouched) */}
+                <MobileActivityBox />
               </div>
             </div>
           </div>
@@ -744,6 +1239,37 @@ const ProfileOverviewPage: React.FC = () => {
         initialEmail={email}
         onSaved={refreshUser}
       />
+
+      {/* Avatar small menu — PORTALED + viewport-aware */}
+      {avatarMenuOpen &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="fixed z-[95] w-44 rounded-lg border border-white/10 bg-gray-900/95 shadow-xl overflow-hidden"
+            style={{ top: menuPos?.top ?? 0, left: menuPos?.left ?? 0 }}
+          >
+            <button
+              type="button"
+              onClick={handlePickAvatar}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800/80"
+            >
+              <UploadCloud className="w-4 h-4" />
+              Upload photo
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPickerOpen(true);
+                setAvatarMenuOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800/80"
+            >
+              <ImageIcon className="w-4 h-4" />
+              Choose avatar
+            </button>
+          </div>,
+          document.body
+        )}
 
       {/* Avatar picker */}
       <AvatarPickerModal

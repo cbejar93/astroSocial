@@ -1,3 +1,4 @@
+// src/pages/WeatherPage.tsx
 import React, {
   useCallback,
   useEffect,
@@ -82,7 +83,7 @@ const circularDiff = (a: number, b: number) =>
 /* ---------------------------- Local converters ---------------------------- */
 // Assume backend stores Celsius and km/h. Convert on the fly for display.
 const toDisplayTemp = (c: number, unit: "metric" | "us") =>
-  unit === "us" ? Math.round(c * 9 / 5 + 32) : Math.round(c);
+  unit === "us" ? Math.round((c * 9) / 5 + 32) : Math.round(c);
 
 const toDisplaySpeed = (kmh: number, unit: "metric" | "us") =>
   unit === "us" ? Math.round(kmh / 1.60934) : Math.round(kmh);
@@ -99,7 +100,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   const [savingPreference, setSavingPreference] = useState(false);
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
 
-  // right-panel scroller (preserve position on unit switch)
+  // desktop right-panel scroller (preserve position on unit switch)
   const asideScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Respect saved preference on mount/changes
@@ -112,7 +113,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   const handleToggleUnit = useCallback(async () => {
     if (savingPreference) return;
 
-    // snapshot scroll before changing unit
+    // snapshot scroll before changing unit (desktop aside)
     const prevScrollTop = asideScrollRef.current?.scrollTop ?? 0;
 
     const previousUnit = unit;
@@ -120,7 +121,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     setPreferenceError(null);
     setSavingPreference(true);
 
-    // instant local toggle (optimistic) — no refetch, just convert numbers
+    // instant local toggle (optimistic)
     setUnit(nextUnit);
 
     // restore scroll on next frame to avoid “refresh” feel
@@ -139,7 +140,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       await updateTemperaturePreference(nextUnit === "metric" ? "C" : "F");
     } catch (err) {
       console.error(err);
-      // rollback if saving failed — keep it smooth
       setUnit(previousUnit);
       setPreferenceError("Unable to save temperature preference. Please try again.");
       requestAnimationFrame(() => {
@@ -270,11 +270,12 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   const windUnitLabel = unit === "us" ? "mph" : "km/h";
 
   return (
-    <div className="relative">
+    <div className="relative overflow-x-hidden">
       {/* background glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-1/2 top-[-12%] h-[42vh] w-[70vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/15 via-fuchsia-500/10 to-emerald-500/15 blur-3xl" />
-        <div className="absolute right-[-10%] bottom-[-20%] h-[36vh] w-[40vw] rounded-[999px] bg-gradient-to-tr from-emerald-500/10 via-sky-500/10 to-transparent blur-3xl" />
+        {/* adjusted to avoid horizontal overflow on mobile */}
+        <div className="absolute right-0 bottom-[-20%] translate-x-1/4 sm:translate-x-0 h-[36vh] w-[80vw] rounded-[999px] bg-gradient-to-tr from-emerald-500/10 via-sky-500/10 to-transparent blur-3xl" />
       </div>
 
       {/* fixed shell */}
@@ -286,14 +287,50 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
               className="max-w-none"
               location={String(weather.coordinates)}
               date={zonedNow.formattedDate}
-              temperature={displayTemp}             // ← converted instantly
+              temperature={displayTemp}
               condition={currentCondition}
               icon={icon}
               sunrise={sunrise}
               sunset={sunset}
-              unit={unit}                            // component decides symbol
+              unit={unit}
               onToggle={handleToggleUnit}
             />
+
+            {/* ===== MOBILE upcoming forecast scroller (between rows) ===== */}
+            <section
+              aria-label="Upcoming forecast (mobile)"
+              className="mt-5 lg:hidden"
+            >
+              <div
+                className="
+                  -mx-4 px-4        /* edge-to-edge lane on small screens */
+                  overflow-x-auto
+                  snap-x snap-mandatory
+                  [scrollbar-gutter:stable]
+                "
+              >
+                <div className="flex gap-3 pr-1">
+                  {futureWeatherData.map((day, index) => (
+                    <div
+                      key={day.date}
+                      className="
+                        flex-shrink-0
+                        min-w-[420px] max-w-[480px]  /* keep same card width as desktop aside */
+                        snap-start
+                      "
+                    >
+                      <WeatherCard
+                        day={day}
+                        isToday={index === 0}
+                        unit={unit}
+                        forcedActiveBlock={index === 0 ? toTimeBlock(activeSlot24) : undefined}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+            {/* ===== end mobile scroller ===== */}
 
             {/* Secondary cards — same height */}
             {todayData?.astro && (
@@ -308,7 +345,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                 />
                 <WindCard
                   className={`h-full ${SECONDARY_CARD_HEIGHT}`}
-                  speed={displayWind}                 // ← converted instantly
+                  speed={displayWind}
                   direction={rawWindDirection}
                   unit={windUnitLabel}
                 />
@@ -316,11 +353,13 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
             )}
 
             {preferenceError && (
-              <p className="mt-3 text-center text-sm text-red-400 px-4">{preferenceError}</p>
+              <p className="mt-3 text-center text-sm text-red-400 px-4">
+                {preferenceError}
+              </p>
             )}
           </div>
 
-          {/* RIGHT column — scrolls inside */}
+          {/* RIGHT column — scrolls inside (desktop only) */}
           <aside
             aria-label="Upcoming forecast"
             className="hidden lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:justify-center"
@@ -331,7 +370,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                 relative max-h-[78vh] overflow-y-auto overscroll-contain
                 rounded-2xl bg-slate-900/30 ring-1 ring-white/10
                 shadow-[inset_0_1px_0_rgba(255,255,255,.04),0_10px_30px_rgba(2,6,23,.35)]
-                p-3 pr-2 w-full nice-scrollbar
+                p-3 pr-2 w-full
                 [scrollbar-gutter:stable]
                 [--fade:16px]
                 [mask-image:linear-gradient(to_bottom,transparent,black_var(--fade),black_calc(100%-var(--fade)),transparent)]
