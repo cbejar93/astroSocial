@@ -63,10 +63,10 @@ const LoungesPage: React.FC = () => {
   }, [lounges]);
 
   return (
-    <div className="w-full py-8 flex justify-center">
+    <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
       <div className="w-full max-w-5xl px-4">
         {/* Header */}
-        <div className="mb-6 rounded-2xl p-[1px] bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]">
+        <div className="mb-4 sm:mb-6 rounded-2xl p-[1px] bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]">
           <div className="rounded-2xl bg-[#0E1626]/70 backdrop-blur-md ring-1 ring-white/10 px-5 py-5 shadow-[0_8px_28px_rgba(2,6,23,.45)]">
             <div className="flex items-center justify-between">
               <div>
@@ -95,7 +95,7 @@ const LoungesPage: React.FC = () => {
             {Array.from({ length: 6 }).map((_, i) => (
               <li
                 key={i}
-                className="rounded-2xl overflow-hidden ring-1 ring-white/10 bg-white/5 backdrop-blur-md shadow-[0_8px_28px_rgba(2,6,23,.45)]"
+                className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20 backdrop-blur-xl text-slate-100 shadow-[0_16px_36px_rgba(2,6,23,0.35)]"
               >
                 <div className="h-28 w-full bg-white/10 animate-pulse" />
                 <div className="p-4">
@@ -117,84 +117,83 @@ const LoungesPage: React.FC = () => {
               const active = formatRelative(l.lastPostAt);
               return (
                 <li key={l.id} className="group">
+                  {/* Card matches PostCard styling */}
                   <Link
                     to={`/lounge/${encodeURIComponent(l.name)}`}
-                    className="block rounded-2xl overflow-hidden p-[1px] bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.18),rgba(90,162,255,.18),rgba(34,197,94,.12),rgba(240,75,179,.18))] hover:shadow-[0_16px_60px_rgba(2,6,23,0.6)] transition-shadow"
+                    className="block rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20 backdrop-blur-xl text-slate-100 shadow-[0_16px_36px_rgba(2,6,23,0.35)] hover:shadow-[0_16px_60px_rgba(2,6,23,0.6)] transition-shadow"
                   >
-                    <div className="rounded-2xl bg-[#0E1626]/70 backdrop-blur-md ring-1 ring-white/10 overflow-hidden">
-                      {/* Banner */}
-                      <div className="relative h-28 w-full overflow-hidden">
-                        <img
-                          src={l.bannerUrl}
-                          alt={`${l.name} banner`}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = "/banner-fallback.jpg";
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0E1626] via-transparent to-transparent opacity-80" />
-                        {/* Avatar */}
-                        <div className="absolute -bottom-6 left-4">
-                          <div className="p-[3px] rounded-full bg-gradient-to-br from-[#f04bb3] to-[#5aa2ff]">
-                            <img
-                              src={l.profileUrl}
-                              alt={`${l.name} icon`}
-                              className="w-12 h-12 rounded-full object-cover ring-2 ring-white/20 bg-[#0E1626]"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = "/defaultPfp.png";
-                              }}
-                            />
-                          </div>
+                    {/* Banner */}
+                    <div className="relative h-28 w-full overflow-hidden">
+                      <img
+                        src={l.bannerUrl}
+                        alt={`${l.name} banner`}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/banner-fallback.jpg";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+                      {/* Avatar */}
+                      <div className="absolute -bottom-6 left-4">
+                        <div className="p-[3px] rounded-full bg-gradient-to-br from-[#f04bb3] to-[#5aa2ff]">
+                          <img
+                            src={l.profileUrl}
+                            alt={`${l.name} icon`}
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-white/20 bg-[#0E1626]"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = "/defaultPfp.png";
+                            }}
+                          />
                         </div>
                       </div>
+                    </div>
 
-                      {/* Body */}
-                      <div className="px-4 pt-7 pb-4">
-                        <div className="flex items-start gap-2">
-                          <h3 className="text-sm font-semibold leading-tight truncate flex-1">
-                            {l.name}
-                          </h3>
+                    {/* Body */}
+                    <div className="px-4 pt-7 pb-4">
+                      <div className="flex items-start gap-2">
+                        <h3 className="text-sm font-semibold leading-tight truncate flex-1">
+                          {l.name}
+                        </h3>
 
-                          {/* Follow pill */}
-                          {user && (
-                            <button
-                              onClick={async (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                await updateFollowedLounge(l.id, l.name, !isFollowed);
-                              }}
-                              aria-pressed={isFollowed}
-                              className={[
-                                "shrink-0 inline-flex items-center justify-center rounded-full px-3 py-1 text-[12px] font-medium ring-1 transition",
-                                isFollowed
-                                  ? "bg-white/5 text-gray-200 ring-white/15 hover:bg-white/10"
-                                  : "text-white ring-white/20 shadow-[0_8px_28px_rgba(15,23,42,0.45)]",
-                              ].join(" ")}
-                              style={
-                                isFollowed
-                                  ? undefined
-                                  : { background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" }
-                              }
-                            >
-                              {isFollowed ? "Following" : "Follow"}
-                            </button>
-                          )}
-                        </div>
+                        {/* Follow pill */}
+                        {user && (
+                          <button
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              await updateFollowedLounge(l.id, l.name, !isFollowed);
+                            }}
+                            aria-pressed={isFollowed}
+                            className={[
+                              "shrink-0 inline-flex items-center justify-center rounded-full px-3 py-1 text-[12px] font-medium ring-1 transition",
+                              isFollowed
+                                ? "bg-white/5 text-gray-200 ring-white/15 hover:bg-white/10"
+                                : "text-white ring-white/20 shadow-[0_8px_28px_rgba(15,23,42,0.45)]",
+                            ].join(" ")}
+                            style={
+                              isFollowed
+                                ? undefined
+                                : { background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" }
+                            }
+                          >
+                            {isFollowed ? "Following" : "Follow"}
+                          </button>
+                        )}
+                      </div>
 
-                        {/* Meta */}
-                        <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
-                          <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 ring-1 ring-white/10 text-gray-300">
-                            {(l.threads ?? 0).toLocaleString()} Threads
+                      {/* Meta */}
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
+                        <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 ring-1 ring-white/10 text-gray-300">
+                          {(l.threads ?? 0).toLocaleString()} Threads
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 ring-1 ring-white/10 text-gray-300">
+                          {(l.followers ?? 0).toLocaleString()} Trackers
+                        </span>
+                        {active && (
+                          <span className="ml-auto text-[11px] text-gray-400">
+                            Active {active}
                           </span>
-                          <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 ring-1 ring-white/10 text-gray-300">
-                            {(l.followers ?? 0).toLocaleString()} Trackers
-                          </span>
-                          {active && (
-                            <span className="ml-auto text-[11px] text-gray-400">
-                              Active {active}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
                   </Link>

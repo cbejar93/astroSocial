@@ -63,8 +63,8 @@ const PostSkeleton: React.FC = () => (
   </div>
 );
 
-/* ----------------------------- Confirm (Portal, max z) ------------------------------ */
-const MAX_Z = 2147483647; // above anything
+/* ----------------------------- Confirm (Portal) ------------------------------ */
+const MAX_Z = 2147483647;
 
 const ConfirmDialog: React.FC<{
   open: boolean;
@@ -149,14 +149,14 @@ const PostMenuPortal: React.FC<{
   if (!portalTarget) return null;
 
   const GAP = 8;
-  const MENU_W = 160; // w-40
-  let left = anchor.right - MENU_W; // right align
+  const MENU_W = 160;
+  let left = anchor.right - MENU_W;
   const minLeft = 8;
   const maxLeft = window.innerWidth - MENU_W - 8;
-  if (left < minLeft) left = anchor.left; // open to the right if needed
+  if (left < minLeft) left = anchor.left;
   left = Math.max(minLeft, Math.min(left, maxLeft));
   const top = Math.min(window.innerHeight - 8 - 90, anchor.bottom + GAP);
-  const z = 999999; // below confirm, above page
+  const z = 999999;
 
   const menu = (
     <div
@@ -202,23 +202,18 @@ const LoungePage: React.FC = () => {
 
   const [sortBy, setSortBy] = useState<SortBy>("latest");
 
-  // post action menu (portaled)
   const [menuPostId, setMenuPostId] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<Rect | null>(null);
 
-  // admin & description
   const [adminOpen, setAdminOpen] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
 
-  // delete confirm
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // NEW: lounge post modal
   const [postModalOpen, setPostModalOpen] = useState(false);
 
-  // helpers
   const reloadPosts = async () => {
     if (!loungeName) return;
     setLoadingPosts(true);
@@ -240,7 +235,6 @@ const LoungePage: React.FC = () => {
     return () => document.removeEventListener("click", handler);
   }, []);
 
-  // close portaled menu on resize/scroll
   useEffect(() => {
     if (!menuPostId || !menuAnchor) return;
     const onReposition = () => {
@@ -329,7 +323,7 @@ const LoungePage: React.FC = () => {
 
   if (loadingLounge) {
     return (
-      <div className="w-full py-8 flex justify-center">
+      <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
         <div className="w-full max-w-4xl px-4">
           <HeroSkeleton />
           <div className="space-y-4">
@@ -344,7 +338,7 @@ const LoungePage: React.FC = () => {
 
   if (!lounge) {
     return (
-      <div className="w-full py-12 flex justify-center">
+      <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
         <div className="w-full max-w-3xl px-4">
           <div className="rounded-2xl ring-1 ring-white/10 bg-white/5 backdrop-blur-md px-6 py-10 text-center">
             <p className="text-sm text-gray-300">Lounge not found.</p>
@@ -362,10 +356,11 @@ const LoungePage: React.FC = () => {
 
   return (
     <>
-      <div className="w-full py-8 flex justify-center">
+      {/* Mobile-only lift up: pt-3 on mobile, pt-8 on >= sm */}
+      <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
         <div className="w-full max-w-5xl px-0 sm:px-4">
-          {/* ====== Aurora Hero ====== */}
-          <section className="relative mb-12 rounded-3xl overflow-hidden ring-1 ring-white/10 bg-[#0B1220]/60 backdrop-blur-md shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+          {/* ====== Hero (kept translucent so banner stays visible) ====== */}
+          <section className="relative mb-10 sm:mb-12 rounded-3xl overflow-hidden ring-1 ring-white/10 bg-[#0B1220]/60 backdrop-blur-md shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
             <div className="absolute inset-0 -z-10">
               <img
                 src={lounge.bannerUrl}
@@ -379,7 +374,8 @@ const LoungePage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B1220] via-transparent to-transparent" />
             </div>
 
-            <div className="px-5 sm:px-7 pt-20 pb-6">
+            {/* Slightly reduced top padding on mobile to lift content */}
+            <div className="px-5 sm:px-7 pt-16 sm:pt-20 pb-6">
               <div className="flex items-end gap-5">
                 <div className="relative">
                   <span
@@ -401,9 +397,9 @@ const LoungePage: React.FC = () => {
                     <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                       {lounge.name}
                     </h1>
-                    {postCount > 0 && (
+                    {sortedPosts.length > 0 && (
                       <span className="text-[11px] sm:text-xs text-sky-300 bg-sky-500/10 ring-1 ring-sky-400/30 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5" /> {postCount} posts
+                        <Sparkles className="w-3.5 h-3.5" /> {sortedPosts.length} posts
                       </span>
                     )}
                     {lastActive && (
@@ -439,7 +435,6 @@ const LoungePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        // close any open menus and open the compose modal
                         setMenuPostId(null);
                         setMenuAnchor(null);
                         setPostModalOpen(true);
@@ -543,8 +538,8 @@ const LoungePage: React.FC = () => {
                 <PostSkeleton />
               </>
             ) : sortedPosts.length === 0 ? (
-              <div className="rounded-2xl ring-1 ring-white/10 bg-white/[0.03] backdrop-blur-md px-6 py-12 text-center">
-                <p className="text-sm text-gray-300">No posts yet.</p>
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20 backdrop-blur-xl text-slate-100 px-6 py-12 text-center shadow-[0_16px_36px_rgba(2,6,23,0.35)]">
+                <p className="text-sm text-slate-200/90">No posts yet.</p>
                 {user && (
                   <button
                     className="mt-4 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] hover:brightness-110"
@@ -571,7 +566,7 @@ const LoungePage: React.FC = () => {
                 return (
                   <article
                     key={post.id}
-                    className="group relative rounded-2xl overflow-hidden ring-1 ring-white/10 bg-[#0E1626]/65 backdrop-blur-md p-4 shadow-[0_10px_40px_rgba(0,0,0,.45)] hover:shadow-[0_18px_80px_rgba(2,6,23,.6)] transition-shadow cursor-pointer"
+                    className="group relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20 backdrop-blur-xl text-slate-100 p-4 shadow-[0_16px_36px_rgba(2,6,23,0.35)] hover:shadow-[0_18px_80px_rgba(2,6,23,.6)] transition-shadow cursor-pointer"
                     onClick={() =>
                       navigate(
                         `/lounge/${encodeURIComponent(lounge.name)}/posts/${post.id}`
@@ -597,7 +592,7 @@ const LoungePage: React.FC = () => {
                           >
                             @{post.username}
                           </Link>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-slate-400">
                             {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
                           </span>
                         </div>
@@ -607,7 +602,7 @@ const LoungePage: React.FC = () => {
                       </div>
 
                       <div className="ml-auto flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1 text-xs text-gray-300 bg-white/5 px-2 py-1 rounded-full ring-1 ring-white/10">
+                        <span className="inline-flex items-center gap-1 text-xs text-slate-200 bg-white/5 px-2 py-1 rounded-full ring-1 ring-white/10">
                           <MessageSquare className="w-3.5 h-3.5" />
                           {post.comments}
                         </span>
@@ -628,7 +623,7 @@ const LoungePage: React.FC = () => {
                                   height: r.height,
                                 });
                               }}
-                              className="p-1 text-gray-300 hover:text-white rounded-md hover:bg-white/10"
+                              className="p-1 text-slate-300 hover:text-white rounded-md hover:bg-white/10"
                               aria-haspopup="menu"
                               aria-expanded={menuPostId === post.id}
                               aria-label="Post menu"
@@ -650,7 +645,7 @@ const LoungePage: React.FC = () => {
                       </div>
                     </div>
 
-                    {lastLine && <p className="mt-2 text-[12px] text-gray-400">{lastLine}</p>}
+                    {lastLine && <p className="mt-2 text-[12px] text-slate-400">{lastLine}</p>}
                   </article>
                 );
               })
@@ -659,7 +654,7 @@ const LoungePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Global confirm modal (portal; max z; scrollable) */}
+      {/* Global confirm modal */}
       <ConfirmDialog
         open={confirmOpen}
         message="Delete this post? This cannot be undone."
@@ -677,7 +672,7 @@ const LoungePage: React.FC = () => {
         }}
       />
 
-      {/* Compose Post (uses your LoungePostModal component) */}
+      {/* Compose Post */}
       <LoungePostModal
         open={postModalOpen}
         onClose={() => setPostModalOpen(false)}

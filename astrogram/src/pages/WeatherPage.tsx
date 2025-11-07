@@ -81,7 +81,6 @@ const circularDiff = (a: number, b: number) =>
   Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
 
 /* ---------------------------- Local converters ---------------------------- */
-// Assume backend stores Celsius and km/h. Convert on the fly for display.
 const toDisplayTemp = (c: number, unit: "metric" | "us") =>
   unit === "us" ? Math.round((c * 9) / 5 + 32) : Math.round(c);
 
@@ -261,10 +260,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     }
   })();
 
-  // Cast numeric slot to TimeBlock union safely
   const toTimeBlock = (n: number): TimeBlock => String(n) as TimeBlock;
 
-  // Display values (converted instantly when unit toggles)
   const displayTemp = toDisplayTemp(rawTempC, unit);
   const displayWind = toDisplaySpeed(rawWindSpeedKmh, unit);
   const windUnitLabel = unit === "us" ? "mph" : "km/h";
@@ -274,83 +271,85 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       {/* background glow */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-1/2 top-[-12%] h-[42vh] w-[70vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/15 via-fuchsia-500/10 to-emerald-500/15 blur-3xl" />
-        {/* adjusted to avoid horizontal overflow on mobile */}
         <div className="absolute right-0 bottom-[-20%] translate-x-1/4 sm:translate-x-0 h-[36vh] w-[80vw] rounded-[999px] bg-gradient-to-tr from-emerald-500/10 via-sky-500/10 to-transparent blur-3xl" />
       </div>
 
       {/* fixed shell */}
-      <div className="w-full flex justify-center py-8 lg:py-0 lg:fixed lg:inset-0 lg:overflow-hidden">
+      <div className="w-full flex justify-center pt-2 pb-8 lg:py-0 lg:fixed lg:inset-0 lg:overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-0 sm:px-4 lg:px-6 lg:h-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
           {/* LEFT column */}
           <div className="lg:h-full lg:min-h-0 lg:flex lg:flex-col lg:justify-center">
-            <CurrentWeatherCard
-              className="max-w-none"
-              location={String(weather.coordinates)}
-              date={zonedNow.formattedDate}
-              temperature={displayTemp}
-              condition={currentCondition}
-              icon={icon}
-              sunrise={sunrise}
-              sunset={sunset}
-              unit={unit}
-              onToggle={handleToggleUnit}
-            />
+            {/* MOBILE-ONLY constant row spacing */}
+            <div className="flex flex-col space-y-4 lg:space-y-0">
+              <CurrentWeatherCard
+                className="max-w-none"
+                location={String(weather.coordinates)}
+                date={zonedNow.formattedDate}
+                temperature={displayTemp}
+                condition={currentCondition}
+                icon={icon}
+                sunrise={sunrise}
+                sunset={sunset}
+                unit={unit}
+                onToggle={handleToggleUnit}
+              />
 
-            {/* ===== MOBILE upcoming forecast scroller (between rows) ===== */}
-            <section
-              aria-label="Upcoming forecast (mobile)"
-              className="mt-5 lg:hidden"
-            >
-              <div
-                className="
-                  -mx-4 px-4        /* edge-to-edge lane on small screens */
-                  overflow-x-auto
-                  snap-x snap-mandatory
-                  [scrollbar-gutter:stable]
-                "
+              {/* ===== MOBILE upcoming forecast scroller (edge-to-edge from left) ===== */}
+              <section
+                aria-label="Upcoming forecast (mobile)"
+                className="lg:hidden"
               >
-                <div className="flex gap-3 pr-1">
-                  {futureWeatherData.map((day, index) => (
-                    <div
-                      key={day.date}
-                      className="
-                        flex-shrink-0
-                        min-w-[420px] max-w-[480px]  /* keep same card width as desktop aside */
-                        snap-start
-                      "
-                    >
-                      <WeatherCard
-                        day={day}
-                        isToday={index === 0}
-                        unit={unit}
-                        forcedActiveBlock={index === 0 ? toTimeBlock(activeSlot24) : undefined}
-                      />
-                    </div>
-                  ))}
+                <div
+                  className="
+                    -mx-4               /* start at screen edge */
+                    overflow-x-auto
+                    snap-x snap-mandatory
+                    [scrollbar-gutter:stable]
+                  "
+                >
+                  <div className="flex gap-3 pr-4">
+                    {futureWeatherData.map((day, index) => (
+                      <div
+                        key={day.date}
+                        className="
+                          flex-shrink-0
+                          min-w-[420px] max-w-[480px]
+                          snap-start
+                        "
+                      >
+                        <WeatherCard
+                          day={day}
+                          isToday={index === 0}
+                          unit={unit}
+                          forcedActiveBlock={index === 0 ? toTimeBlock(activeSlot24) : undefined}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </section>
-            {/* ===== end mobile scroller ===== */}
+              </section>
+              {/* ===== end mobile scroller ===== */}
 
-            {/* Secondary cards — same height */}
-            {todayData?.astro && (
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-                <MoonPhaseCard
-                  className={`h-full ${SECONDARY_CARD_HEIGHT}`}
-                  phase={todayData.astro.moonPhase.phase}
-                  illumination={todayData.astro.moonPhase.illumination}
-                  moonrise={todayData.astro.moonrise}
-                  moonset={todayData.astro.moonset}
-                  unit={unit}
-                />
-                <WindCard
-                  className={`h-full ${SECONDARY_CARD_HEIGHT}`}
-                  speed={displayWind}
-                  direction={rawWindDirection}
-                  unit={windUnitLabel}
-                />
-              </div>
-            )}
+              {/* Secondary cards — same height */}
+              {todayData?.astro && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch lg:mt-6">
+                  <MoonPhaseCard
+                    className={`h-full ${SECONDARY_CARD_HEIGHT}`}
+                    phase={todayData.astro.moonPhase.phase}
+                    illumination={todayData.astro.moonPhase.illumination}
+                    moonrise={todayData.astro.moonrise}
+                    moonset={todayData.astro.moonset}
+                    unit={unit}
+                  />
+                  <WindCard
+                    className={`h-full ${SECONDARY_CARD_HEIGHT}`}
+                    speed={displayWind}
+                    direction={rawWindDirection}
+                    unit={windUnitLabel}
+                  />
+                </div>
+              )}
+            </div>
 
             {preferenceError && (
               <p className="mt-3 text-center text-sm text-red-400 px-4">

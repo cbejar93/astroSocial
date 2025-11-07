@@ -5,18 +5,18 @@ import {
   Send,
   Quote,
   Reply,
-} from 'lucide-react';
+} from "lucide-react";
 import React, {
   useEffect,
   useMemo,
   useRef,
   useState,
   useImperativeHandle,
-} from 'react';
-import { Link } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '../../hooks/useAuth';
-import CommentsSkeleton from './CommentsSkeleton';
+} from "react";
+import { Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { useAuth } from "../../hooks/useAuth";
+import CommentsSkeleton from "./CommentsSkeleton";
 import {
   fetchCommentPage,
   createComment,
@@ -25,7 +25,7 @@ import {
   fetchCommentById,
   type CommentResponse,
   type PaginatedCommentsResponse,
-} from '../../lib/api';
+} from "../../lib/api";
 
 export interface CommentItem extends CommentResponse {
   likedByMe?: boolean;
@@ -59,16 +59,15 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
     const [replyContext, setReplyContext] = useState<
       { username: string; commentId?: string; parentId?: string | null } | null
     >(null);
-    const [editorPlain, setEditorPlain] = useState('');
+    const [editorPlain, setEditorPlain] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const editorRef = useRef<HTMLDivElement>(null);
 
-    /* Reset page when post changes */
+    /* -------------------- pagination + fetch -------------------- */
     useEffect(() => {
       setCurrentPage(initialPage);
     }, [initialPage, postId]);
 
-    /* Fetch comments page */
     useEffect(() => {
       let cancelled = false;
       setLoading(true);
@@ -93,7 +92,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
         .catch((err: unknown) => {
           if (cancelled) return;
           console.error(err);
-          setError('Could not load replies.');
+          setError("Could not load replies.");
           setPageData(null);
         })
         .finally(() => {
@@ -106,14 +105,14 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       };
     }, [postId, currentPage, pageSize, refreshKey]);
 
-    /* Close any open menu on outside click */
+    /* -------------------- close overflow menu on outside click -------------------- */
     useEffect(() => {
       const closeMenu = () => setMenuOpenId(null);
-      document.addEventListener('click', closeMenu);
-      return () => document.removeEventListener('click', closeMenu);
+      document.addEventListener("click", closeMenu);
+      return () => document.removeEventListener("click", closeMenu);
     }, []);
 
-    /* Build map of replies by parent */
+    /* -------------------- replies lookup -------------------- */
     const repliesByParent = useMemo(() => {
       const map = new Map<string, CommentItem[]>();
       pageData?.replies.forEach((reply) => {
@@ -127,7 +126,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
 
     const allComments = useMemo(
       () => (pageData ? [...pageData.comments, ...pageData.replies] : []),
-      [pageData],
+      [pageData]
     );
 
     const totalPages = useMemo(() => {
@@ -135,7 +134,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       return Math.max(1, Math.ceil(Math.max(pageData.total, 0) / pageData.limit));
     }, [pageData]);
 
-    /* Editor helpers */
+    /* -------------------- editor helpers -------------------- */
     const focusEditor = () => {
       const editor = editorRef.current;
       if (!editor) return;
@@ -150,40 +149,52 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       }
     };
 
+    /** Encode text for safe attribute/inline insertion */
     const escapeHtml = (value: string) =>
       value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
+    /** Decode HTML entities (e.g. &lt;blockquote&gt;) back to markup */
+    const decodeHtmlEntities = (value: string): string => {
+      if (!value) return "";
+      if (typeof window === "undefined") return value;
+      const el = document.createElement("textarea");
+      el.innerHTML = value;
+      return el.value;
+    };
+
+    /** Sanitize markup to a small allowlist */
     const sanitizeHtml = (value: string) => {
-      if (typeof window === 'undefined' || !value) {
-        return '';
+      if (typeof window === "undefined" || !value) {
+        return "";
       }
       const parser = new DOMParser();
-      const doc = parser.parseFromString(value, 'text/html');
+      const doc = parser.parseFromString(value, "text/html");
       const body = doc.body;
-      if (!body) return '';
+      if (!body) return "";
 
       const allowedTags = new Set([
-        'a',
-        'blockquote',
-        'br',
-        'code',
-        'em',
-        'i',
-        'li',
-        'ol',
-        'p',
-        'pre',
-        'strong',
-        'ul',
+        "a",
+        "blockquote",
+        "br",
+        "code",
+        "em",
+        "i",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "strong",
+        "ul",
       ]);
-      const allowedAttrs = new Set(['href', 'title', 'rel', 'target']);
+      const allowedAttrs = new Set(["href", "title", "rel", "target"]);
 
       const walker = doc.createTreeWalker(body, NodeFilter.SHOW_ELEMENT, null);
+
       const nodesToRemove: Element[] = [];
       const nodesToUnwrap: Element[] = [];
 
@@ -192,7 +203,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
         const tag = node.tagName.toLowerCase();
 
         if (!allowedTags.has(tag)) {
-          if (tag === 'script' || tag === 'style') {
+          if (tag === "script" || tag === "style") {
             nodesToRemove.push(node);
             continue;
           }
@@ -206,39 +217,45 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
           }
         });
 
-        if (tag === 'a') {
-          if (!node.hasAttribute('rel')) {
-            node.setAttribute('rel', 'noopener noreferrer');
+        if (tag === "a") {
+          if (!node.hasAttribute("rel")) {
+            node.setAttribute("rel", "noopener noreferrer");
           }
-          if (!node.hasAttribute('target')) {
-            node.setAttribute('target', '_blank');
+          if (!node.hasAttribute("target")) {
+            node.setAttribute("target", "_blank");
           }
         }
       }
 
-      nodesToRemove.forEach((node) => node.remove());
-      nodesToUnwrap.forEach((node) => {
-        const fragment = document.createDocumentFragment();
-        while (node.firstChild) fragment.appendChild(node.firstChild);
-        node.replaceWith(fragment);
+      nodesToRemove.forEach((n) => n.remove());
+      nodesToUnwrap.forEach((n) => {
+        const frag = document.createDocumentFragment();
+        while (n.firstChild) frag.appendChild(n.firstChild);
+        n.replaceWith(frag);
       });
 
       return body.innerHTML;
     };
 
+    /** Decode entities → sanitize (for both stored comments & quoted content). */
+    const toSafeHtml = (value: string): string => sanitizeHtml(decodeHtmlEntities(value));
+
+    /* -------------------- quoting / replying -------------------- */
     const insertQuote = (source: QuoteSource) => {
       focusEditor();
       const editor = editorRef.current;
       if (!editor) return;
+
       const parentId = source.parentId ?? source.id ?? null;
-      const sanitizedBody = sanitizeHtml(source.text);
+      const sanitizedBody = toSafeHtml(source.text);
+
       const quoteHtml =
         `<blockquote><p><strong>@${escapeHtml(source.username)}</strong> wrote:</p>` +
-        `<div>${sanitizedBody}</div></blockquote><p><br></p>`;
+        `${sanitizedBody}</blockquote><p><br></p>`;
 
       try {
-        if (document.queryCommandSupported('insertHTML')) {
-          document.execCommand('insertHTML', false, quoteHtml);
+        if (document.queryCommandSupported("insertHTML")) {
+          document.execCommand("insertHTML", false, quoteHtml);
         } else {
           editor.innerHTML += quoteHtml;
         }
@@ -248,16 +265,12 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
 
       setReplyParentId(parentId);
       setReplyContext({ username: source.username, commentId: source.id, parentId });
-      setEditorPlain(editor.textContent ?? '');
+      setEditorPlain(editor.textContent ?? "");
     };
 
     useImperativeHandle(ref, () => ({
-      quote: (source: QuoteSource) => {
-        insertQuote(source);
-      },
-      focusEditor: () => {
-        focusEditor();
-      },
+      quote: (source: QuoteSource) => insertQuote(source),
+      focusEditor: () => focusEditor(),
     }));
 
     const handleQuoteComment = async (commentId: string) => {
@@ -289,25 +302,26 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       focusEditor();
     };
 
+    /* -------------------- editor events -------------------- */
     const handleEditorInput = () => {
       const editor = editorRef.current;
-      setEditorPlain(editor?.textContent ?? '');
+      setEditorPlain(editor?.textContent ?? "");
     };
 
     const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
       e.preventDefault();
-      const text = e.clipboardData.getData('text/plain');
+      const text = e.clipboardData.getData("text/plain");
       focusEditor();
-      document.execCommand('insertText', false, text);
+      document.execCommand("insertText", false, text);
       handleEditorInput();
     };
 
-    const handleToolbarCommand = (command: 'bold' | 'italic' | 'bullet' | 'numbered') => {
+    const handleToolbarCommand = (command: "bold" | "italic" | "bullet" | "numbered") => {
       const commandMap: Record<typeof command, string> = {
-        bold: 'bold',
-        italic: 'italic',
-        bullet: 'insertUnorderedList',
-        numbered: 'insertOrderedList',
+        bold: "bold",
+        italic: "italic",
+        bullet: "insertUnorderedList",
+        numbered: "insertOrderedList",
       };
       focusEditor();
       document.execCommand(commandMap[command]);
@@ -339,8 +353,8 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
         } else {
           setRefreshKey((key) => key + 1);
         }
-        editorRef.current.innerHTML = '';
-        setEditorPlain('');
+        editorRef.current.innerHTML = "";
+        setEditorPlain("");
         setReplyParentId(null);
         setReplyContext(null);
       } catch (err) {
@@ -357,9 +371,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
           if (!prev) return prev;
           const updateList = (list: CommentItem[]) =>
             list.map((item) =>
-              item.id === commentId
-                ? { ...item, likes: count, likedByMe: liked }
-                : item,
+              item.id === commentId ? { ...item, likes: count, likedByMe: liked } : item
             );
           if (prev.comments.some((c) => c.id === commentId)) {
             return { ...prev, comments: updateList(prev.comments) };
@@ -386,7 +398,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
           if (!prev) return prev;
           const comments = prev.comments.filter((c) => c.id !== commentId);
           const replies = prev.replies.filter(
-            (r) => r.id !== commentId && r.parentId !== commentId,
+            (r) => r.id !== commentId && r.parentId !== commentId
           );
           return {
             ...prev,
@@ -415,44 +427,41 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       setReplyParentId(null);
     };
 
-    /* ---------- RENDER SINGLE COMMENT (avatar fix here) ---------- */
+    /* -------------------- render -------------------- */
     const renderComment = (comment: CommentItem, depth = 0): JSX.Element => {
       const replies = repliesByParent.get(comment.id) ?? [];
       const isOwn = user?.id === comment.authorId;
-      const containerClasses = [
-        'rounded-xl border border-white/10 bg-gray-900/70 p-4 backdrop-blur',
-      ];
-      if (depth > 0) containerClasses.push('ml-6');
 
-      const encodedUsername = encodeURIComponent(comment.username);
+      // ✅ EXACT PostCard glass look for each comment:
+      const cardClasses = [
+        "relative overflow-hidden rounded-lg",
+        "border border-white/10",
+        "bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20",
+        "backdrop-blur-xl text-slate-100",
+        "shadow-[0_16px_36px_rgba(2,6,23,0.35)]",
+        "p-4",
+      ];
+      if (depth > 0) cardClasses.push("ml-6");
 
       return (
-        <div key={comment.id} className={containerClasses.join(' ')}>
-          <div className="flex items-start gap-3 min-w-0">
-            {/* ✅ Perfect circle avatar: wrapper is the mask, can't shrink */}
-            <div className="w-10 h-10 shrink-0 rounded-full overflow-hidden ring-1 ring-white/10">
-              <img
-                src={comment.avatarUrl ?? '/defaultPfp.png'}
-                alt={`${comment.username} avatar`}
-                className="block w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-
-            {/* Allow text to wrap instead of pushing avatar */}
-            <div className="flex-1 min-w-0 space-y-3">
+        <div key={comment.id} className={cardClasses.join(" ")}>
+          <div className="flex items-start gap-3">
+            <img
+              src={comment.avatarUrl ?? "/defaultPfp.png"}
+              alt={`${comment.username} avatar`}
+              className="h-10 w-10 rounded-full object-cover ring-2 ring-white/15"
+            />
+            <div className="flex-1 space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div>
                   <Link
-                    to={`/users/${encodedUsername}/posts`}
-                    className="text-sm font-semibold text-teal-400 hover:underline"
+                    to={`/users/${encodeURIComponent(comment.username)}/posts`}
+                    className="text-sm font-semibold text-teal-300 hover:underline"
                   >
                     @{comment.username}
                   </Link>
-                  <div className="text-xs text-gray-400">
-                    {formatDistanceToNow(new Date(comment.timestamp), {
-                      addSuffix: true,
-                    })}
+                  <div className="text-xs text-slate-400">
+                    {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
                   </div>
                 </div>
 
@@ -464,19 +473,19 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                         e.stopPropagation();
                         setMenuOpenId((prev) => (prev === comment.id ? null : comment.id));
                       }}
-                      className="rounded-full p-1 text-gray-400 transition hover:text-gray-200"
+                      className="rounded-md p-1 text-slate-300 hover:text-white hover:bg-white/10 transition"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </button>
                     {menuOpenId === comment.id && (
-                      <div className="absolute right-0 mt-2 w-32 rounded-lg border border-white/10 bg-gray-900 shadow-lg">
+                      <div className="absolute right-0 mt-2 w-32 rounded-md border border-white/10 bg-slate-900/80 backdrop-blur-xl shadow-2xl">
                         <button
                           type="button"
                           onClick={() => {
                             void handleDelete(comment.id);
                             setMenuOpenId(null);
                           }}
-                          className="block w-full px-4 py-2 text-left text-xs text-red-400 hover:bg-red-500/10"
+                          className="block w-full px-4 py-2 text-left text-xs text-red-300 hover:bg-white/10"
                         >
                           Delete
                         </button>
@@ -486,29 +495,30 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                 )}
               </div>
 
+              {/* Render: decode entities -> sanitize */}
               <div
                 className="prose prose-invert max-w-none text-sm leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: comment.text }}
+                dangerouslySetInnerHTML={{ __html: toSafeHtml(comment.text) }}
               />
 
               <div className="flex flex-wrap items-center gap-4 text-xs">
                 <button
                   type="button"
                   onClick={() => void handleLike(comment.id)}
-                  className="inline-flex items-center gap-1 text-gray-300 transition hover:text-teal-300"
+                  className="inline-flex items-center gap-1 text-slate-300 transition hover:text-teal-300"
                 >
                   <Star
                     className="h-4 w-4"
-                    fill={comment.likedByMe ? 'currentColor' : 'none'}
+                    fill={comment.likedByMe ? "currentColor" : "none"}
                   />
                   <span>{comment.likes}</span>
                 </button>
 
-                {depth === 0 && (
+                {comment.parentId === null && (
                   <button
                     type="button"
                     onClick={() => handleReplyToComment(comment)}
-                    className="inline-flex items-center gap-1 text-gray-300 transition hover:text-teal-300"
+                    className="inline-flex items-center gap-1 text-slate-300 transition hover:text-teal-300"
                   >
                     <Reply className="h-4 w-4" />
                     Reply
@@ -518,7 +528,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
                 <button
                   type="button"
                   onClick={() => void handleQuoteComment(comment.id)}
-                  className="inline-flex items-center gap-1 text-gray-300 transition hover:text-teal-300"
+                  className="inline-flex items-center gap-1 text-slate-300 transition hover:text-teal-300"
                 >
                   <Quote className="h-4 w-4" />
                   Quote
@@ -536,7 +546,6 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       );
     };
 
-    /* ---------- Pagination ---------- */
     const PaginationControls = () => {
       if (!pageData) return null;
       const start = pageData.total === 0 ? 0 : (currentPage - 1) * pageData.limit + 1;
@@ -545,7 +554,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
         <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-gray-900/70 px-4 py-3 text-xs text-gray-300 backdrop-blur md:flex-row md:items-center md:justify-between">
           <span>
             {pageData.total === 0
-              ? 'No replies yet'
+              ? "No replies yet"
               : `Showing ${start}-${Math.min(end, pageData.total)} of ${pageData.total}`}
           </span>
           <div className="flex items-center gap-2">
@@ -562,9 +571,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
             </span>
             <button
               type="button"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={currentPage >= totalPages}
               className="rounded-full border border-white/10 px-3 py-1 text-gray-200 transition disabled:cursor-not-allowed disabled:opacity-40 hover:bg-white/10"
             >
@@ -575,14 +582,11 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       );
     };
 
-    /* ---------- Render ---------- */
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-100">Thread Replies</h2>
-          <span className="text-xs text-gray-400">
-            {pageData?.total ?? 0} replies
-          </span>
+          <span className="text-xs text-gray-400">{pageData?.total ?? 0} replies</span>
         </div>
 
         {loading ? (
@@ -605,7 +609,6 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
           </div>
         )}
 
-        {/* Composer */}
         <div className="sticky bottom-4 z-10">
           {user ? (
             <form
@@ -613,17 +616,15 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
               className="space-y-3 rounded-2xl border border-white/10 bg-gray-950/90 p-4 shadow-2xl backdrop-blur"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-100">
-                  Reply to this topic
-                </h3>
+                <h3 className="text-sm font-semibold text-gray-100">Reply to this topic</h3>
                 {replyContext && (
                   <button
                     type="button"
                     onClick={() => {
                       clearReplyContext();
                       if (editorRef.current) {
-                        editorRef.current.innerHTML = '';
-                        setEditorPlain('');
+                        editorRef.current.innerHTML = "";
+                        setEditorPlain("");
                       }
                     }}
                     className="text-xs text-teal-300 hover:text-teal-200"
@@ -642,28 +643,28 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => handleToolbarCommand('bold')}
+                  onClick={() => handleToolbarCommand("bold")}
                   className="rounded-md border border-white/10 px-2 py-1 text-sm font-semibold text-gray-100 hover:bg-white/10"
                 >
                   B
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleToolbarCommand('italic')}
+                  onClick={() => handleToolbarCommand("italic")}
                   className="rounded-md border border-white/10 px-2 py-1 text-sm italic text-gray-100 hover:bg-white/10"
                 >
                   I
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleToolbarCommand('bullet')}
+                  onClick={() => handleToolbarCommand("bullet")}
                   className="rounded-md border border-white/10 px-2 py-1 text-sm text-gray-100 hover:bg-white/10"
                 >
                   •
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleToolbarCommand('numbered')}
+                  onClick={() => handleToolbarCommand("numbered")}
                   className="rounded-md border border-white/10 px-2 py-1 text-sm text-gray-100 hover:bg-white/10"
                 >
                   1.
@@ -698,8 +699,8 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
         </div>
       </div>
     );
-  },
+  }
 );
 
-Comments.displayName = 'Comments';
+Comments.displayName = "Comments";
 export default Comments;

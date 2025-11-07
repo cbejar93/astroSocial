@@ -31,6 +31,81 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9._]+$/;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 20;
 
+/* ---------------- Safe HTML helpers (deep-decode → sanitize) ---------------- */
+function decodeHtmlEntitiesDeep(value: string): string {
+  if (!value) return "";
+  let prev = value;
+  // a few passes to fully decode nested entities like &amp;lt; → &lt; → <
+  for (let i = 0; i < 5; i++) {
+    const ta = document.createElement("textarea");
+    ta.innerHTML = prev;
+    const next = ta.value;
+    if (next === prev) break;
+    prev = next;
+  }
+  return prev;
+}
+function sanitizeHtml(value: string): string {
+  if (typeof window === "undefined" || !value) return "";
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(value, "text/html");
+  const body = doc.body;
+  if (!body) return "";
+
+  const allowedTags = new Set([
+    "a",
+    "blockquote",
+    "br",
+    "code",
+    "em",
+    "i",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "strong",
+    "ul",
+  ]);
+  const allowedAttrs = new Set(["href", "title", "rel", "target"]);
+
+  const walker = doc.createTreeWalker(body, NodeFilter.SHOW_ELEMENT, null);
+  const nodesToRemove: Element[] = [];
+  const nodesToUnwrap: Element[] = [];
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Element;
+    const tag = node.tagName.toLowerCase();
+
+    if (!allowedTags.has(tag)) {
+      if (tag === "script" || tag === "style") {
+        nodesToRemove.push(node);
+        continue;
+      }
+      nodesToUnwrap.push(node);
+      continue;
+    }
+
+    [...node.attributes].forEach((attr) => {
+      if (!allowedAttrs.has(attr.name.toLowerCase())) node.removeAttribute(attr.name);
+    });
+
+    if (tag === "a") {
+      if (!node.hasAttribute("rel")) node.setAttribute("rel", "noopener noreferrer");
+      if (!node.hasAttribute("target")) node.setAttribute("target", "_blank");
+    }
+  }
+
+  nodesToRemove.forEach((n) => n.remove());
+  nodesToUnwrap.forEach((n) => {
+    const frag = document.createDocumentFragment();
+    while (n.firstChild) frag.appendChild(n.firstChild);
+    n.replaceWith(frag);
+  });
+
+  return body.innerHTML;
+}
+const toSafeHtml = (value: string) => sanitizeHtml(decodeHtmlEntitiesDeep(value));
+
 /* ---------- Brand Logos (inline SVGs) ---------- */
 const InstagramLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
@@ -516,7 +591,11 @@ const MobileActivityBox: React.FC = () => {
           <div className="mt-1 text-sm font-semibold text-gray-100 line-clamp-2">{post.title}</div>
         )}
         {"body" in post && (post as any).body && (
-          <div className="text-xs text-gray-300 line-clamp-2 mt-1">{(post as any).body}</div>
+          <div
+            className="text-xs text-gray-300 line-clamp-2 mt-1"
+            // safer preview for lounge posts, in case body contains entities
+            dangerouslySetInnerHTML={{ __html: toSafeHtml(String((post as any).body)) }}
+          />
         )}
         <div className="mt-1 text-xs text-gray-400">{post.comments} replies</div>
       </div>
@@ -702,7 +781,7 @@ const MobileActivityBox: React.FC = () => {
               )}
             </>
           ) : activeTab === "comments" ? (
-            // COMMENTS — same look as desktop
+            // COMMENTS — same look as desktop but safe HTML
             <section className="space-y-2">
               {loadingComments ? (
                 <div className="text-sm text-gray-400">Loading…</div>
@@ -722,7 +801,11 @@ const MobileActivityBox: React.FC = () => {
                           <span className="font-medium text-gray-200">@{c.username}</span> •{" "}
                           {formatDistanceToNow(new Date(c.timestamp), { addSuffix: true })}
                         </div>
-                        <div className="text-sm text-gray-100 mt-1">{c.text}</div>
+                        {/* FIX: render HTML safely (deep-decode + sanitize) */}
+                        <div
+                          className="prose prose-invert max-w-none text-sm text-gray-100 mt-1 leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: toSafeHtml(c.text) }}
+                        />
                         <div className="mt-2 text-xs text-gray-400 flex items-center gap-3">
                           <button
                             type="button"

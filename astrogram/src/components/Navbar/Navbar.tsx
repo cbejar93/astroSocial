@@ -1,9 +1,10 @@
 // src/components/Navbar/Navbar.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { Bell, X, Search } from "lucide-react";
+import { Bell, X, Search, Loader2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
+import { search, type SearchResponse } from "../../lib/api";
 
 /* ---- Brand Icons ---- */
 const GoogleG: React.FC<{ className?: string }> = ({ className }) => (
@@ -162,6 +163,14 @@ const Navbar: React.FC = () => {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // --- Added Search States (logic only; nothing removed) ---
+  const [results, setResults] = useState<SearchResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
   // Close account popover on outside click and on route change
   useEffect(() => {
     setAuthOpen(false);
@@ -212,17 +221,62 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const email =
-    (user as any)?.email ||
-    (user as any)?.profile?.email ||
-    (user as any)?.emails?.[0]?.email ||
-    (user as any)?.emails?.[0]?.value ||
-    "";
+  // --- Search Logic (reuses SearchPage behavior) ---
+  async function performSearch(newPage = 1) {
+    if (!query.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await search(query, newPage);
+      setResults(data);
+      setPage(newPage);
+      setShowDropdown(true);
+    } catch (err) {
+      setError((err as Error).message);
+      setResults(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
+  const hasResults =
+    results &&
+    ((results.users?.results.length ?? 0) > 0 ||
+      (results.lounges?.results.length ?? 0) > 0);
+
+  const hasPrev = page > 1;
+  const hasNext =
+    results &&
+    ((results.users &&
+      results.users.total > results.users.page * results.users.limit) ||
+      (results.lounges &&
+        results.lounges.total >
+          results.lounges.page * results.lounges.limit));
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        !inputRef.current?.contains(e.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
+
+  // Keep your original custom-event behavior AND run dropdown search
   const onSubmitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
+
+    // Original behavior (kept)
     if (location.pathname !== "/") {
       navigate("/");
       setTimeout(() => {
@@ -231,7 +285,17 @@ const Navbar: React.FC = () => {
     } else {
       window.dispatchEvent(new CustomEvent("app:search", { detail: { query: q } }));
     }
+
+    // New: also show dropdown results
+    void performSearch(1);
   };
+
+  const email =
+    (user as any)?.email ||
+    (user as any)?.profile?.email ||
+    (user as any)?.emails?.[0]?.email ||
+    (user as any)?.emails?.[0]?.value ||
+    "";
 
   return (
     <>
@@ -241,41 +305,142 @@ const Navbar: React.FC = () => {
           className="
             px-3 sm:px-6 py-2
             border-b border-white/10
-            bg-[#0E1626]/60 backdrop-blur-xl
-            shadow-[0_10px_30px_rgba(2,6,23,0.25)]
+            bg-transparent backdrop-blur-2xl
+            shadow-[0_10px_30px_rgba(2,6,23,0.15)]
             flex items-center gap-3 justify-between
           "
         >
           {/* Search (left; constrained width on large screens) */}
           <form onSubmit={onSubmitSearch} className="flex-1 min-w-0" aria-label="Search">
-            <div className="mx-auto w-full lg:max-w-[520px] xl:max-w-[640px]">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300/80" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search users & lounges…  ( /  or  ⌘K / Ctrl+K )"
-                  className="w-full pl-9 pr-9 rounded-full
-                             bg-white/[0.07] backdrop-blur-md
-                             border border-white/10
-                             text-gray-100 placeholder-gray-400
-                             focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-white/20
-                             py-1.5 text-sm transition"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-white/15 border border-white/10"
-                    aria-label="Clear search"
-                    title="Clear"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+            <div className="mx-auto w-full lg:max-w-[520px] xl:max-w-[640px] relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300/80" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search users & lounges…  ( /  or  ⌘K / Ctrl+K )"
+                className="w-full pl-9 pr-9 rounded-full
+                           bg-white/[0.07] backdrop-blur-md
+                           border border-white/10
+                           text-gray-100 placeholder-gray-400
+                           focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-white/20
+                           py-1.5 text-sm transition"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setResults(null);
+                    setShowDropdown(false);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-white/15 border border-white/10"
+                  aria-label="Clear search"
+                  title="Clear"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* 🔍 Dropdown search results */}
+              {showDropdown && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute left-0 mt-2 w-full rounded-xl border border-white/10 bg-[#0E1626]/95 shadow-xl backdrop-blur-2xl p-4 max-h-[60vh] overflow-y-auto space-y-4 z-[90]"
+                >
+                  {loading && (
+                    <div className="flex items-center justify-center text-gray-400 text-sm">
+                      <Loader2 className="animate-spin mr-2 h-4 w-4" /> Searching...
+                    </div>
+                  )}
+
+                  {error && <p className="text-red-400 text-sm">Error: {error}</p>}
+
+                  {!loading && hasResults && (
+                    <>
+                      {results?.users?.results.length ? (
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2 text-teal-300">
+                            Users
+                          </h3>
+                          <ul className="space-y-2">
+                            {results.users.results.map((u) => (
+                              <li
+                                key={u.id}
+                                className="flex items-center gap-2 text-sm hover:bg-white/5 p-1.5 rounded-md transition cursor-pointer"
+                                onClick={() => {
+                                  navigate(`/users/${u.username}`);
+                                  setShowDropdown(false);
+                                }}
+                              >
+                                <img
+                                  src={u.avatarUrl ?? "/defaultPfp.png"}
+                                  alt={u.username ?? "user"}
+                                  className="w-7 h-7 rounded-full"
+                                />
+                                <span>@{u.username}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+
+                      {results?.lounges?.results.length ? (
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2 text-indigo-300">
+                            Lounges
+                          </h3>
+                          <ul className="space-y-2">
+                            {results.lounges.results.map((l) => (
+                              <li
+                                key={l.id}
+                                className="flex items-center gap-2 text-sm hover:bg-white/5 p-1.5 rounded-md cursor-pointer transition"
+                                onClick={() => {
+                                  navigate(`/lounges/${l.name}`);
+                                  setShowDropdown(false);
+                                }}
+                              >
+                                {l.bannerUrl && (
+                                  <img
+                                    src={l.bannerUrl}
+                                    alt={l.name}
+                                    className="w-7 h-7 rounded"
+                                  />
+                                )}
+                                <span>{l.name}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+
+                      {(hasPrev || hasNext) && (
+                        <div className="flex justify-between mt-3 text-xs text-gray-400">
+                          <button
+                            onClick={() => performSearch(page - 1)}
+                            disabled={!hasPrev || loading}
+                            className="px-3 py-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-40"
+                          >
+                            Previous
+                          </button>
+                          <button
+                            onClick={() => performSearch(page + 1)}
+                            disabled={!hasNext || loading}
+                            className="px-3 py-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-40"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {!loading && !hasResults && !error && (
+                    <p className="text-gray-400 text-sm text-center">No results found</p>
+                  )}
+                </div>
+              )}
             </div>
           </form>
 

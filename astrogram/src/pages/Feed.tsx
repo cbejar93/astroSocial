@@ -1,5 +1,3 @@
-
-
 // src/pages/Feed.tsx
 import {
   useCallback,
@@ -34,6 +32,80 @@ const NAV_PUSH_CLASS = "pt-0 sm:pt-0 lg:pt-0";
 
 /** Sticky anchor */
 const STICKY_TOP_CLASS = "top-0";
+
+/* ---------------- Safe HTML helpers (deep-decode → sanitize) ---------------- */
+function decodeHtmlEntitiesDeep(value: string): string {
+  if (!value) return "";
+  let prev = value;
+  for (let i = 0; i < 5; i++) {
+    const ta = document.createElement("textarea");
+    ta.innerHTML = prev;
+    const next = ta.value;
+    if (next === prev) break;
+    prev = next;
+  }
+  return prev;
+}
+function sanitizeHtml(value: string): string {
+  if (typeof window === "undefined" || !value) return "";
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(value, "text/html");
+  const body = doc.body;
+  if (!body) return "";
+
+  const allowedTags = new Set([
+    "a",
+    "blockquote",
+    "br",
+    "code",
+    "em",
+    "i",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "strong",
+    "ul",
+  ]);
+  const allowedAttrs = new Set(["href", "title", "rel", "target"]);
+
+  const walker = doc.createTreeWalker(body, NodeFilter.SHOW_ELEMENT, null);
+  const nodesToRemove: Element[] = [];
+  const nodesToUnwrap: Element[] = [];
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Element;
+    const tag = node.tagName.toLowerCase();
+
+    if (!allowedTags.has(tag)) {
+      if (tag === "script" || tag === "style") {
+        nodesToRemove.push(node);
+        continue;
+      }
+      nodesToUnwrap.push(node);
+      continue;
+    }
+
+    [...node.attributes].forEach((attr) => {
+      if (!allowedAttrs.has(attr.name.toLowerCase())) node.removeAttribute(attr.name);
+    });
+
+    if (tag === "a") {
+      if (!node.hasAttribute("rel")) node.setAttribute("rel", "noopener noreferrer");
+      if (!node.hasAttribute("target")) node.setAttribute("target", "_blank");
+    }
+  }
+
+  nodesToRemove.forEach((n) => n.remove());
+  nodesToUnwrap.forEach((n) => {
+    const frag = document.createDocumentFragment();
+    while (n.firstChild) frag.appendChild(n.firstChild);
+    n.replaceWith(frag);
+  });
+
+  return body.innerHTML;
+}
+const toSafeHtml = (value: string) => sanitizeHtml(decodeHtmlEntitiesDeep(value));
 
 /* ---------------------------------
    Desktop detection for right panel
@@ -235,7 +307,7 @@ function RightProfilePanel() {
             alt={`${post.username} avatar`}
             className="w-6 h-6 rounded-full object-cover"
           />
-        <span className="font-medium text-gray-200">{post.username}</span>
+          <span className="font-medium text-gray-200">{post.username}</span>
           <span>•</span>
           <span>
             {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
@@ -537,9 +609,11 @@ function RightProfilePanel() {
                                 addSuffix: true,
                               })}
                             </div>
-                            <div className="text-sm text-gray-100 mt-1">
-                              {c.text}
-                            </div>
+                            {/* FIX: render HTML safely (deep-decode + sanitize) */}
+                            <div
+                              className="prose prose-invert max-w-none text-sm text-gray-100 mt-1 leading-relaxed"
+                              dangerouslySetInnerHTML={{ __html: toSafeHtml(c.text) }}
+                            />
                             <div className="mt-2 text-xs text-gray-400 flex items-center gap-3">
                               <button
                                 type="button"
@@ -1006,7 +1080,7 @@ function Feed() {
       </div>
 
       {/* Desktop: start the fixed shell below the (shorter) navbar */}
-      <div className="w-full flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:top-[48px] lg:overflow-hidden">
+      <div className="w-full flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:top[48px] lg:overflow-hidden lg:top-[48px]">
         <div
           className={`w-full ${showRightPanel ? "max-w-6xl" : "max-w-3xl"} mx-auto
                       px-0 sm:px-4 lg:px-6
@@ -1095,7 +1169,8 @@ function Feed() {
               </div>
             </div>
 
-            <div className="h-2" />
+            {/* Increased spacing between the sticky composer section and the posts */}
+            <div className="h-6" />
 
             <div className="space-y-4">
               {loading ? (
@@ -1137,7 +1212,7 @@ function Feed() {
 
           {/* RIGHT COLUMN (desktop only) — enable internal scroll */}
           {showRightPanel && (
-            <div className="hidden lg:block lg:h-full lg:min-h-0 lg:overflow-hidden lg:pt-6">
+            <div className="hidden lg:block lg:h-full lg:minh-0 lg:overflow-hidden lg:pt-6">
               <RightProfilePanel />
             </div>
           )}
@@ -1150,10 +1225,10 @@ function Feed() {
           type="button"
           onClick={scrollToTop}
           className="lg:hidden group fixed right-4 z-[70] h-12 w-12 rounded-full
-                     border border-white/15 bg-white/10 backdrop-blur-xl
+                     border border-white/15 bg-transparent backdrop-blur-2xl
                      shadow-[0_8px_30px_rgba(0,0,0,0.35)]
                      ring-1 ring-white/10
-                     hover:ring-white/30 hover:bg-white/15
+                     hover:ring-white/30 hover:bg-white/10
                      active:scale-95 transition"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}
           aria-label="Scroll to top"

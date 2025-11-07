@@ -283,9 +283,9 @@ const PostCard: React.FC<PostCardProps> = ({
         className={[
           "relative overflow-hidden rounded-lg",
           "border border-white/10",
-          // Medium-contrast card (between earlier dark and light)
-          "bg-gradient-to-br from-slate-900/80 via-slate-900/70 to-slate-900/60",
-          "backdrop-blur-sm text-slate-100",
+          // LIGHTER: glassy slate gradient + stronger blur
+          "bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20",
+          "backdrop-blur-xl text-slate-100",
           "shadow-[0_16px_36px_rgba(2,6,23,0.35)]",
         ].join(" ")}
       >
@@ -305,7 +305,7 @@ const PostCard: React.FC<PostCardProps> = ({
             {menuOpen && (
               <div
                 role="menu"
-                className="absolute right-0 top-[calc(100%+0.5rem)] w-44 overflow-hidden rounded-md border border-white/10 bg-slate-900/85 backdrop-blur-xl shadow-2xl"
+                className="absolute right-0 top-[calc(100%+0.5rem)] w-44 overflow-hidden rounded-md border border-white/10 bg-slate-900/80 backdrop-blur-xl shadow-2xl"
               >
                 <button
                   role="menuitem"
@@ -383,7 +383,7 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Media */}
         {imageUrl && (
           <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
-            <div className="overflow-hidden rounded-md border border-white/10 bg-black/20">
+            <div className="overflow-hidden rounded-md border border-white/10 bg-black/10">
               <div className="aspect-[2/1] md:aspect-[21/9]">
                 <img
                   src={imageUrl}

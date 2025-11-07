@@ -100,24 +100,15 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   return (
     <div
       className={[
-        "group relative w-full overflow-x-hidden",
-        "rounded-2xl p-[1px] bg-[conic-gradient(at_30%_10%,rgba(34,211,238,.35),rgba(168,85,247,.28),rgba(16,185,129,.35),rgba(34,211,238,.35))]",
-        // hover shadow (no transform -> prevents blur seam)
-        "transition-shadow duration-300 hover:shadow-[0_10px_36px_rgba(2,6,23,.55)]",
-        // wider feel (override via className if needed)
-        "max-w-[820px] sm:max-w-[880px]",
+        "relative overflow-hidden rounded-lg",
+        "border border-white/10",
+        "bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20",
+        "backdrop-blur-xl text-slate-100",
+        "shadow-[0_16px_36px_rgba(2,6,23,0.35)]",
         className,
       ].join(" ")}
     >
-      {/* Inner glass panel */}
-      <div
-        className={[
-          "relative rounded-2xl box-border overflow-hidden", // ← critical to avoid seams with blur
-          "bg-slate-900/75 supports-[backdrop-filter]:backdrop-blur-md text-slate-100",
-          "ring-1 ring-white/10 shadow-[0_8px_28px_rgba(2,6,23,.44)]",
-          "px-5 pb-4 pt-3", // extra right padding to prevent clipping
-        ].join(" ")}
-      >
+      <div className="px-5 pb-4 pt-3">
         {/* Header */}
         <div className="relative flex items-center justify-between">
           <h3 className="text-sm sm:text-base font-semibold">{dateLabel}</h3>
@@ -140,7 +131,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
             {timeBlocks.map((time) => {
               const hour = Number.parseInt(time, 10);
               const raw = formatHourLabel(hour, unit);
-              const label = unit === "us" ? raw.replace(" ", "\u202F") : raw; // keep 0H/AM labels tight
+              const label = unit === "us" ? raw.replace(" ", "\u202F") : raw;
               const isActive = time === activeTime && isToday;
 
               return (

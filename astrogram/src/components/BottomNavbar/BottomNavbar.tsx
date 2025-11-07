@@ -57,8 +57,9 @@ const BottomNavbar: React.FC = () => {
         <div
           className={[
             "relative w-full items-stretch overflow-hidden",
-            "rounded-2xl bg-white/5 backdrop-blur-2xl",
-            "ring-1 ring-white/15 shadow-[0_10px_24px_rgba(2,6,23,0.45)]",
+            // ▼ Match top navbar: transparent + heavy blur
+            "rounded-2xl bg-transparent backdrop-blur-2xl",
+            "ring-1 ring-white/15 shadow-[0_10px_30px_rgba(2,6,23,0.15)]",
             "flex",
             BAR_HEIGHT,
           ].join(" ")}
