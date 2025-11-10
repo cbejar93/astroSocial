@@ -26,16 +26,15 @@ import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
 import { formatDistanceToNow } from "date-fns";
 
-/* Username validation */
+/* ======================= Username validation ======================= */
 const USERNAME_PATTERN = /^[a-zA-Z0-9._]+$/;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 20;
 
-/* ---------------- Safe HTML helpers (deep-decode → sanitize) ---------------- */
+/* =================== Safe HTML helpers (decode → sanitize) =================== */
 function decodeHtmlEntitiesDeep(value: string): string {
   if (!value) return "";
   let prev = value;
-  // a few passes to fully decode nested entities like &amp;lt; → &lt; → <
   for (let i = 0; i < 5; i++) {
     const ta = document.createElement("textarea");
     ta.innerHTML = prev;
@@ -45,6 +44,7 @@ function decodeHtmlEntitiesDeep(value: string): string {
   }
   return prev;
 }
+
 function sanitizeHtml(value: string): string {
   if (typeof window === "undefined" || !value) return "";
   const parser = new DOMParser();
@@ -106,7 +106,7 @@ function sanitizeHtml(value: string): string {
 }
 const toSafeHtml = (value: string) => sanitizeHtml(decodeHtmlEntitiesDeep(value));
 
-/* ---------- Brand Logos (inline SVGs) ---------- */
+/* =========================== Brand Logos (SVG) =========================== */
 const InstagramLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
     <defs>
@@ -141,14 +141,14 @@ const TikTokLogo: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/* ---------- Shared Card ---------- */
+/* =============================== Shared Card =============================== */
 const Card: React.FC<
   React.PropsWithChildren<{ className?: string; title?: string; onEdit?: () => void }>
 > = ({ className = "", title, onEdit, children }) => (
   <div
     className={[
-      "rounded-2xl border border-white/10 bg-[#0E1626]/90 text-white shadow-[0_8px_28px_rgba(2,6,23,0.45)]",
-      "backdrop-blur-md",
+      "rounded-2xl border border-white/10 bg-[#0E1626]/90 text-white",
+      "shadow-[0_8px_28px_rgba(2,6,23,0.45)] backdrop-blur-md",
       className,
     ].join(" ")}
   >
@@ -171,7 +171,7 @@ const Card: React.FC<
   </div>
 );
 
-/* ---------- Edit Sheet ---------- */
+/* ============================= Edit Account Sheet ============================= */
 type EditSheetProps = {
   open: boolean;
   onClose: () => void;
@@ -261,8 +261,7 @@ const EditAccountSheet: React.FC<EditSheetProps> = ({
       <div
         className={[
           "fixed inset-y-0 right-0 w-full max-w-md bg-[#0E1626] text-white",
-          "shadow-2xl ring-1 ring-white/10",
-          "transition-transform duration-300 ease-out",
+          "shadow-2xl ring-1 ring-white/10 transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "translate-x-full",
           "z-50",
         ].join(" ")}
@@ -320,9 +319,7 @@ const EditAccountSheet: React.FC<EditSheetProps> = ({
             />
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-600/90 px-3 py-2 text-xs">{error}</div>
-          )}
+          {error && <div className="rounded-md bg-red-600/90 px-3 py-2 text-xs">{error}</div>}
 
           <div className="pt-2 flex items-center justify-end gap-2">
             <button
@@ -347,7 +344,7 @@ const EditAccountSheet: React.FC<EditSheetProps> = ({
   );
 };
 
-/* ---------- Avatar Presets ---------- */
+/* ============================== Avatar Presets ============================== */
 const EMOJI_PRESETS = [
   { e: "🚀", a: "#f04bb3", b: "#5aa2ff" },
   { e: "🌙", a: "#6366f1", b: "#22d3ee" },
@@ -378,7 +375,7 @@ function svgEmojiAvatar(emoji: string, a: string, b: string): Blob {
   return new Blob([svg], { type: "image/svg+xml" });
 }
 
-/* ---------- Avatar Picker (PORTALED) ---------- */
+/* ========================= Avatar Picker (Portaled) ========================= */
 const AvatarPickerModal: React.FC<{
   open: boolean;
   onClose: () => void;
@@ -393,10 +390,7 @@ const AvatarPickerModal: React.FC<{
       aria-modal="true"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      {/* Dim background */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-      {/* Modal card */}
       <div className="relative w-[92%] max-w-lg rounded-2xl border border-white/10 bg-[#0E1626] text-white shadow-2xl p-5">
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <h3 className="text-sm font-semibold tracking-wide">Choose an avatar</h3>
@@ -434,8 +428,7 @@ const AvatarPickerModal: React.FC<{
   );
 };
 
-/* ---------- Activity (MOBILE-ONLY) ---------- */
-
+/* ====================== Activity (Mobile-only, internal) ===================== */
 type ActivityComment = {
   id: string;
   text: string;
@@ -453,8 +446,6 @@ interface MyPost extends PostCardProps {
   loungeName?: string;
   title?: string;
 }
-
-const PAGE_SIZE = 20;
 
 const MobileActivityBox: React.FC = () => {
   const navigate = useNavigate();
@@ -476,7 +467,7 @@ const MobileActivityBox: React.FC = () => {
 
   const [showMorePosts, setShowMorePosts] = useState(false);
   const [showMoreLounge, setShowMoreLounge] = useState(false);
-  const [openLoungeGroups, setOpenLoungeGroups] = useState<Set<string>>(() => new Set());
+  const [openLoungeGroups, setOpenLoungeGroups] = useState<Set<string>>(new Set<string>());
 
   // initial loads
   useEffect(() => {
@@ -494,6 +485,8 @@ const MobileActivityBox: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  const PAGE_SIZE = 20;
 
   // lazy-load saved
   const loadSavedPage = async (nextPage: number) => {
@@ -555,7 +548,13 @@ const MobileActivityBox: React.FC = () => {
     }
   };
 
-  function TinyPost({ post, onDeleted }: { post: MyPost; onDeleted?: (id: string | number) => void }) {
+  function TinyPost({
+    post,
+    onDeleted,
+  }: {
+    post: MyPost;
+    onDeleted?: (id: string | number) => void;
+  }) {
     return (
       <div className="rounded-md border border-white/10 bg-gray-900/30 hover:bg-gray-900/50 transition">
         <div className="w-full" onClick={() => navigate(`/posts/${post.id}`)}>
@@ -575,7 +574,9 @@ const MobileActivityBox: React.FC = () => {
     return (
       <div
         className="rounded-lg border border-white/10 bg-gray-900/30 hover:bg-gray-900/50 transition cursor-pointer p-3"
-        onClick={() => navigate(`/lounge/${encodeURIComponent(post.loungeName ?? "")}/posts/${post.id}`)}
+        onClick={() =>
+          navigate(`/lounge/${encodeURIComponent(post.loungeName ?? "")}/posts/${post.id}`)
+        }
       >
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <img
@@ -593,7 +594,6 @@ const MobileActivityBox: React.FC = () => {
         {"body" in post && (post as any).body && (
           <div
             className="text-xs text-gray-300 line-clamp-2 mt-1"
-            // safer preview for lounge posts, in case body contains entities
             dangerouslySetInnerHTML={{ __html: toSafeHtml(String((post as any).body)) }}
           />
         )}
@@ -604,7 +604,6 @@ const MobileActivityBox: React.FC = () => {
 
   return (
     <Card title="Your Activity" className="lg:hidden">
-      {/* Scrollable area for the tabs content on mobile */}
       <div className="p-4">
         {/* Tabs */}
         <div className="grid grid-cols-3 rounded-lg border border-white/10 p-1 bg-gray-900/40">
@@ -637,7 +636,6 @@ const MobileActivityBox: React.FC = () => {
 
         {/* Content (mobile scroll) */}
         <div className="pretty-scroll mt-3 max-h-[60vh] overflow-y-auto overflow-x-hidden pt-1 pb-2">
-          {/* POSTS */}
           {activeTab === "posts" ? (
             <>
               {/* Sub-tabs */}
@@ -660,7 +658,8 @@ const MobileActivityBox: React.FC = () => {
                       : "border-white/10 text-gray-300 hover:bg-gray-800/40"
                   }`}
                 >
-                  Posts <span className="ml-1 text-[10px] opacity-75">({generalPosts.length})</span>
+                  Posts{" "}
+                  <span className="ml-1 text-[10px] opacity-75">({myPosts.filter((p) => !p.loungeId).length})</span>
                 </button>
                 <button
                   onClick={() => setPostSubTab("lounges")}
@@ -670,7 +669,8 @@ const MobileActivityBox: React.FC = () => {
                       : "border-white/10 text-gray-300 hover:bg-gray-800/40"
                   }`}
                 >
-                  Lounges <span className="ml-1 text-[10px] opacity-75">({loungePosts.length})</span>
+                  Lounges{" "}
+                  <span className="ml-1 text-[10px] opacity-75">({myPosts.filter((p) => p.loungeId).length})</span>
                 </button>
               </div>
 
@@ -679,7 +679,7 @@ const MobileActivityBox: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs uppercase tracking-wide text-gray-400">Your Posts</h4>
-                    {generalPosts.length > 3 && (
+                    {myPosts.filter((p) => !p.loungeId).length > 3 && (
                       <button
                         className="text-xs text-sky-300 hover:underline"
                         onClick={() => setShowMorePosts((s) => !s)}
@@ -693,17 +693,20 @@ const MobileActivityBox: React.FC = () => {
                       <PostSkeleton />
                       <PostSkeleton />
                     </div>
-                  ) : generalPosts.length === 0 ? (
+                  ) : myPosts.filter((p) => !p.loungeId).length === 0 ? (
                     <div className="text-sm text-gray-400">No posts yet.</div>
                   ) : (
-                    (showMorePosts ? generalPosts : generalPosts.slice(0, 3)).map((p) => (
+                    (showMorePosts
+                      ? myPosts.filter((p) => !p.loungeId)
+                      : myPosts.filter((p) => !p.loungeId).slice(0, 3)
+                    ).map((p) => (
                       <TinyPost key={p.id} post={p} />
                     ))
                   )}
 
                   <div className="flex items-center justify-between mt-3">
                     <h4 className="text-xs uppercase tracking-wide text-gray-400">Lounge Posts</h4>
-                    {loungePosts.length > 3 && (
+                    {myPosts.filter((p) => p.loungeId).length > 3 && (
                       <button
                         className="text-xs text-sky-300 hover:underline"
                         onClick={() => setShowMoreLounge((s) => !s)}
@@ -717,10 +720,13 @@ const MobileActivityBox: React.FC = () => {
                       <PostSkeleton />
                       <PostSkeleton />
                     </div>
-                  ) : loungePosts.length === 0 ? (
+                  ) : myPosts.filter((p) => p.loungeId).length === 0 ? (
                     <div className="text-sm text-gray-400">No lounge posts yet.</div>
                   ) : (
-                    (showMoreLounge ? loungePosts : loungePosts.slice(0, 3)).map((p) => (
+                    (showMoreLounge
+                      ? myPosts.filter((p) => p.loungeId)
+                      : myPosts.filter((p) => p.loungeId).slice(0, 3)
+                    ).map((p) => (
                       <LoungeRow key={p.id} post={p} />
                     ))
                   )}
@@ -735,10 +741,12 @@ const MobileActivityBox: React.FC = () => {
                       <PostSkeleton />
                       <PostSkeleton />
                     </div>
-                  ) : generalPosts.length === 0 ? (
+                  ) : myPosts.filter((p) => !p.loungeId).length === 0 ? (
                     <div className="text-sm text-gray-400">No posts yet.</div>
                   ) : (
-                    generalPosts.map((p) => <TinyPost key={p.id} post={p} />)
+                    myPosts
+                      .filter((p) => !p.loungeId)
+                      .map((p) => <TinyPost key={p.id} post={p} />)
                   )}
                 </div>
               )}
@@ -781,7 +789,6 @@ const MobileActivityBox: React.FC = () => {
               )}
             </>
           ) : activeTab === "comments" ? (
-            // COMMENTS — same look as desktop but safe HTML
             <section className="space-y-2">
               {loadingComments ? (
                 <div className="text-sm text-gray-400">Loading…</div>
@@ -801,7 +808,6 @@ const MobileActivityBox: React.FC = () => {
                           <span className="font-medium text-gray-200">@{c.username}</span> •{" "}
                           {formatDistanceToNow(new Date(c.timestamp), { addSuffix: true })}
                         </div>
-                        {/* FIX: render HTML safely (deep-decode + sanitize) */}
                         <div
                           className="prose prose-invert max-w-none text-sm text-gray-100 mt-1 leading-relaxed"
                           dangerouslySetInnerHTML={{ __html: toSafeHtml(c.text) }}
@@ -826,7 +832,6 @@ const MobileActivityBox: React.FC = () => {
               )}
             </section>
           ) : (
-            // SAVED
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs uppercase tracking-wide text-gray-400">Saved posts</h4>
@@ -848,7 +853,9 @@ const MobileActivityBox: React.FC = () => {
                     <div key={p.id} className={i === savedPosts.length - 1 ? "mb-3" : ""}>
                       <TinyPost
                         post={p}
-                        onDeleted={(id) => setSavedPosts((prev) => prev.filter((sp) => String(sp.id) !== String(id)))}
+                        onDeleted={(id) =>
+                          setSavedPosts((prev) => prev.filter((sp) => String(sp.id) !== String(id)))
+                        }
                       />
                     </div>
                   ))}
@@ -897,7 +904,7 @@ const MobileActivityBox: React.FC = () => {
   );
 };
 
-/* ---------- Page ---------- */
+/* =================================== Page =================================== */
 const ProfileOverviewPage: React.FC = () => {
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -910,7 +917,7 @@ const ProfileOverviewPage: React.FC = () => {
   const [avatarBust, setAvatarBust] = useState<number>(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Refs for the small avatar menu (portaled)
+  // small avatar menu (portaled)
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const menuBtnRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -937,17 +944,13 @@ const ProfileOverviewPage: React.FC = () => {
     const GAP = 8;
     const MENU_W = 176; // w-44
     const prefLeft = r.right - MENU_W; // align right edges (opens left)
-    const altLeft = r.left;            // align left edges (opens right)
+    const altLeft = r.left; // align left edges (opens right)
     let left = prefLeft;
     const minLeft = 8;
     const maxLeft = window.innerWidth - MENU_W - 8;
-    // If preferred goes off-screen, use alternate; then clamp
     if (prefLeft < minLeft) left = altLeft;
     left = Math.max(minLeft, Math.min(left, maxLeft));
-    const top = Math.min(
-      window.innerHeight - 8 - 90, // simple bottom guard
-      r.bottom + GAP
-    );
+    const top = Math.min(window.innerHeight - 8 - 90, r.bottom + GAP);
     setMenuPos({ top, left });
   };
 
@@ -955,7 +958,6 @@ const ProfileOverviewPage: React.FC = () => {
     if (!avatarMenuOpen) return;
     positionSmallMenu();
     const onResize = () => positionSmallMenu();
-    // Reposition on any scroll (capture to catch scrolling ancestors)
     const onAnyScroll = () => positionSmallMenu();
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onAnyScroll, true);
@@ -967,7 +969,7 @@ const ProfileOverviewPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="fixed inset-0 overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden pt-[88px] sm:pt-[96px]">
         <div className="grid h-full w-full place-items-center px-4">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(1000px_600px_at_20%_-10%,rgba(168,85,247,0.18),transparent),radial-gradient(800px_500px_at_80%_110%,rgba(59,130,246,0.12),transparent)]" />
           <div className="rounded-2xl border border-white/10 bg-[#0E1626]/80 backdrop-blur-md px-6 py-10 text-center shadow-[0_8px_28px_rgba(2,6,23,0.45)]">
@@ -979,8 +981,7 @@ const ProfileOverviewPage: React.FC = () => {
     );
   }
 
-  const displayName =
-    (user as any).name || (user as any).fullName || user.username || "User";
+  const displayName = (user as any).name || (user as any).fullName || user.username || "User";
   const username = user.username || "user";
   const email =
     (user as any)?.email ||
@@ -1041,14 +1042,13 @@ const ProfileOverviewPage: React.FC = () => {
     }
   };
 
-  const avatarSrc =
-    (user.avatarUrl ?? "/defaultPfp.png") + (avatarBust ? `?t=${avatarBust}` : "");
+  const avatarSrc = (user.avatarUrl ?? "/defaultPfp.png") + (avatarBust ? `?t=${avatarBust}` : "");
   const trackers = user.followers?.length ?? 0;
   const tracking = user.following?.length ?? 0;
 
   return (
-    // Full viewport, no vertical page scroll
-    <div className="fixed inset-0 overflow-hidden">
+    // Give space below fixed navbar
+    <div className="fixed inset-0 overflow-hidden pt-[88px] sm:pt-[96px]">
       {/* Background glows */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-[-12%] h-[36vh] w-[64vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/15 via-fuchsia-500/10 to-emerald-500/15 blur-3xl" />
@@ -1096,9 +1096,7 @@ const ProfileOverviewPage: React.FC = () => {
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                      {displayName}
-                    </h1>
+                    <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">{displayName}</h1>
                     <span className="text-xs sm:text-sm text-sky-300 bg-sky-500/10 ring-1 ring-sky-400/30 px-2 py-0.5 rounded-md">
                       @{username}
                     </span>
@@ -1138,9 +1136,7 @@ const ProfileOverviewPage: React.FC = () => {
                       </button>
                     </div>
 
-                    {uploading && (
-                      <p className="ml-2 text-xs text-gray-300">Updating avatar…</p>
-                    )}
+                    {uploading && <p className="ml-2 text-xs text-gray-300">Updating avatar…</p>}
                   </div>
                 </div>
               </div>
@@ -1262,7 +1258,6 @@ const ProfileOverviewPage: React.FC = () => {
                         Log Out
                       </button>
 
-                      {/* Subtle “More actions” discloser */}
                       <button
                         type="button"
                         onClick={() => setShowAdvanced((s) => !s)}
@@ -1278,7 +1273,6 @@ const ProfileOverviewPage: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Low-emphasis danger area */}
                     {showAdvanced && (
                       <div className="mt-3 rounded-lg bg-gray-900/40 ring-1 ring-white/10 p-3">
                         <p className="text-xs text-gray-400 mb-2">
@@ -1296,7 +1290,7 @@ const ProfileOverviewPage: React.FC = () => {
                   </div>
                 </Card>
 
-                {/* MOBILE-ONLY Your Activity (desktop untouched) */}
+                {/* Mobile activity (desktop unaffected) */}
                 <MobileActivityBox />
               </div>
             </div>
@@ -1355,11 +1349,7 @@ const ProfileOverviewPage: React.FC = () => {
         )}
 
       {/* Avatar picker */}
-      <AvatarPickerModal
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onPick={handlePickPreset}
-      />
+      <AvatarPickerModal open={pickerOpen} onClose={() => setPickerOpen(false)} onPick={handlePickPreset} />
     </div>
   );
 };

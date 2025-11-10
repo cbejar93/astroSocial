@@ -23,21 +23,22 @@ const ACCENTS: Record<AccentKey, { from: string; to: string }> = {
 };
 
 /* --------------------------- UI Primitives ----------------------------- */
-
+/** Uses the same frosted/blur gradient style as PostCard */
 const AuroraBorder: React.FC<React.PropsWithChildren<{ className?: string }>> = ({
   className = "",
   children,
 }) => (
   <div
     className={[
-      "rounded-2xl p-[1px]",
-      "bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]",
+      "relative overflow-hidden rounded-lg",
+      "border border-white/10",
+      "bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20",
+      "backdrop-blur-xl text-slate-100",
+      "shadow-[0_16px_36px_rgba(2,6,23,0.35)]",
       className,
     ].join(" ")}
   >
-    <div className="rounded-2xl bg-slate-900/65 backdrop-blur-md ring-1 ring-white/10 shadow-[0_8px_28px_rgba(2,6,23,.45)]">
-      {children}
-    </div>
+    {children}
   </div>
 );
 
@@ -47,7 +48,7 @@ const Card: React.FC<
   <AuroraBorder className={className}>
     <div className="px-5 py-4 border-b border-white/10">
       <h2 className="text-sm font-semibold tracking-wide">{title}</h2>
-      {desc && <p className="mt-1 text-xs text-gray-400">{desc}</p>}
+      {desc && <p className="mt-1 text-xs text-gray-300">{desc}</p>}
     </div>
     <div className="p-5">{children}</div>
   </AuroraBorder>
@@ -61,8 +62,8 @@ const Row: React.FC<
       <div className="flex items-start gap-2">
         {icon && <span className="mt-0.5 text-gray-300">{icon}</span>}
         <div>
-          <div className="text-[13px] text-gray-200">{label}</div>
-          {hint && <div className="text-[11px] text-gray-400 mt-0.5">{hint}</div>}
+          <div className="text-[13px] text-gray-100">{label}</div>
+          {hint && <div className="text-[11px] text-gray-300 mt-0.5">{hint}</div>}
         </div>
       </div>
       <div className="sm:min-w-[16rem]">{children}</div>
@@ -102,7 +103,7 @@ const Switch: React.FC<
         />
         <span className="sr-only">{label ?? "toggle"}</span>
       </label>
-      {label && <span className="text-sm text-gray-200">{label}</span>}
+      {label && <span className="text-sm text-gray-100">{label}</span>}
     </div>
   );
 };
@@ -116,7 +117,7 @@ const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({
     <select
       {...props}
       className={[
-        "w-full appearance-none rounded-lg bg-gray-800/70 border border-gray-700",
+        "w-full appearance-none rounded-lg bg-gray-900/40 border border-white/10",
         "text-gray-100 placeholder-gray-400",
         "focus:outline-none focus:ring-2 focus:ring-sky-500",
         "px-3 py-2 text-sm pr-9",
@@ -160,16 +161,16 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="w-full">
-      {/* Center horizontally */}
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
+      {/* Center horizontally (uplift kept) */}
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 pt-2 pb-8">
         <div className="text-gray-200 space-y-6">
-          {/* Header */}
+          {/* Header (now frosted like PostCard) */}
           <AuroraBorder>
             <div className="px-5 py-5">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-lg font-semibold">Settings</h1>
-                  <p className="text-xs text-gray-400 mt-1">Tune the vibe to your liking.</p>
+                  <p className="text-xs text-gray-300 mt-1">Tune the vibe to your liking.</p>
                 </div>
                 <button
                   type="button"
@@ -179,7 +180,7 @@ const SettingsPage: React.FC = () => {
                     setCompactUI(false);
                     setAccent("brand");
                   }}
-                  className="text-xs rounded-md px-3 py-1.5 bg-white/5 hover:bg-white/10 ring-1 ring-white/10"
+                  className="text-xs rounded-md px-3 py-1.5 bg-white/10 hover:bg-white/20 ring-1 ring-white/10"
                 >
                   Reset
                 </button>
@@ -193,7 +194,9 @@ const SettingsPage: React.FC = () => {
                 >
                   Current accent
                 </div>
-                <div className="text-[11px] text-gray-400">Preview applies to controls below</div>
+                <div className="text-[11px] text-gray-300">
+                  Preview applies to controls below
+                </div>
               </div>
             </div>
           </AuroraBorder>
@@ -292,7 +295,7 @@ const SettingsPage: React.FC = () => {
                 Contact Support
               </TileLink>
             </div>
-            <p className="mt-3 text-[11px] text-gray-400">
+            <p className="mt-3 text-[11px] text-gray-300">
               Legal pages open in a modal so you don’t lose your place.
             </p>
           </Card>

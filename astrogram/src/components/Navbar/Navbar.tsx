@@ -304,7 +304,6 @@ const Navbar: React.FC = () => {
         <div
           className="
             px-3 sm:px-6 py-2
-            border-b border-white/10
             bg-transparent backdrop-blur-2xl
             shadow-[0_10px_30px_rgba(2,6,23,0.15)]
             flex items-center gap-3 justify-between
