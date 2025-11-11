@@ -14,6 +14,7 @@ import WeatherCard from "../components/Weather/WeatherCard";
 import MoonPhaseCard from "../components/Weather/MoonPhaseCard";
 import WeatherSkeleton from "../components/Weather/WeatherSkeleton";
 import WindCard from "../components/Weather/WindCard";
+import PrecipitationCard from "../components/Weather/PrecipitationCard";
 import { isWithinDaylight } from "../lib/time";
 import type { WeatherData } from "../types/weather";
 import type { TimeBlock } from "../types/weather";
@@ -70,7 +71,7 @@ export const getZonedDateInfo = (
   return { isoDate, hour, minute, formattedDate };
 };
 
-// Shared fixed height for Moon & Wind (identical sizing)
+// Shared fixed height for Moon / Wind cards
 const SECONDARY_CARD_HEIGHT = "h-[248px] sm:h-[268px]";
 
 type HourlyNumberMap = Record<string, number>;
@@ -99,7 +100,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   const [savingPreference, setSavingPreference] = useState(false);
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
 
-  // desktop right-panel scroller (preserve position on unit switch)
+  // desktop scrollers (preserve position on unit switch)
+  const leftScrollRef = useRef<HTMLDivElement | null>(null);
   const asideScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Respect saved preference on mount/changes
@@ -112,22 +114,22 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   const handleToggleUnit = useCallback(async () => {
     if (savingPreference) return;
 
-    // snapshot scroll before changing unit (desktop aside)
-    const prevScrollTop = asideScrollRef.current?.scrollTop ?? 0;
+    // snapshot both scroll containers (desktop)
+    const prevLeftTop = leftScrollRef.current?.scrollTop ?? 0;
+    const prevRightTop = asideScrollRef.current?.scrollTop ?? 0;
 
     const previousUnit = unit;
     const nextUnit = unit === "metric" ? "us" : "metric";
     setPreferenceError(null);
     setSavingPreference(true);
 
-    // instant local toggle (optimistic)
+    // optimistic local toggle (no page refresh)
     setUnit(nextUnit);
 
-    // restore scroll on next frame to avoid “refresh” feel
+    // restore scroll next frame to avoid jump
     requestAnimationFrame(() => {
-      if (asideScrollRef.current) {
-        asideScrollRef.current.scrollTop = prevScrollTop;
-      }
+      if (leftScrollRef.current) leftScrollRef.current.scrollTop = prevLeftTop;
+      if (asideScrollRef.current) asideScrollRef.current.scrollTop = prevRightTop;
     });
 
     if (!user) {
@@ -142,9 +144,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       setUnit(previousUnit);
       setPreferenceError("Unable to save temperature preference. Please try again.");
       requestAnimationFrame(() => {
-        if (asideScrollRef.current) {
-          asideScrollRef.current.scrollTop = prevScrollTop;
-        }
+        if (leftScrollRef.current) leftScrollRef.current.scrollTop = prevLeftTop;
+        if (asideScrollRef.current) asideScrollRef.current.scrollTop = prevRightTop;
       });
     } finally {
       setSavingPreference(false);
@@ -166,10 +167,28 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     [weather, todayStr],
   );
 
-  const speedMap: HourlyNumberMap = todayData?.conditions?.windspeed ?? EMPTY_NUM_MAP;       // km/h
-  const directionMap: HourlyNumberMap = todayData?.conditions?.winddirection ?? EMPTY_NUM_MAP;
-  const tempMap: HourlyNumberMap = todayData?.conditions?.temperature ?? EMPTY_NUM_MAP;      // °C
-  const conditionMap: HourlyNumberMap = todayData?.conditions?.cloudcover ?? EMPTY_NUM_MAP;  // %
+  const speedMap: HourlyNumberMap =
+    todayData?.conditions?.windspeed ?? EMPTY_NUM_MAP; // km/h
+  const directionMap: HourlyNumberMap =
+    todayData?.conditions?.winddirection ?? EMPTY_NUM_MAP;
+  const tempMap: HourlyNumberMap =
+    todayData?.conditions?.temperature ?? EMPTY_NUM_MAP; // °C
+  const conditionMap: HourlyNumberMap =
+    todayData?.conditions?.cloudcover ?? EMPTY_NUM_MAP; // %
+
+  // Precipitation maps — tolerate different backend keys safely
+  const c = (todayData?.conditions as any) ?? {};
+  const precipProbMap: HourlyNumberMap =
+    (c.precipprob ??
+      c.precipProb ??
+      c.precipProbability ??
+      EMPTY_NUM_MAP) as HourlyNumberMap; // %
+  const precipAmtMmMap: HourlyNumberMap =
+    (c.precipitation ??
+      c.precip ??
+      c.precip_mm ??
+      c.precipAmount ??
+      EMPTY_NUM_MAP) as HourlyNumberMap; // mm/hr
 
   const hourKeys = useMemo(() => {
     const arrays = [
@@ -186,7 +205,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       (acc, arr) => acc.filter((k) => arr.includes(k)),
       arrays[0]
     );
-
     return intersection.length ? intersection : arrays[0];
   }, [tempMap, conditionMap, speedMap, directionMap]);
 
@@ -200,17 +218,23 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
     () =>
       SLOTS_24.reduce(
         (best, cur) =>
-          circularDiff(cur, zonedNow.hour) < circularDiff(best, zonedNow.hour) ? cur : best,
-        SLOTS_24[0]
+          circularDiff(cur, zonedNow.hour) < circularDiff(best, zonedNow.hour)
+            ? cur
+            : best,
+        SLOTS_24[0],
       ),
-    [zonedNow.hour]
+    [zonedNow.hour],
   );
 
   // ---- Early returns ----
   if (loading) return <WeatherSkeleton />;
   if (error) return <div className="text-red-500 text-center py-6">{error}</div>;
   if (!weather?.data?.length)
-    return <div className="text-center text-gray-400 py-6">No weather data available.</div>;
+    return (
+      <div className="text-center text-gray-400 py-6">
+        No weather data available.
+      </div>
+    );
 
   const sunrise = todayData?.astro?.sunrise;
   const sunset = todayData?.astro?.sunset;
@@ -252,11 +276,16 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
 
   const icon = (() => {
     switch (currentCondition) {
-      case "Clear": return isDaytime ? "☀️" : "🌕";
-      case "Partly Cloudy": return isDaytime ? "⛅️" : "🌥️";
-      case "Cloudy": return "☁️";
-      case "Overcast": return "🌫️";
-      default: return "❓";
+      case "Clear":
+        return isDaytime ? "☀️" : "🌕";
+      case "Partly Cloudy":
+        return isDaytime ? "⛅️" : "🌥️";
+      case "Cloudy":
+        return "☁️";
+      case "Overcast":
+        return "🌫️";
+      default:
+        return "❓";
     }
   })();
 
@@ -277,85 +306,101 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
       {/* fixed shell */}
       <div className="w-full flex justify-center pt-2 pb-8 lg:py-0 lg:fixed lg:inset-0 lg:overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-0 sm:px-4 lg:px-6 lg:h-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
-          {/* LEFT column */}
+          {/* LEFT column (scrollable on lg+) */}
           <div className="lg:h-full lg:min-h-0 lg:flex lg:flex-col lg:justify-center">
-            {/* MOBILE-ONLY constant row spacing */}
-            <div className="flex flex-col space-y-4 lg:space-y-0">
-              <CurrentWeatherCard
-                className="max-w-none"
-                location={String(weather.coordinates)}
-                date={zonedNow.formattedDate}
-                temperature={displayTemp}
-                condition={currentCondition}
-                icon={icon}
-                sunrise={sunrise}
-                sunset={sunset}
-                unit={unit}
-                onToggle={handleToggleUnit}
-              />
+            <div
+              ref={leftScrollRef}
+              className="
+                lg:max-h-[78vh] lg:overflow-y-auto lg:overscroll-contain
+                [scrollbar-gutter:stable]
+                pr-0
+                scrollbar-cute
+              "
+            >
+              {/* MOBILE-ONLY constant row spacing */}
+              <div className="flex flex-col space-y-4 lg:space-y-0">
+                <CurrentWeatherCard
+                  className="max-w-none"
+                  location={String(weather.coordinates)}
+                  date={zonedNow.formattedDate}
+                  temperature={displayTemp}
+                  condition={currentCondition}
+                  icon={icon}
+                  sunrise={sunrise}
+                  sunset={sunset}
+                  unit={unit}
+                  onToggle={handleToggleUnit}
+                />
 
-              {/* ===== MOBILE upcoming forecast scroller (edge-to-edge from left) ===== */}
-              <section
-                aria-label="Upcoming forecast (mobile)"
-                className="lg:hidden"
-              >
-                <div
-                  className="
-                    -mx-4               /* start at screen edge */
-                    overflow-x-auto
-                    snap-x snap-mandatory
-                    [scrollbar-gutter:stable]
-                  "
-                >
-                  <div className="flex gap-3 pr-4">
-                    {futureWeatherData.map((day, index) => (
-                      <div
-                        key={day.date}
-                        className="
-                          flex-shrink-0
-                          min-w-[420px] max-w-[480px]
-                          snap-start
-                        "
-                      >
-                        <WeatherCard
-                          day={day}
-                          isToday={index === 0}
-                          unit={unit}
-                          forcedActiveBlock={index === 0 ? toTimeBlock(activeSlot24) : undefined}
-                        />
-                      </div>
-                    ))}
+                {/* ===== MOBILE upcoming forecast scroller (edge-to-edge from left) ===== */}
+                <section aria-label="Upcoming forecast (mobile)" className="lg:hidden">
+                  <div
+                    className="
+                      -mx-4 overflow-x-auto snap-x snap-mandatory
+                      [scrollbar-gutter:stable]
+                      scrollbar-cute
+                    "
+                  >
+                    <div className="flex gap-3 pr-4">
+                      {futureWeatherData.map((day, index) => (
+                        <div
+                          key={day.date}
+                          className="
+                            flex-shrink-0
+                            min-w-[420px] max-w-[480px]
+                            snap-start
+                          "
+                        >
+                          <WeatherCard
+                            day={day}
+                            isToday={index === 0}
+                            unit={unit}
+                            forcedActiveBlock={
+                              index === 0 ? toTimeBlock(activeSlot24) : undefined
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </section>
-              {/* ===== end mobile scroller ===== */}
+                </section>
+                {/* ===== end mobile scroller ===== */}
 
-              {/* Secondary cards — same height */}
-              {todayData?.astro && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch lg:mt-6">
-                  <MoonPhaseCard
-                    className={`h-full ${SECONDARY_CARD_HEIGHT}`}
-                    phase={todayData.astro.moonPhase.phase}
-                    illumination={todayData.astro.moonPhase.illumination}
-                    moonrise={todayData.astro.moonrise}
-                    moonset={todayData.astro.moonset}
-                    unit={unit}
-                  />
-                  <WindCard
-                    className={`h-full ${SECONDARY_CARD_HEIGHT}`}
-                    speed={displayWind}
-                    direction={rawWindDirection}
-                    unit={windUnitLabel}
-                  />
-                </div>
+                {/* Secondary cards — Moon + Wind (two columns on sm+) */}
+                {todayData?.astro && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch lg:mt-6">
+                    <MoonPhaseCard
+                      className={`h-full ${SECONDARY_CARD_HEIGHT}`}
+                      phase={todayData.astro.moonPhase.phase}
+                      illumination={todayData.astro.moonPhase.illumination}
+                      moonrise={todayData.astro.moonrise}
+                      moonset={todayData.astro.moonset}
+                      unit={unit}
+                    />
+                    <WindCard
+                      className={`h-full ${SECONDARY_CARD_HEIGHT}`}
+                      speed={displayWind}
+                      direction={rawWindDirection}
+                      unit={windUnitLabel}
+                    />
+                    {/* Precipitation — full-width row for wider chart */}
+                    <PrecipitationCard
+                      className="sm:col-span-2"
+                      hourlyProbability={precipProbMap}
+                      hourlyAmountMm={precipAmtMmMap}
+                      activeHour={toTimeBlock(activeSlot24)}
+                      unit={unit}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {preferenceError && (
+                <p className="mt-3 text-center text-sm text-red-400 px-4">
+                  {preferenceError}
+                </p>
               )}
             </div>
-
-            {preferenceError && (
-              <p className="mt-3 text-center text-sm text-red-400 px-4">
-                {preferenceError}
-              </p>
-            )}
           </div>
 
           {/* RIGHT column — scrolls inside (desktop only) */}
@@ -369,21 +414,21 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                 relative max-h-[78vh] overflow-y-auto overscroll-contain
                 rounded-2xl bg-slate-900/30 ring-1 ring-white/10
                 shadow-[inset_0_1px_0_rgba(255,255,255,.04),0_10px_30px_rgba(2,6,23,.35)]
-                p-3 pr-2 w-full
-                [scrollbar-gutter:stable]
-                [--fade:16px]
-                [mask-image:linear-gradient(to_bottom,transparent,black_var(--fade),black_calc(100%-var(--fade)),transparent)]
-                supports-[-webkit-mask-image:linear-gradient(#000,#000)]:[-webkit-mask-image:linear-gradient(to_bottom,transparent,black_var(--fade),black_calc(100%-var(--fade)),transparent)]
+                p-3 pr-3 w-full
+                [scrollbar-gutter:stable_both-edges]
+                scrollbar-cute
               "
             >
               <div className="flex flex-col gap-3 pr-1">
                 {futureWeatherData.map((day, index) => (
                   <WeatherCard
-                    key={day.date} // keep stable to avoid remounts on unit switch
+                    key={day.date}
                     day={day}
                     isToday={index === 0}
                     unit={unit}
-                    forcedActiveBlock={index === 0 ? toTimeBlock(activeSlot24) : undefined}
+                    forcedActiveBlock={
+                      index === 0 ? toTimeBlock(activeSlot24) : undefined
+                    }
                   />
                 ))}
               </div>

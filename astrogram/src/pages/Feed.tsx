@@ -416,9 +416,9 @@ function RightProfilePanel() {
             </button>
           </div>
 
-          {/* Scrollable body */}
+          {/* Scrollable body (ADD-ONLY: scrollbar-cute + scrollbar-gutter) */}
           <div className="mt-3 flex-1 min-h-0">
-            <div className="pretty-scroll space-y-3 max-h-[66vh] overflow-y-auto overflow-x-hidden pt-3 pb-16 px-2 mx-auto w-full max-w-[360px]">
+            <div className="pretty-scroll scrollbar-cute [scrollbar-gutter:stable] space-y-3 max-h-[66vh] overflow-y-auto overflow-x-hidden pt-3 pb-16 px-2 mx-auto w-full max-w-[360px]">
               {activeTab === "posts" ? (
                 <>
                   {/* Sub-tabs */}
@@ -1090,11 +1090,11 @@ function Feed() {
                           : "lg:grid-cols-1"
                       } lg:gap-6`}
         >
-          {/* LEFT SCROLLER */}
+          {/* LEFT SCROLLER (ADD-ONLY: scrollbar-cute + scrollbar-gutter) */}
           <div
             id="feedScroll"
             ref={scrollerRef}
-            className="pretty-scroll min-w-0 lg:h-full lg:overflow-y-auto lg:pt-4 pb-16"
+            className="pretty-scroll scrollbar-cute [scrollbar-gutter:stable] min-w-0 lg:h-full lg:overflow-y-auto lg:pt-4 pb-16"
           >
             <div className={`sticky ${STICKY_TOP_CLASS} z-30 bg-transparent`}>
               <div className="relative px-2 sm:px-4">

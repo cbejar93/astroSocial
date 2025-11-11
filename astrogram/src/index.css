@@ -260,3 +260,93 @@ html, body, #root {
   animation: bgShift 10s ease-in-out infinite alternate;
   background-size: 200% 200%;
 }
+/* Variable-driven pretty scrollbars */
+.scrollbar-cute {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-thumb, #a855f7) var(--sb-track, transparent);
+}
+
+/* WebKit (Chrome/Edge/Safari) */
+.scrollbar-cute::-webkit-scrollbar {
+  width: var(--sb-size, 10px);
+  height: var(--sb-size, 10px);
+}
+.scrollbar-cute::-webkit-scrollbar-track {
+  background: var(--sb-track, transparent);
+  border-radius: var(--sb-radius, 999px);
+}
+.scrollbar-cute::-webkit-scrollbar-thumb {
+  border-radius: var(--sb-radius, 999px);
+  background: var(--sb-gradient, var(--sb-thumb, #a855f7));
+  border: var(--sb-border, 2px) solid transparent;
+  background-clip: padding-box;
+}
+.scrollbar-cute:hover::-webkit-scrollbar-thumb {
+  background: var(--sb-hover-gradient, var(--sb-hover, #7e22ce));
+}
+.scrollbar-cute::-webkit-scrollbar-corner { background: transparent; }
+/* ===============================
+   Cute Scrollbars (opt-in)
+   Works when BOTH classes are present:
+   .pretty-scroll.scrollbar-cute
+   =============================== */
+
+:root {
+  /* 🎨 tweak these to taste (purple by default) */
+  --sb-size: 10px;
+  --sb-radius: 999px;
+  --sb-border: 2px;
+
+  /* colors */
+  --sb-track: transparent;
+  --sb-thumb: #8b5cf6; /* base violet */
+  --sb-thumb-2: #ec4899; /* pink blend */
+  --sb-thumb-hover-1: #7c3aed; /* deeper violet */
+  --sb-thumb-hover-2: #a855f7; /* violet-500 */
+
+  /* gradients */
+  --sb-gradient: linear-gradient(180deg, var(--sb-thumb), var(--sb-thumb-2));
+  --sb-hover-gradient: linear-gradient(
+    180deg,
+    var(--sb-thumb-hover-1),
+    var(--sb-thumb-hover-2)
+  );
+}
+
+/* Firefox */
+.pretty-scroll.scrollbar-cute {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--sb-thumb) var(--sb-track) !important;
+}
+
+/* WebKit (Chrome, Edge, Safari, Opera) */
+.pretty-scroll.scrollbar-cute::-webkit-scrollbar {
+  width: var(--sb-size);
+  height: var(--sb-size);
+}
+
+.pretty-scroll.scrollbar-cute::-webkit-scrollbar-track {
+  background: var(--sb-track) !important;
+  border-radius: var(--sb-radius) !important;
+}
+
+.pretty-scroll.scrollbar-cute::-webkit-scrollbar-thumb {
+  background: var(--sb-gradient) !important;
+  border-radius: var(--sb-radius) !important;
+  border: var(--sb-border) solid transparent !important;
+  background-clip: padding-box !important;
+  /* optional subtle inset shadow */
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+.pretty-scroll.scrollbar-cute::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-hover-gradient) !important;
+}
+
+.pretty-scroll.scrollbar-cute {
+  scrollbar-gutter: stable both-edges;
+}
+.pretty-scroll.scrollbar-cute::-webkit-scrollbar-corner {
+  background: transparent;
+}
