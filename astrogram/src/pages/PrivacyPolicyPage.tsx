@@ -1,229 +1,229 @@
-import type { FC } from 'react';
+// src/pages/PrivacyPolicyPage.tsx
+import type { FC, PropsWithChildren } from "react";
 
 const PrivacyPolicyPage: FC = () => {
   return (
-    <div className="px-6 py-24 mx-auto max-w-4xl text-left text-white space-y-8">
-      <header className="space-y-4">
-        <h1 className="text-3xl font-bold">Privacy Policy for AstroSocial</h1>
-        <p className="text-neutral-300">Effective Date: October 02, 2025</p>
-        <p className="text-neutral-300">
-          AstroSocial (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) provides this Privacy Policy to explain how
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12 text-white">
+      {/* Header */}
+      <header className="mb-6 sm:mb-8">
+        <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10 text-[11px] text-slate-300">
+          Privacy Policy
+          <span className="h-1 w-1 rounded-full bg-slate-400/70" />
+          Effective: <time dateTime="2025-10-02">Oct 02, 2025</time>
+        </div>
+
+        <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">
+          Privacy Policy for AstroSocial
+        </h1>
+
+        <p className="mt-2 text-[13.5px] sm:text-[14.5px] leading-7 text-slate-300">
+          AstroSocial (“we,” “us,” or “our”) provides this Privacy Policy to explain how
           we collect, use, share, and safeguard personal information when you use our
-          website and related services (collectively, the &ldquo;Services&rdquo;). By accessing or
-          using the Services, you acknowledge that you have read and understood this
-          Policy.
+          website and related services (the “Services”). By accessing or using the
+          Services, you acknowledge you’ve read and understood this Policy.
         </p>
+
+        {/* Mini TOC */}
+        <nav className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {[
+            { href: "#info", label: "1. Information We Collect" },
+            { href: "#use", label: "2. How We Use Information" },
+            { href: "#share", label: "3. How We Share Information" },
+            { href: "#retention", label: "4. Data Retention" },
+            { href: "#security", label: "5. Security" },
+            { href: "#intl", label: "6. International Users" },
+            { href: "#rights", label: "7. Your Rights & Choices" },
+            { href: "#children", label: "8. Children’s Privacy" },
+            { href: "#changes", label: "9. Changes to This Policy" },
+            { href: "#contact", label: "10. Contact Us" },
+          ].map((i) => (
+            <a
+              key={i.href}
+              href={i.href}
+              className="rounded-lg bg-white/5 px-3 py-2 text-[12.5px] text-slate-200 ring-1 ring-white/10 hover:bg-white/7 hover:ring-cyan-400/30 transition"
+            >
+              {i.label}
+            </a>
+          ))}
+        </nav>
       </header>
 
-      <section className="space-y-6">
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">1. Information We Collect</h2>
-          <p className="text-neutral-300">
-            We collect the following categories of personal information when you use our
-            Services:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-neutral-300">
-            <li>
-              <span className="font-semibold">Account and Contact Details:</span> Name, username,
-              email address, and location information.
-            </li>
-            <li>
-              <span className="font-semibold">Social Sign-On Data:</span> When you connect a social
-              media or third-party account to sign in, we receive identifiers and basic
-              profile details authorized by that provider.
-            </li>
-            <li>
-              <span className="font-semibold">Usage and Device Data:</span> Information about how you
-              interact with the Services, including device type, browser, IP address, and
-              general analytics data.
-            </li>
-            <li>
-              <span className="font-semibold">Communications:</span> Records of your correspondence with
-              us, including support inquiries and marketing preferences.
-            </li>
-          </ul>
-        </article>
+      {/* Sections */}
+      <div className="space-y-4 sm:space-y-5">
+        <Section id="info" title="1. Information We Collect">
+          <P>We collect the following categories of personal information when you use our Services:</P>
+          <Ul>
+            <Li>
+              <b>Account & Contact Details:</b> Name, username, email address, and location information.
+            </Li>
+            <Li>
+              <b>Social Sign-On Data:</b> Identifiers and profile details from providers you authorize.
+            </Li>
+            <Li>
+              <b>Usage & Device Data:</b> Interactions with the Services, device type, browser, IP, and analytics.
+            </Li>
+            <Li>
+              <b>Communications:</b> Support inquiries and marketing preferences.
+            </Li>
+          </Ul>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">2. How We Use Personal Information</h2>
-          <p className="text-neutral-300">We use personal information for the following purposes:</p>
-          <ul className="list-disc list-inside space-y-2 text-neutral-300">
-            <li>
-              <span className="font-semibold">Account Creation and Management:</span> To register users,
-              authenticate logins (including via social sign-on), and provide customer
-              support.
-            </li>
-            <li>
-              <span className="font-semibold">Service Delivery and Personalization:</span> To operate,
-              maintain, and improve the Services, including personalization and analytics.
-            </li>
-            <li>
-              <span className="font-semibold">Marketing and Communications:</span> To send service
-              updates, newsletters, and promotional messages (where permitted) and to
-              manage your communication preferences.
-            </li>
-            <li>
-              <span className="font-semibold">Advertising:</span> To facilitate targeted advertising,
-              including by working with advertising partners who may use personal
-              information as permitted by law.
-            </li>
-            <li>
-              <span className="font-semibold">Security and Compliance:</span> To detect, prevent, and
-              respond to fraud, unauthorized activity, or other security incidents, and to
-              comply with legal obligations.
-            </li>
-          </ul>
-        </article>
+        <Section id="use" title="2. How We Use Personal Information">
+          <P>We use personal information to:</P>
+          <Ul>
+            <Li>
+              <b>Create & Manage Accounts:</b> Registration, authentication (including social sign-on), and support.
+            </Li>
+            <Li>
+              <b>Deliver & Improve Services:</b> Operate, maintain, personalize, and analyze performance.
+            </Li>
+            <Li>
+              <b>Communicate:</b> Service updates, newsletters, and promotions (where permitted).
+            </Li>
+            <Li>
+              <b>Advertising:</b> Facilitate targeted advertising in compliance with applicable laws.
+            </Li>
+            <Li>
+              <b>Security & Compliance:</b> Detect, prevent, and respond to fraud or security incidents; meet legal obligations.
+            </Li>
+          </Ul>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">3. How We Share Personal Information</h2>
-          <p className="text-neutral-300">We share personal information only as necessary:</p>
-          <ul className="list-disc list-inside space-y-2 text-neutral-300">
-            <li>
-              <span className="font-semibold">Service Providers:</span> With trusted vendors who process
-              data on our behalf (e.g., hosting, analytics, customer support), bound by
-              contractual obligations to safeguard information.
-            </li>
-            <li>
-              <span className="font-semibold">Advertising Partners:</span> With advertisers and advertising
-              networks to deliver targeted ads and measure campaign performance.
-            </li>
-            <li>
-              <span className="font-semibold">Legal and Safety Obligations:</span> When required by law,
-              regulation, legal process, or governmental request, or to protect the
-              rights, property, or safety of AstroSocial, our users, or others.
-            </li>
-            <li>
-              <span className="font-semibold">Business Transfers:</span> In connection with mergers,
-              acquisitions, financing, or asset sales, subject to appropriate
-              confidentiality safeguards.
-            </li>
-          </ul>
-          <p className="text-neutral-300">
-            We do not sell personal information for monetary consideration. We may,
-            however, share personal information for targeted advertising or
-            &ldquo;cross-context behavioral advertising&rdquo; as defined under certain U.S.
-            privacy laws. You can opt out of such sharing as described below.
-          </p>
-        </article>
+        <Section id="share" title="3. How We Share Personal Information">
+          <P>We share personal information only as necessary:</P>
+          <Ul>
+            <Li>
+              <b>Service Providers:</b> Hosting, analytics, and support vendors under contractual safeguards.
+            </Li>
+            <Li>
+              <b>Advertising Partners:</b> To deliver targeted ads and measure performance.
+            </Li>
+            <Li>
+              <b>Legal & Safety:</b> As required by law or to protect rights, property, and safety.
+            </Li>
+            <Li>
+              <b>Business Transfers:</b> In mergers, acquisitions, or asset sales with appropriate confidentiality.
+            </Li>
+          </Ul>
+          <P className="mt-2">
+            We do not sell personal information for money. We may share data for targeted or
+            “cross-context behavioral” advertising under certain U.S. laws. You can opt out as
+            described below.
+          </P>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">4. Data Retention</h2>
-          <p className="text-neutral-300">
-            We retain personal information for as long as your account is active or as
-            needed to provide the Services. When you delete or deactivate your account, we
-            delete or anonymize your personal information within 30 days, unless longer
-            retention is required to comply with legal obligations, resolve disputes, or
-            enforce our agreements. Backup copies may persist for a limited period
-            consistent with our data retention and disaster recovery practices.
-          </p>
-        </article>
+        <Section id="retention" title="4. Data Retention">
+          <P>
+            We retain personal information while your account is active or as needed for the Services. When you
+            delete or deactivate your account, we delete or anonymize personal data within 30 days unless longer
+            retention is required for legal obligations, dispute resolution, or enforcement. Backup copies may
+            persist briefly per our disaster recovery practices.
+          </P>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">5. Security</h2>
-          <p className="text-neutral-300">
-            We implement technical and organizational measures designed to protect
-            personal information, including encryption, access controls, and
-            authentication safeguards. Despite these measures, no online service can
-            guarantee complete security, and you should take care when sharing personal
-            information online.
-          </p>
-        </article>
+        <Section id="security" title="5. Security">
+          <P>
+            We implement technical and organizational measures (encryption, access controls, authentication) to
+            protect personal information. No online service can guarantee absolute security, so please use care
+            when sharing information online.
+          </P>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">6. International Users</h2>
-          <p className="text-neutral-300">
-            We currently make the Services available to users in the EU/UK, the United
-            States, Canada, the broader Americas, Japan, South Korea, Australia, and New
-            Zealand. Your information may be stored or processed in countries outside your
-            jurisdiction (including the United States) where we or our service providers
-            operate. When we transfer personal information internationally, we implement
-            appropriate safeguards, such as standard contractual clauses or equivalent
-            mechanisms, to protect your data.
-          </p>
-        </article>
+        <Section id="intl" title="6. International Users">
+          <P>
+            We serve users in the EU/UK, U.S., Canada, the broader Americas, Japan, South Korea, Australia, and
+            New Zealand. Your data may be stored or processed outside your jurisdiction (including the U.S.). We
+            use appropriate safeguards (e.g., standard contractual clauses) for international transfers.
+          </P>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">7. Your Privacy Rights and Choices</h2>
-          <p className="text-neutral-300">
-            Depending on your location, you may have the following rights:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-neutral-300">
-            <li>
-              <span className="font-semibold">Access, Correction, and Portability:</span> Request access to
-              or a copy of the personal information we hold about you, and ask that we
-              correct inaccurate or incomplete information.
-            </li>
-            <li>
-              <span className="font-semibold">Deletion:</span> Request deletion of your personal
-              information, subject to legal exceptions.
-            </li>
-            <li>
-              <span className="font-semibold">Objection and Restriction:</span> Object to or request
-              restriction of certain processing activities, including targeted advertising.
-            </li>
-            <li>
-              <span className="font-semibold">Opt Out of Marketing:</span> Opt out of marketing emails by
-              using the &ldquo;unsubscribe&rdquo; link in those messages or adjusting your account
-              preferences.
-            </li>
-            <li>
-              <span className="font-semibold">Opt Out of Targeted Advertising:</span> Contact us using the
-              details below or adjust your preferences (where available) to stop sharing
-              data with advertising partners for targeted advertising.
-            </li>
-          </ul>
-          <p className="text-neutral-300">
-            Residents of the European Union/United Kingdom have additional rights under
-            the GDPR, including the right to lodge a complaint with a supervisory
-            authority. Residents of California and other U.S. states with comprehensive
-            privacy laws may have specific rights to opt out of certain data sharing and to
-            request information about our data practices. Canadian residents have rights
-            under PIPEDA, including access and correction rights. Users in Japan, South
-            Korea, Australia, and New Zealand may have additional rights under applicable
-            national or regional privacy laws; we will honor those rights as required.
-          </p>
-          <p className="text-neutral-300">
-            To exercise your rights, please contact us at [insert privacy email/contact
-            form]. We may ask you to verify your identity before fulfilling your request.
-          </p>
-        </article>
+        <Section id="rights" title="7. Your Privacy Rights & Choices">
+          <P>Depending on your location, you may have rights to:</P>
+          <Ul>
+            <Li>
+              <b>Access / Correction / Portability:</b> Request access or a copy; ask us to correct inaccuracies.
+            </Li>
+            <Li>
+              <b>Deletion:</b> Request deletion, subject to legal exceptions.
+            </Li>
+            <Li>
+              <b>Objection / Restriction:</b> Object to or restrict certain processing, including targeted ads.
+            </Li>
+            <Li>
+              <b>Marketing Opt-Out:</b> Use the “unsubscribe” link or adjust preferences.
+            </Li>
+            <Li>
+              <b>Targeted Ads Opt-Out:</b> Contact us or use available preference controls.
+            </Li>
+          </Ul>
+          <P className="mt-2">
+            EU/UK residents (GDPR) can lodge complaints with a supervisory authority. California and other U.S.
+            states may offer specific opt-out rights and disclosures. Canadian residents have access/correction
+            rights under PIPEDA. Users in Japan, South Korea, Australia, and New Zealand may have additional rights.
+          </P>
+          <P className="mt-2">
+            To exercise rights, contact us at <i>[insert privacy contact]</i>. We may need to verify your identity.
+          </P>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">8. Children&rsquo;s Privacy</h2>
-          <p className="text-neutral-300">
-            The Services are not directed to children under the age of 13 (or the age of
-            digital consent in your jurisdiction). We do not knowingly collect personal
-            information from children. If we learn that we have inadvertently collected
-            such information, we will delete it promptly.
-          </p>
-        </article>
+        <Section id="children" title="8. Children’s Privacy">
+          <P>
+            Our Services are not directed to children under 13 (or the age of digital consent in your region). We
+            do not knowingly collect children’s personal information; if we learn we have, we’ll delete it promptly.
+          </P>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">9. Changes to This Policy</h2>
-          <p className="text-neutral-300">
-            We may update this Privacy Policy from time to time. If we make material
-            changes, we will notify you by posting the updated policy on the website and
-            updating the &ldquo;Effective Date.&rdquo; Your continued use of the Services after the
-            update constitutes acceptance of the revised policy.
-          </p>
-        </article>
+        <Section id="changes" title="9. Changes to This Policy">
+          <P>
+            We may update this Policy periodically. Material changes will be posted here and the “Effective Date”
+            updated. Your continued use after updates constitutes acceptance.
+          </P>
+        </Section>
 
-        <article className="space-y-4">
-          <h2 className="text-2xl font-semibold">10. Contact Us</h2>
-          <p className="text-neutral-300">
-            If you have questions or concerns about this Privacy Policy or our data
-            practices, please contact us at:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-neutral-300">
-            <li>Email: [insert privacy contact email]</li>
-            <li>Mailing Address: [insert business address]</li>
-            <li>Data Protection Officer (if applicable): [insert contact]</li>
-          </ul>
-        </article>
-      </section>
+        <Section id="contact" title="10. Contact Us">
+          <P>If you have questions about this Policy or our data practices, contact:</P>
+          <Ul>
+            <Li>Email: <i>[insert privacy contact email]</i></Li>
+            <Li>Mailing Address: <i>[insert business address]</i></Li>
+            <Li>Data Protection Officer (if applicable): <i>[insert contact]</i></Li>
+          </Ul>
+        </Section>
+      </div>
     </div>
   );
 };
+
+/* ---------- Small helpers for consistent styling ---------- */
+
+const Section: FC<PropsWithChildren<{ id: string; title: string }>> = ({
+  id,
+  title,
+  children,
+}) => (
+  <section
+    id={id}
+    className="rounded-2xl bg-[#0B1220]/70 backdrop-blur-md ring-1 ring-white/10 shadow-[0_8px_28px_rgba(2,6,23,0.45)]"
+  >
+    <div className="px-5 py-3 border-b border-white/10">
+      <h2 className="text-[15px] sm:text-base font-semibold">{title}</h2>
+      <div className="mt-2 h-[2px] bg-gradient-to-r from-[#f04bb3]/50 via-white/10 to-[#5aa2ff]/50 rounded-full" />
+    </div>
+    <div className="p-5">{children}</div>
+  </section>
+);
+
+const P: FC<PropsWithChildren<{ className?: string }>> = ({ className = "", children }) => (
+  <p className={["text-[13.5px] sm:text-[14.5px] leading-7 text-slate-300", className].join(" ")}>
+    {children}
+  </p>
+);
+
+const Ul: FC<PropsWithChildren> = ({ children }) => (
+  <ul className="list-disc pl-5 space-y-2 text-[13.5px] sm:text-[14.5px] leading-7 text-slate-300">
+    {children}
+  </ul>
+);
+
+const Li: FC<PropsWithChildren> = ({ children }) => <li>{children}</li>;
 
 export default PrivacyPolicyPage;

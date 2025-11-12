@@ -6,7 +6,8 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 // Strip a trailing `/api` segment from the base URL so we can reuse the origin
 // when constructing those absolute URLs.
 
-let accessToken = '';  // in‑memory only
+let accessToken = localStorage.getItem('ACCESS_TOKEN') || '';
+
 
 export function setAccessToken(token: string) {
   accessToken = token;

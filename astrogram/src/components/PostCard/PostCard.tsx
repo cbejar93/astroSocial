@@ -1,15 +1,30 @@
-import { useEffect, useState, useRef } from "react";
-import { useNavigate, Link } from 'react-router-dom';
+// src/components/PostCard/PostCard.tsx
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { Star, MessageCircle, Share2, Repeat2, Bookmark, MoreVertical } from "lucide-react";
-import { sharePost, repostPost, apiFetch, savePost as savePostRequest, unsavePost } from '../../lib/api';
+import {
+  Star,
+  MessageCircle,
+  Share2,
+  Repeat2,
+  Bookmark,
+  MoreVertical,
+  Trash2,
+  Eye,
+} from "lucide-react";
+import {
+  sharePost,
+  repostPost,
+  apiFetch,
+  savePost as savePostRequest,
+  unsavePost,
+} from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
-import { useAnalytics } from '../../hooks/useAnalytics';
-
+import { useAnalytics } from "../../hooks/useAnalytics";
 
 export interface PostCardProps {
-  id: string
-  authorId: string
+  id: string | number;
+  authorId: string;
   username: string;
   title?: string;
   imageUrl?: string;
@@ -25,7 +40,11 @@ export interface PostCardProps {
   repostedBy?: string;
   savedByMe?: boolean;
   saves?: number;
-  onDeleted?: (id: string) => void;
+  views?: number;
+  onDeleted?: (id: string | number) => void;
+  onSavedChange?: (id: string | number, saved: boolean, count: number) => void;
+  onLikeChange?: (id: string | number, liked: boolean, count: number) => void;
+  onRepostChange?: (id: string | number, reposted: boolean, count: number) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -45,15 +64,18 @@ const PostCard: React.FC<PostCardProps> = ({
   savedByMe,
   saves = 0,
   authorId,
-  onDeleted
+  views = 0,
+  onDeleted,
+  onSavedChange,
+  onLikeChange,
+  onRepostChange,
 }) => {
-
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
   const navigate = useNavigate();
   const isOwn = user?.id === authorId;
 
-  const [liked, setLiked] = useState(likedByMe);
+  const [liked, setLiked] = useState(Boolean(likedByMe));
   const [starCount, setStarCount] = useState(stars);
   const [commentCount] = useState(comments);
   const [shareCount, setShareCount] = useState(shares);
@@ -61,37 +83,47 @@ const PostCard: React.FC<PostCardProps> = ({
   const [repostCount, setRepostCount] = useState(reposts);
   const [saved, setSaved] = useState(Boolean(savedByMe));
   const [saveCount, setSaveCount] = useState(saves);
+
   const [menuOpen, setMenuOpen] = useState(false);
+  const [repostPending, setRepostPending] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const encodedUsername = encodeURIComponent(username);
 
   useEffect(() => {
     setSaveCount(saves ?? 0);
-
     if (!user) {
       setLiked(false);
       setReposted(false);
       setSaved(false);
       return;
     }
-
     setLiked(Boolean(likedByMe));
     setReposted(Boolean(repostedByMe));
     setSaved(Boolean(savedByMe));
   }, [user, likedByMe, repostedByMe, savedByMe, saves]);
 
-  const handleLike = async () => {
+  const safeTrack = (payload: Parameters<NonNullable<typeof trackEvent>>[0]) => {
+    try {
+      trackEvent?.(payload);
+    } catch {}
+  };
+
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  const handleLike = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!user) return;
     try {
-      const res = await apiFetch(`/posts/${id}/like`, { method: 'POST' });
-      if (!res.ok) throw new Error('Like toggle failed');
+      const res = await apiFetch(`/posts/${id}/like`, { method: "POST" });
+      if (!res.ok) throw new Error("Like toggle failed");
       const { liked: nextLiked, count } = await res.json();
       setLiked(nextLiked);
       setStarCount(count);
-      void trackEvent({
-        type: nextLiked ? 'post_like' : 'post_unlike',
-        targetType: 'post',
-        targetId: id,
+      onLikeChange?.(id, nextLiked, count);
+      safeTrack({
+        type: nextLiked ? "post_like" : "post_unlike",
+        targetType: "post",
+        targetId: String(id),
         value: count,
       });
     } catch (err) {
@@ -99,34 +131,26 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  const handleShare = async () => {
+  const handleShare = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const postUrl = `${window.location.origin}/posts/${id}`;
-
     try {
-      const { count } = await sharePost(id);
+      const { count } = await sharePost(String(id));
       setShareCount(count);
-      void trackEvent({
-        type: 'post_share',
-        targetType: 'post',
-        targetId: id,
+      safeTrack({
+        type: "post_share",
+        targetType: "post",
+        targetId: String(id),
         value: count,
       });
     } catch (err) {
       console.error("Failed to share:", err);
     }
-
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: `${username}'s post`,
-          text: caption,
-          url: postUrl,
-        });
-      } catch (err) {
-        console.warn("User cancelled share or error:", err);
-      }
+        await navigator.share({ title: `${username}'s post`, text: caption, url: postUrl });
+      } catch {}
     } else {
-      // fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(postUrl);
         alert("Link copied to clipboard!");
@@ -136,215 +160,285 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  const handleRepost = async () => {
-    if (!user) return;
-    if (reposted) return;
+  const handleRepost = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!user || repostPending) return;
+
+    setRepostPending(true);
     try {
-      const { count } = await repostPost(id);
-      setRepostCount(count);
-      setReposted(true);
-      setShareCount((prev) => prev); // share count unaffected by repost
-      void trackEvent({
-        type: 'post_repost',
-        targetType: 'post',
-        targetId: id,
-        value: count,
+      const data: any = await repostPost(String(id));
+
+      const nextReposted =
+        typeof data?.reposted === "boolean"
+          ? data.reposted
+          : typeof data?.repostedByMe === "boolean"
+          ? data.repostedByMe
+          : true;
+
+      const nextCount =
+        typeof data?.count === "number"
+          ? data.count
+          : typeof data?.reposts === "number"
+          ? data.reposts
+          : repostCount + (reposted ? 0 : 1);
+
+      setReposted(nextReposted);
+      setRepostCount(nextCount);
+      onRepostChange?.(id, nextReposted, nextCount);
+      safeTrack({
+        type: "post_repost",
+        targetType: "post",
+        targetId: String(id),
+        value: nextCount,
       });
-    } catch (err: unknown) {
-      console.error("Failed to repost:", err);
+    } catch (e: unknown) {
+      type WithResponse = { response?: { status?: number } };
+      const err = e as (Error & { statusCode?: number; status?: number }) & WithResponse;
+      const msg = typeof err?.message === "string" ? err.message : "";
+      const match = msg.match(/\b(\d{3})\b/);
+      const status =
+        (typeof err?.statusCode === "number" ? err.statusCode : undefined) ??
+        (typeof err?.status === "number" ? err.status : undefined) ??
+        (typeof err?.response?.status === "number" ? err.response.status : undefined) ??
+        (match ? parseInt(match[1], 10) : 0);
+
+      if (status === 409) {
+        if (!reposted) {
+          setReposted(true);
+          onRepostChange?.(id, true, repostCount);
+        }
+        console.info("Already reposted — updating UI.");
+      } else if (status === 401) {
+        alert("Please sign in again to repost.");
+      } else {
+        console.error("Failed to toggle repost:", err);
+      }
+    } finally {
+      setRepostPending(false);
     }
   };
 
-  const toggleSave = async () => {
+  const toggleSave = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!user) return;
-
     try {
       if (saved) {
-        const { saved: isSaved, count } = await unsavePost(id);
+        const { saved: isSaved, count } = await unsavePost(String(id));
         setSaved(isSaved);
         setSaveCount(count);
-        void trackEvent({
-          type: 'post_unsave',
-          targetType: 'post',
-          targetId: id,
+        onSavedChange?.(id, isSaved, count);
+        safeTrack({
+          type: "post_unsave",
+          targetType: "post",
+          targetId: String(id),
           value: count,
         });
       } else {
-        const { saved: isSaved, count } = await savePostRequest(id);
+        const { saved: isSaved, count } = await savePostRequest(String(id));
         setSaved(isSaved);
         setSaveCount(count);
-        void trackEvent({
-          type: 'post_save',
-          targetType: 'post',
-          targetId: id,
+        onSavedChange?.(id, isSaved, count);
+        safeTrack({
+          type: "post_save",
+          targetType: "post",
+          targetId: String(id),
           value: count,
         });
       }
     } catch (err) {
-      console.error('Failed to toggle save:', err);
+      console.error("Failed to toggle save:", err);
     }
   };
 
-  // close menu on outside click
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+    const handler = (ev: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(ev.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const stop = (e: React.MouseEvent) => e.stopPropagation();
-
   const handleDelete = async () => {
     setMenuOpen(false);
-
     try {
-      const res = await apiFetch(`/posts/delete/${id}`, {
-        method: 'DELETE',
-      });
-
+      const res = await apiFetch(`/posts/delete/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || 'Failed to delete post');
+        throw new Error(body.message || "Failed to delete post");
       }
-
-      // inform parent so it can remove this post from the UI
       onDeleted?.(id);
-    } catch (err: unknown) {
-      console.error('Delete post error:', err);
-      // you could show a toast here
+    } catch (err) {
+      console.error("Delete post error:", err);
     }
   };
 
+  const formatK = (n: number) =>
+    n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
+    : n >= 1_000 ? `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`
+    : `${n}`;
+
   return (
-    <div className="w-full py-0 sm:py-2 sm:px-2">
-      <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden border border-gray-300 dark:border-gray-700 w-full sm:max-w-2xl sm:mx-auto">
+    <div className="w-full py-0 sm:py-1 sm:px-1">
+      <div
+        className={[
+          "relative overflow-hidden rounded-lg",
+          "border border-white/10",
+          // LIGHTER: glassy slate gradient + stronger blur
+          "bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20",
+          "backdrop-blur-xl text-slate-100",
+          "shadow-[0_16px_36px_rgba(2,6,23,0.35)]",
+        ].join(" ")}
+      >
+        {/* 3-dot menu */}
+        <div className="absolute right-2 top-2 z-20" onClick={stop}>
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              className="rounded-md p-2 text-slate-200/90 hover:text-white hover:bg-white/10 transition"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label="Post options"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-[calc(100%+0.5rem)] w-44 overflow-hidden rounded-md border border-white/10 bg-slate-900/80 backdrop-blur-xl shadow-2xl"
+              >
+                <button
+                  role="menuitem"
+                  onClick={toggleSave}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-100 hover:bg-white/10"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>{saved ? "Unsave" : "Save"}({saveCount})</span>
+                </button>
+
+                <div className="mx-2 my-1 h-px bg-white/10" />
+
+                <button
+                  role="menuitem"
+                  onClick={handleShare}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-100 hover:bg-white/10"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Share({shareCount})</span>
+                </button>
+
+                {isOwn && (
+                  <>
+                    <div className="mx-2 my-1 h-px bg-white/10" />
+                    <button
+                      role="menuitem"
+                      onClick={handleDelete}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-300 hover:bg-white/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Reposted badge */}
         {repostedBy && (
-          <div className="px-4 sm:px-6 pt-4 text-xs text-gray-500 dark:text-gray-400">
+          <div className="px-4 sm:px-6 pt-3 text-xs text-slate-300">
             Reposted by {repostedBy}
           </div>
         )}
 
         {/* Header */}
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div className="relative z-[1] px-4 sm:px-6 pt-3 pb-2 flex justify-between items-start">
           <Link
             to={`/users/${encodedUsername}/posts`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 hover:underline"
+            className="flex items-center gap-3"
           >
             <img
-              src={avatarUrl ?? '/defaultPfp.png'}
+              src={avatarUrl ?? "/defaultPfp.png"}
               alt={`${username}'s profile`}
-              className="w-8 h-8 rounded-full object-cover"
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-white/15"
             />
-            <span className="font-semibold text-teal-400 text-sm">@{username}</span>
+            <div className="leading-tight">
+              <div className="font-semibold text-white/95">@{username}</div>
+              {timestamp && (
+                <div className="text-[11px] text-slate-400">
+                  {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
+                </div>
+              )}
+            </div>
           </Link>
-          <div className="flex items-center gap-2">
-            {timestamp && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
-              </span>
-            )}
-            {isOwn && (
-              <div ref={menuRef} className="relative" onClick={stop}>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((o) => !o)}
-                  className="p-1 text-gray-400 hover:text-gray-600"
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded shadow-lg z-10">
-                    <button
-                      onClick={handleDelete}
-                      className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                    >
-                      Delete Post
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
         </div>
 
-        {/* Image */}
+        {/* Caption */}
+        <div className="relative z-[1] px-4 sm:px-6 pb-2 text-[14px] leading-snug text-slate-200/95">
+          {caption}
+        </div>
+
+        {/* Media */}
         {imageUrl && (
-          <div className="w-full aspect-video overflow-hidden">
-            <img
-              src={imageUrl}
-              alt={`Post by ${username}: ${caption}`}
-              className="object-cover w-full h-full"
-              loading="lazy"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
-              }}
-            />
+          <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
+            <div className="overflow-hidden rounded-md border border-white/10 bg-black/10">
+              <div className="aspect-[2/1] md:aspect-[21/9]">
+                <img
+                  src={imageUrl}
+                  alt={`Post by ${username}: ${caption}`}
+                  className="object-cover w-full h-full"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
+                  }}
+                />
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Caption */}
-        <div className="px-4 sm:px-6 py-4 text-sm">{caption}</div>
+        {/* Views */}
+        <div className="relative z-[1] px-4 sm:px-6 py-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-300" aria-label="Views">
+            <Eye className="w-4 h-4 opacity-90" aria-hidden="true" />
+            <span className="tabular-nums">{formatK(views)}</span>
+          </div>
+        </div>
 
-        {/* Action Buttons */}
-        <div onClick={stop} className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex justify-evenly items-center text-gray-400 dark:text-gray-300 text-sm">
-
-            {/* Like */}
+        {/* Actions */}
+        <div onClick={stop} className="relative z-[1] px-3 sm:px-6 pb-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
               type="button"
               onClick={handleLike}
-              className="btn-unstyled btn-action text-white hover:text-gray-300"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition"
             >
-              <Star className="w-5 h-5" fill={user && liked ? "currentColor" : "none"} />
-              <span className="ml-1">{starCount}</span>
+              <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
+              <span className="font-medium leading-none">Like({starCount})</span>
             </button>
 
-            {/* Repost */}
             <button
               type="button"
               onClick={handleRepost}
-              className="btn-unstyled btn-action hover:text-green-400"
+              disabled={repostPending}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition disabled:opacity-60"
             >
-              <Repeat2 className="w-5 h-5" />
-              <span>{repostCount}</span>
+              <Repeat2 className="w-4 h-4" />
+              <span className="font-medium leading-none">
+                {reposted ? "Retweeted" : "Retweet"}({repostCount})
+              </span>
             </button>
 
-            {/* Comment */}
             <button
               type="button"
               onClick={() => navigate(`/posts/${id}`)}
-              className="btn-unstyled btn-action hover:text-violet-400"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition"
             >
-              <MessageCircle className="w-5 h-5" />
-              <span>{commentCount}</span>
+              <MessageCircle className="w-4 h-4" />
+              <span className="font-medium leading-none">Comment({commentCount})</span>
             </button>
-
-            {/* Save */}
-            <button
-              type="button"
-              onClick={toggleSave}
-              className="btn-unstyled btn-action hover:text-blue-400"
-            >
-              <Bookmark className="w-5 h-5" fill={user && saved ? "currentColor" : "none"} />
-              <span>{saveCount}</span>
-            </button>
-
-            {/* Share */}
-            <button
-              type="button"
-              onClick={handleShare}
-              className="btn-unstyled btn-action hover:text-violet-400"
-            >
-              <Share2 className="w-5 h-5" />
-              <span>{shareCount}</span>
-            </button>
-
           </div>
         </div>
       </div>

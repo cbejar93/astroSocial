@@ -1,30 +1,24 @@
-import {
-  MoreVertical,
-  Star,
-  Send,
-  Quote,
-  Reply,
-} from 'lucide-react';
+// src/components/Comments/Comments.tsx
+import { Star, Send, Quote, Reply } from "lucide-react";
 import React, {
   useEffect,
   useMemo,
   useRef,
   useState,
   useImperativeHandle,
-} from 'react';
-import { Link } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '../../hooks/useAuth';
-import CommentsSkeleton from './CommentsSkeleton';
+} from "react";
+import { Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { useAuth } from "../../hooks/useAuth";
+import CommentsSkeleton from "./CommentsSkeleton";
 import {
   fetchCommentPage,
   createComment,
   deleteComment,
   toggleCommentLike,
-  fetchCommentById,
   type CommentResponse,
   type PaginatedCommentsResponse,
-} from '../../lib/api';
+} from "../../lib/api";
 
 export interface CommentItem extends CommentResponse {
   likedByMe?: boolean;
@@ -42,646 +36,312 @@ interface CommentsProps {
   initialPage?: number;
 }
 
-type QuoteSource = { id?: string; username: string; text: string; parentId?: string | null };
-
-type CommentsState = PaginatedCommentsResponse<CommentItem> | null;
-
 const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
   ({ postId, pageSize = 10, initialPage = 1 }, ref) => {
     const { user } = useAuth();
-    const [pageData, setPageData] = useState<CommentsState>(null);
+    const [pageData, setPageData] =
+      useState<PaginatedCommentsResponse<CommentItem> | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(initialPage);
     const [refreshKey, setRefreshKey] = useState(0);
-    const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
     const [replyParentId, setReplyParentId] = useState<string | null>(null);
-    const [replyContext, setReplyContext] = useState<
-      { username: string; commentId?: string; parentId?: string | null } | null
-    >(null);
-    const [editorPlain, setEditorPlain] = useState('');
+    const [replyContext, setReplyContext] = useState<{ username: string; commentId?: string }>({ username: "" });
+    const [editorPlain, setEditorPlain] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const editorRef = useRef<HTMLDivElement>(null);
 
+    // Load comments
     useEffect(() => {
-      setCurrentPage(initialPage);
-    }, [initialPage, postId]);
-
-    useEffect(() => {
-      let cancelled = false;
       setLoading(true);
-      setError(null);
-
-      const normalizeComment = (comment: CommentResponse): CommentItem => ({
-        ...comment,
-        parentId: comment.parentId ?? null,
-        likedByMe: comment.likedByMe ?? false,
-      });
-
       fetchCommentPage(postId, currentPage, pageSize)
-        .then((data) => {
-          if (cancelled) return;
-          const normalized: PaginatedCommentsResponse<CommentItem> = {
+        .then((data) =>
+          setPageData({
             ...data,
-            comments: data.comments.map(normalizeComment),
-            replies: data.replies.map(normalizeComment),
-          };
-          setPageData(normalized);
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          console.error(err);
-          setError('Could not load replies.');
-          setPageData(null);
-        })
-        .finally(() => {
-          if (cancelled) return;
-          setLoading(false);
-        });
-
-      return () => {
-        cancelled = true;
-      };
+            comments: data.comments.map((c) => ({
+              ...c,
+              parentId: c.parentId ?? null,
+            })),
+            replies: data.replies.map((r) => ({
+              ...r,
+              parentId: r.parentId ?? null,
+            })),
+          })
+        )
+        .catch(() => setError("Could not load replies."))
+        .finally(() => setLoading(false));
     }, [postId, currentPage, pageSize, refreshKey]);
 
-    useEffect(() => {
-      const closeMenu = () => setMenuOpenId(null);
-      document.addEventListener('click', closeMenu);
-      return () => document.removeEventListener('click', closeMenu);
-    }, []);
-
+    // Group replies
     const repliesByParent = useMemo(() => {
       const map = new Map<string, CommentItem[]>();
-      pageData?.replies.forEach((reply) => {
-        if (!reply.parentId) return;
-        const bucket = map.get(reply.parentId) ?? [];
-        bucket.push(reply);
-        map.set(reply.parentId, bucket);
+      pageData?.replies.forEach((r) => {
+        if (!r.parentId) return;
+        const arr = map.get(r.parentId) ?? [];
+        arr.push(r);
+        map.set(r.parentId, arr);
       });
       return map;
     }, [pageData]);
 
-    const allComments = useMemo(
-      () => (pageData ? [...pageData.comments, ...pageData.replies] : []),
-      [pageData],
-    );
-
-    const totalPages = useMemo(() => {
-      if (!pageData) return 1;
-      return Math.max(1, Math.ceil(Math.max(pageData.total, 0) / pageData.limit));
-    }, [pageData]);
-
-    const focusEditor = () => {
-      const editor = editorRef.current;
-      if (!editor) return;
-      editor.focus();
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        const range = document.createRange();
-        range.selectNodeContents(editor);
-        range.collapse(false);
-        selection.addRange(range);
-      }
+    const sanitize = (v: string) => {
+      const el = document.createElement("div");
+      el.innerHTML = v;
+      el.querySelectorAll("script,style").forEach((e) => e.remove());
+      return el.innerHTML;
     };
 
-    const escapeHtml = (value: string) =>
-      value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-
-    const sanitizeHtml = (value: string) => {
-      if (typeof window === 'undefined' || !value) {
-        return '';
-      }
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(value, 'text/html');
-      const body = doc.body;
-      if (!body) {
-        return '';
-      }
-      const allowedTags = new Set([
-        'a',
-        'blockquote',
-        'br',
-        'code',
-        'em',
-        'i',
-        'li',
-        'ol',
-        'p',
-        'pre',
-        'strong',
-        'ul',
-      ]);
-      const allowedAttrs = new Set(['href', 'title', 'rel', 'target']);
-
-      const walker = doc.createTreeWalker(
-        body,
-        NodeFilter.SHOW_ELEMENT,
-        null,
-      );
-
-      const nodesToRemove: Element[] = [];
-      const nodesToUnwrap: Element[] = [];
-
-      while (walker.nextNode()) {
-        const node = walker.currentNode as Element;
-        const tag = node.tagName.toLowerCase();
-
-        if (!allowedTags.has(tag)) {
-          if (tag === 'script' || tag === 'style') {
-            nodesToRemove.push(node);
-            continue;
-          }
-          nodesToUnwrap.push(node);
-          continue;
-        }
-
-        [...node.attributes].forEach((attr) => {
-          if (!allowedAttrs.has(attr.name.toLowerCase())) {
-            node.removeAttribute(attr.name);
-          }
-        });
-
-        if (tag === 'a') {
-          if (!node.hasAttribute('rel')) {
-            node.setAttribute('rel', 'noopener noreferrer');
-          }
-          if (!node.hasAttribute('target')) {
-            node.setAttribute('target', '_blank');
-          }
-        }
-      }
-
-      nodesToRemove.forEach((node) => node.remove());
-      nodesToUnwrap.forEach((node) => {
-        const fragment = document.createDocumentFragment();
-        while (node.firstChild) {
-          fragment.appendChild(node.firstChild);
-        }
-        node.replaceWith(fragment);
-      });
-
-      return body.innerHTML;
-    };
-
-    const insertQuote = (source: QuoteSource) => {
-      focusEditor();
-      const editor = editorRef.current;
-      if (!editor) return;
-      const parentId = source.parentId ?? source.id ?? null;
-      const sanitizedBody = sanitizeHtml(source.text);
-      const quoteHtml =
-        `<blockquote><p><strong>@${escapeHtml(source.username)}</strong> wrote:</p>` +
-        `<div>${sanitizedBody}</div></blockquote><p><br></p>`;
-      try {
-        if (document.queryCommandSupported('insertHTML')) {
-          document.execCommand('insertHTML', false, quoteHtml);
-        } else {
-          editor.innerHTML += quoteHtml;
-        }
-      } catch {
-        editor.innerHTML += quoteHtml;
-      }
-      setReplyParentId(parentId);
-      setReplyContext({ username: source.username, commentId: source.id, parentId });
-      setEditorPlain(editor.textContent ?? '');
-    };
+    const focusEditor = () => editorRef.current?.focus();
 
     useImperativeHandle(ref, () => ({
-      quote: (source: QuoteSource) => {
-        insertQuote(source);
-      },
-      focusEditor: () => {
-        focusEditor();
-      },
+      quote: (s) => insertQuote(s),
+      focusEditor,
     }));
 
-    const handleQuoteComment = async (commentId: string) => {
-      try {
-        let comment = allComments.find((c) => c.id === commentId);
-        if (!comment) {
-          const fetched = await fetchCommentById<CommentResponse>(commentId);
-          comment = {
-            ...fetched,
-            parentId: fetched.parentId ?? null,
-            likedByMe: fetched.likedByMe ?? false,
-          };
-        }
-        insertQuote({
-          id: comment.id,
-          username: comment.username,
-          text: comment.text,
-          parentId: comment.parentId ?? comment.id,
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    const handleReplyToComment = (comment: CommentItem) => {
-      const parentId = comment.parentId ?? comment.id;
-      setReplyParentId(parentId);
-      setReplyContext({ username: comment.username, commentId: comment.id, parentId });
+    const insertQuote = (s: { id?: string; username: string; text: string; parentId?: string | null }) => {
       focusEditor();
+      if (!editorRef.current) return;
+      const html = `<blockquote><p><strong>@${s.username}</strong>:</p>${sanitize(
+        s.text
+      )}</blockquote><p><br/></p>`;
+      editorRef.current.innerHTML += html;
+      setReplyParentId(s.parentId ?? s.id ?? null);
+      setReplyContext({ username: s.username, commentId: s.id });
     };
 
-    const handleEditorInput = () => {
-      const editor = editorRef.current;
-      setEditorPlain(editor?.textContent ?? '');
-    };
-
-    const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      const text = e.clipboardData.getData('text/plain');
-      focusEditor();
-      document.execCommand('insertText', false, text);
-      handleEditorInput();
-    };
-
-    const handleToolbarCommand = (command: 'bold' | 'italic' | 'bullet' | 'numbered') => {
-      const commandMap: Record<typeof command, string> = {
-        bold: 'bold',
-        italic: 'italic',
-        bullet: 'insertUnorderedList',
-        numbered: 'insertOrderedList',
-      };
-      focusEditor();
-      document.execCommand(commandMap[command]);
-      handleEditorInput();
-    };
-
-    const isEditorEmpty = editorPlain.trim().length === 0;
-
-    const handleQuickReplySubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!user || !editorRef.current || isEditorEmpty) return;
-      const html = editorRef.current.innerHTML.trim();
-      if (!html) return;
-
-      const parentId = replyParentId ?? undefined;
-      const limit = pageData?.limit ?? pageSize;
-      const currentTotal = pageData?.total ?? 0;
-      const expectedPage = parentId
-        ? currentPage
-        : Math.max(1, Math.ceil((currentTotal + 1) / limit));
-
+      if (!editorRef.current || !editorRef.current.innerHTML.trim()) return;
       setSubmitting(true);
       try {
-        await createComment(postId, html, parentId);
-        if (parentId) {
-          setRefreshKey((key) => key + 1);
-        } else if (expectedPage !== currentPage) {
-          setCurrentPage(expectedPage);
-        } else {
-          setRefreshKey((key) => key + 1);
-        }
-        editorRef.current.innerHTML = '';
-        setEditorPlain('');
+        await createComment(postId, editorRef.current.innerHTML, replyParentId ?? undefined);
+        editorRef.current.innerHTML = "";
+        setEditorPlain("");
         setReplyParentId(null);
-        setReplyContext(null);
-      } catch (err) {
-        console.error(err);
+        setReplyContext({ username: "" });
+        setRefreshKey((k) => k + 1);
       } finally {
         setSubmitting(false);
       }
     };
 
-    const handleLike = async (commentId: string) => {
-      try {
-        const { liked, count } = await toggleCommentLike(commentId);
-        setPageData((prev) => {
-          if (!prev) return prev;
-          const updateList = (list: CommentItem[]) =>
-            list.map((item) =>
-              item.id === commentId
-                ? { ...item, likes: count, likedByMe: liked }
-                : item,
-            );
-          if (prev.comments.some((c) => c.id === commentId)) {
-            return { ...prev, comments: updateList(prev.comments) };
-          }
-          if (prev.replies.some((r) => r.id === commentId)) {
-            return { ...prev, replies: updateList(prev.replies) };
-          }
-          return prev;
-        });
-      } catch (err) {
-        console.error(err);
-      }
+    const handleLike = async (id: string) => {
+      const { liked, count } = await toggleCommentLike(id);
+      setPageData((p) =>
+        p
+          ? {
+              ...p,
+              comments: p.comments.map((c) =>
+                c.id === id ? { ...c, likes: count, likedByMe: liked } : c
+              ),
+              replies: p.replies.map((r) =>
+                r.id === id ? { ...r, likes: count, likedByMe: liked } : r
+              ),
+            }
+          : p
+      );
     };
 
-    const handleDelete = async (commentId: string) => {
-      try {
-        await deleteComment(commentId);
-        const isTopLevel = pageData?.comments.some((c) => c.id === commentId) ?? false;
-        const limit = pageData?.limit ?? pageSize;
-        const newTotal = Math.max(0, (pageData?.total ?? 0) - (isTopLevel ? 1 : 0));
-        const newPage = Math.min(currentPage, Math.max(1, Math.ceil(newTotal / limit)));
-
-        setPageData((prev) => {
-          if (!prev) return prev;
-          const comments = prev.comments.filter((c) => c.id !== commentId);
-          const replies = prev.replies.filter(
-            (r) => r.id !== commentId && r.parentId !== commentId,
-          );
-          return {
-            ...prev,
-            comments,
-            replies,
-            total: isTopLevel ? newTotal : prev.total,
-          };
-        });
-
-        if (isTopLevel) {
-          if (newPage !== currentPage) {
-            setCurrentPage(newPage);
-          } else {
-            setRefreshKey((key) => key + 1);
-          }
-        } else {
-          setRefreshKey((key) => key + 1);
-        }
-      } catch (err) {
-        console.error(err);
-      }
+    const handleDelete = async (id: string) => {
+      await deleteComment(id);
+      setRefreshKey((k) => k + 1);
     };
 
-    const clearReplyContext = () => {
-      setReplyContext(null);
-      setReplyParentId(null);
-    };
-
-    const renderComment = (comment: CommentItem, depth = 0): JSX.Element => {
-      const replies = repliesByParent.get(comment.id) ?? [];
-      const isOwn = user?.id === comment.authorId;
-      const containerClasses = [
-        'rounded-xl border border-white/10 bg-gray-900/70 p-4 backdrop-blur',
-      ];
-      if (depth > 0) {
-        containerClasses.push('ml-6');
-      }
-      const encodedUsername = encodeURIComponent(comment.username);
-
-      return (
-        <div key={comment.id} className={containerClasses.join(' ')}>
-          <div className="flex items-start gap-3">
-            <img
-              src={comment.avatarUrl ?? '/defaultPfp.png'}
-              alt={`${comment.username} avatar`}
-              className="h-10 w-10 rounded-full object-cover"
-            />
-            <div className="flex-1 space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <Link
-                    to={`/users/${encodedUsername}/posts`}
-                    className="text-sm font-semibold text-teal-400 hover:underline"
-                  >
-                    @{comment.username}
-                  </Link>
-                  <div className="text-xs text-gray-400">
-                    {formatDistanceToNow(new Date(comment.timestamp), {
-                      addSuffix: true,
-                    })}
-                  </div>
+    const renderComment = (c: CommentItem, depth = 0): JSX.Element => (
+      <div
+        key={c.id}
+        className={`p-4 border border-white/10 rounded-lg bg-slate-800/30 backdrop-blur ${
+          depth ? "ml-6" : ""
+        }`}
+      >
+        <div className="flex gap-3 items-start">
+          <img
+            src={c.avatarUrl ?? "/defaultPfp.png"}
+            alt={c.username}
+            className="h-10 w-10 aspect-square flex-shrink-0 rounded-full object-cover ring-2 ring-white/15"
+          />
+          <div className="flex-1 space-y-2">
+            <div className="flex justify-between">
+              <div>
+                <Link
+                  to={`/users/${c.username}/posts`}
+                  className="text-sm font-semibold text-teal-300 hover:underline"
+                >
+                  @{c.username}
+                </Link>
+                <div className="text-xs text-gray-400">
+                  {formatDistanceToNow(new Date(c.timestamp), { addSuffix: true })}
                 </div>
-                {isOwn && (
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpenId((prev) => (prev === comment.id ? null : comment.id));
-                      }}
-                      className="rounded-full p-1 text-gray-400 transition hover:text-gray-200"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-                    {menuOpenId === comment.id && (
-                      <div className="absolute right-0 mt-2 w-32 rounded-lg border border-white/10 bg-gray-900 shadow-lg">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void handleDelete(comment.id);
-                            setMenuOpenId(null);
-                          }}
-                          className="block w-full px-4 py-2 text-left text-xs text-red-400 hover:bg-red-500/10"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
-              <div
-                className="prose prose-invert max-w-none text-sm leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: comment.text }}
-              />
-              <div className="flex flex-wrap items-center gap-4 text-xs">
+              {user?.id === c.authorId && (
                 <button
-                  type="button"
-                  onClick={() => void handleLike(comment.id)}
-                  className="inline-flex items-center gap-1 text-gray-300 transition hover:text-teal-300"
+                  onClick={() => handleDelete(c.id)}
+                  className="text-xs text-red-400 hover:text-red-300"
                 >
-                  <Star
-                    className="h-4 w-4"
-                    fill={comment.likedByMe ? 'currentColor' : 'none'}
-                  />
-                  <span>{comment.likes}</span>
+                  Delete
                 </button>
-                {depth === 0 && (
-                  <button
-                    type="button"
-                    onClick={() => handleReplyToComment(comment)}
-                    className="inline-flex items-center gap-1 text-gray-300 transition hover:text-teal-300"
-                  >
-                    <Reply className="h-4 w-4" />
-                    Reply
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void handleQuoteComment(comment.id)}
-                  className="inline-flex items-center gap-1 text-gray-300 transition hover:text-teal-300"
-                >
-                  <Quote className="h-4 w-4" />
-                  Quote
-                </button>
-              </div>
+              )}
             </div>
-          </div>
-          {replies.length > 0 && (
-            <div className="mt-4 space-y-4 border-l border-white/10 pl-4">
-              {replies.map((reply) => renderComment(reply, depth + 1))}
-            </div>
-          )}
-        </div>
-      );
-    };
 
-    const PaginationControls = () => {
-      if (!pageData) return null;
-      const start = pageData.total === 0 ? 0 : (currentPage - 1) * pageData.limit + 1;
-      const end = start === 0 ? 0 : start + pageData.comments.length - 1;
-      return (
-        <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-gray-900/70 px-4 py-3 text-xs text-gray-300 backdrop-blur md:flex-row md:items-center md:justify-between">
-          <span>
-            {pageData.total === 0
-              ? 'No replies yet'
-              : `Showing ${start}-${Math.min(end, pageData.total)} of ${pageData.total}`}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage <= 1}
-              className="rounded-full border border-white/10 px-3 py-1 text-gray-200 transition disabled:cursor-not-allowed disabled:opacity-40 hover:bg-white/10"
-            >
-              Previous
-            </button>
-            <span className="font-semibold text-gray-100">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              type="button"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
-              disabled={currentPage >= totalPages}
-              className="rounded-full border border-white/10 px-3 py-1 text-gray-200 transition disabled:cursor-not-allowed disabled:opacity-40 hover:bg-white/10"
-            >
-              Next
-            </button>
+            {/* ✅ Left-aligned text (normal flow) */}
+            <div
+              className="text-sm leading-relaxed text-gray-200 prose prose-invert"
+              dangerouslySetInnerHTML={{ __html: sanitize(c.text) }}
+            />
+
+            <div className="flex gap-4 text-xs text-slate-300">
+              <button
+                onClick={() => handleLike(c.id)}
+                className="flex items-center gap-1 hover:text-teal-300"
+              >
+                <Star
+                  className="h-4 w-4"
+                  fill={c.likedByMe ? "currentColor" : "none"}
+                />{" "}
+                {c.likes}
+              </button>
+              <button
+                onClick={() => {
+                  setReplyParentId(c.id);
+                  setReplyContext({ username: c.username, commentId: c.id });
+                  focusEditor();
+                }}
+                className="flex items-center gap-1 hover:text-teal-300"
+              >
+                <Reply className="h-4 w-4" /> Reply
+              </button>
+              <button
+                onClick={() =>
+                  insertQuote({
+                    id: c.id,
+                    username: c.username,
+                    text: c.text,
+                    parentId: c.parentId ?? c.id,
+                  })
+                }
+                className="flex items-center gap-1 hover:text-teal-300"
+              >
+                <Quote className="h-4 w-4" /> Quote
+              </button>
+            </div>
           </div>
         </div>
-      );
-    };
+
+        {(repliesByParent.get(c.id) ?? []).length > 0 && (
+          <div className="mt-2 space-y-2 border-l border-white/10 pl-4">
+            {repliesByParent.get(c.id)?.map((r) => renderComment(r, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-100">Thread Replies</h2>
-          <span className="text-xs text-gray-400">
-            {pageData?.total ?? 0} replies
-          </span>
+        <div className="flex justify-between">
+          <span className="text-xs text-gray-400">{pageData?.total ?? 0} replies</span>
         </div>
-        {loading ? (
-          <CommentsSkeleton />
-        ) : error ? (
-          <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {error}
-          </div>
-        ) : pageData && pageData.total > 0 ? (
-          <>
-            <PaginationControls />
-            <div className="space-y-4">
-              {pageData.comments.map((comment) => renderComment(comment))}
-            </div>
-            <PaginationControls />
-          </>
-        ) : (
-          <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-gray-400">
-            No replies yet—be the first to join the conversation.
-          </div>
-        )}
 
-        <div className="sticky bottom-4 z-10">
-          {user ? (
-            <form
-              onSubmit={handleQuickReplySubmit}
-              className="space-y-3 rounded-2xl border border-white/10 bg-gray-950/90 p-4 shadow-2xl backdrop-blur"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-100">
-                  Reply to this topic
-                </h3>
-                {replyContext && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearReplyContext();
-                      if (editorRef.current) {
-                        editorRef.current.innerHTML = '';
-                        setEditorPlain('');
-                      }
-                    }}
-                    className="text-xs text-teal-300 hover:text-teal-200"
-                  >
-                    Clear quote
-                  </button>
-                )}
-              </div>
-              {replyContext && (
-                <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
-                  Replying to <span className="font-semibold">@{replyContext.username}</span>
+        {/* Scrollable container */}
+        <div className="max-h-[70vh] overflow-y-auto rounded-xl border border-white/10 p-3 pretty-scroll scrollbar-cute">
+          {loading ? (
+            <CommentsSkeleton />
+          ) : error ? (
+            <div className="text-red-300">{error}</div>
+          ) : (
+            <>
+              {pageData && pageData.comments.length > 0 ? (
+                <div className="space-y-4">{pageData.comments.map((c) => renderComment(c))}</div>
+              ) : (
+                <div className="text-gray-400 text-center py-6 border border-dashed border-white/10 rounded-xl">
+                  No replies yet — be the first to join the conversation.
                 </div>
               )}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleToolbarCommand('bold')}
-                  className="rounded-md border border-white/10 px-2 py-1 text-sm font-semibold text-gray-100 hover:bg-white/10"
-                >
-                  B
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleToolbarCommand('italic')}
-                  className="rounded-md border border-white/10 px-2 py-1 text-sm italic text-gray-100 hover:bg-white/10"
-                >
-                  I
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleToolbarCommand('bullet')}
-                  className="rounded-md border border-white/10 px-2 py-1 text-sm text-gray-100 hover:bg-white/10"
-                >
-                  •
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleToolbarCommand('numbered')}
-                  className="rounded-md border border-white/10 px-2 py-1 text-sm text-gray-100 hover:bg-white/10"
-                >
-                  1.
-                </button>
-              </div>
-              <div
-                ref={editorRef}
-                contentEditable
-                className="min-h-[6rem] w-full rounded-xl border border-white/10 bg-gray-900/80 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                onInput={handleEditorInput}
-                onPaste={handlePaste}
-                suppressContentEditableWarning
-              />
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={submitting || isEditorEmpty}
-                  className="inline-flex items-center gap-2 rounded-full bg-teal-500 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Send className="h-4 w-4" />
-                  Post reply
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="rounded-xl border border-white/10 bg-gray-900/70 px-4 py-3 text-sm text-gray-300 backdrop-blur">
-              Sign in to join the discussion.
-            </div>
+
+              {pageData && pageData.total > pageData.comments.length && (
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    className="text-sm text-teal-300 hover:underline"
+                  >
+                    Load more replies
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
+
+        {user ? (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3 mt-4 border border-white/10 bg-gray-950/70 rounded-xl p-3 backdrop-blur"
+          >
+            {replyParentId && (
+              <div className="text-xs text-gray-300">
+                Replying to{" "}
+                <span className="text-teal-300">@{replyContext.username}</span>
+                <button
+                  type="button"
+                  className="ml-2 text-teal-300 hover:underline"
+                  onClick={() => {
+                    setReplyParentId(null);
+                    setReplyContext({ username: "" });
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            <div
+              ref={editorRef}
+              contentEditable
+              onInput={() => setEditorPlain(editorRef.current?.textContent ?? "")}
+              className="min-h-[3rem] max-h-[8rem] overflow-y-auto border border-white/10 bg-gray-900/80 rounded-lg px-3 py-2 text-sm text-gray-100 focus:ring-2 focus:ring-teal-400 outline-none pretty-scroll scrollbar-cute"
+              suppressContentEditableWarning
+            />
+
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {["B", "I", "•", "1."].map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className="border border-white/10 px-2 py-1 rounded-md text-sm text-gray-200 hover:bg-white/10"
+                    onClick={() =>
+                      document.execCommand(
+                        t === "B"
+                          ? "bold"
+                          : t === "I"
+                          ? "italic"
+                          : t === "•"
+                          ? "insertUnorderedList"
+                          : "insertOrderedList"
+                      )
+                    }
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="submit"
+                disabled={!editorPlain.trim() || submitting}
+                className="flex items-center gap-2 rounded-full bg-teal-500 hover:bg-teal-400 text-gray-900 font-semibold text-sm px-4 py-1.5 disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" /> Post reply
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="border border-white/10 bg-gray-900/70 text-sm text-gray-300 rounded-xl p-3 text-center">
+            Sign in to join the discussion.
+          </div>
+        )}
       </div>
     );
-  },
+  }
 );
 
-Comments.displayName = 'Comments';
-
+Comments.displayName = "Comments";
 export default Comments;

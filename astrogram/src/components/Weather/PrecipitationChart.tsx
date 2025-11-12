@@ -2,14 +2,17 @@ import React, { useMemo } from "react";
 import { formatHourLabel } from "../../lib/time";
 import type { TimeBlock } from "../../types/weather";
 
-interface PrecipitationChartProps {
+export interface PrecipitationChartProps {
   data?: Partial<Record<TimeBlock, number>>;
   unit?: "metric" | "us";
   /**
    * First hour (0-23) that should be included in the chart. Earlier hours will be hidden.
    */
   startHour?: number;
+  /** Extra classes for the OUTER <section> */
   className?: string;
+  /** Extra classes for the INNER overflow scroller (so we can style the scrollbar) */
+  scrollClassName?: string;
 }
 
 type BarDatum = {
@@ -30,10 +33,10 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
   unit = "metric",
   startHour = 0,
   className = "",
+  scrollClassName = "",
 }) => {
   const normalizedStartHour = useMemo(() => {
     if (!Number.isFinite(startHour)) return 0;
-
     const floored = Math.floor(startHour);
     if (floored < 0) return 0;
     if (floored > 23) return 23;
@@ -78,7 +81,7 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
 
       <div className="px-5 sm:px-6 pb-5 pt-3 flex-1 flex">
         {hasData ? (
-          <div className="overflow-x-auto flex-1">
+          <div className={`overflow-x-auto flex-1 ${scrollClassName}`}>
             <div
               role="img"
               aria-label="Bar chart showing precipitation probability by hour"
