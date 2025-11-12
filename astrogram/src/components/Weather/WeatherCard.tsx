@@ -6,18 +6,20 @@ type WeatherCardProps = {
   day: WeatherDay;
   isToday?: boolean;
   unit?: "metric" | "us";
-  timeZone?: string;
-  utcOffsetSeconds?: number;
+  className?: string;
+  forcedActiveBlock?: TimeBlock;
 };
 
+/* ------------------------------ Styling Maps ------------------------------ */
 const levelColors: Record<number, string> = {
-  1: "bg-red-600",     // Worst
-  2: "bg-orange-500",  // Poor
-  3: "bg-yellow-400",  // Moderate
-  4: "bg-lime-400",    // Good
-  5: "bg-green-500",   // Best
+  1: "bg-red-600",
+  2: "bg-orange-500",
+  3: "bg-yellow-400",
+  4: "bg-lime-400",
+  5: "bg-green-500",
 };
 
+/* ---------------------------- Time/Condition Data ------------------------- */
 const timeBlocks: TimeBlock[] = ["0", "3", "6", "12", "18", "21"];
 const conditions: Array<keyof WeatherDay["conditions"]> = [
   "cloudcover",
@@ -31,88 +33,177 @@ const conditionLabels: Record<string, string> = {
   seeing: "Seeing",
 };
 
-function getClosestTimeBlock(): TimeBlock {
-  const now = new Date().getHours();
-  // convert to numbers & sort just in case
-  const blocks = timeBlocks
-    .map((tb) => parseInt(tb, 10))
-    .sort((a, b) => a - b);
+/* --------------------------------- Icons ---------------------------------- */
+const CloudIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path d="M7 18h9a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.8A3.5 3.5 0 0 0 7 18Z" fill="currentColor" />
+  </svg>
+);
+const EyeIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" strokeWidth="1.4" />
+    <circle cx="12" cy="12" r="2.7" fill="currentColor" />
+  </svg>
+);
+const SparkleIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path d="M12 3l1.4 4.2L18 9l-4.2 1.4L12 15l-1.4-4.6L6 9l4.6-1.8L12 3Z" fill="currentColor" />
+  </svg>
+);
 
-  // find first block >= now
-  for (const block of blocks) {
-    if (now <= block) {
-      return block.toString() as TimeBlock;
-    }
+function ConditionIcon({ name }: { name: string }) {
+  switch (name) {
+    case "cloudcover": return <CloudIcon />;
+    case "visibility": return <EyeIcon />;
+    case "seeing":     return <SparkleIcon />;
+    default:           return <span className="w-3 h-3 inline-block rounded-full bg-current" />;
   }
-
-  // if we're past the last block, wrap to the first block tomorrow
-  return blocks[0].toString() as TimeBlock;
 }
 
+/* ---------------------------- Time Block Helper --------------------------- */
+function getClosestTimeBlock(): TimeBlock {
+  const now = new Date().getHours();
+  const blocks = timeBlocks.map((tb) => parseInt(tb, 10)).sort((a, b) => a - b);
+  let best = blocks[0];
+  const circ = (a: number, b: number) => Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
+  for (const b of blocks) if (circ(b, now) < circ(best, now)) best = b;
+  return String(best) as TimeBlock;
+}
+
+/* --------------------------------- Card ----------------------------------- */
 const WeatherCard: React.FC<WeatherCardProps> = ({
   day,
   isToday = false,
   unit = "metric",
-  timeZone,
-  utcOffsetSeconds,
+  className = "",
+  forcedActiveBlock,
 }) => {
-  const activeTime = isToday ? getClosestTimeBlock() : null;
-  const dateLabel = React.useMemo(
-    () => formatWeatherDate(day.date, timeZone, utcOffsetSeconds),
-    [day.date, timeZone, utcOffsetSeconds],
-  );
+  const activeTime: TimeBlock | null = isToday
+    ? (forcedActiveBlock ?? getClosestTimeBlock())
+    : null;
+
+  // Responsive track size: shrinks on small screens to avoid horizontal overflow.
+  const maxTrackPx = unit === "us" ? 52 : 40; // upper cap for larger screens
+  const timeTrack = `clamp(28px, 8vw, ${maxTrackPx}px)`; // min 28px on tiny screens
+  const pillMinW =
+    unit === "us"
+      ? "min-w-[36px] sm:min-w-[52px]"
+      : "min-w-[32px] sm:min-w-[40px]";
+
+  const dateLabel = new Date(day.date).toLocaleDateString(undefined, {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
   return (
-    <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden border border-gray-300 dark:border-gray-700 w-full">
-      {/* Date Header */}
-      <h3 className="text-lg font-semibold px-4 pt-4 pb-2 text-white">
-        {dateLabel}
-      </h3>
+    <div
+      className={[
+        "relative overflow-hidden rounded-lg",
+        "border border-white/10",
+        "bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-slate-800/20",
+        "backdrop-blur-xl text-slate-100",
+        "shadow-[0_16px_36px_rgba(2,6,23,0.35)]",
+        className,
+      ].join(" ")}
+    >
+      <div className="px-5 pb-4 pt-3">
+        {/* Header */}
+        <div className="relative flex items-center justify-between">
+          <h3 className="text-sm sm:text-base font-semibold">{dateLabel}</h3>
+          {isToday && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-cyan-400/12 text-cyan-300 px-2 py-0.5 text-[10px] font-medium ring-1 ring-cyan-400/30">
+              <span className="block w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse" />
+              Today
+            </span>
+          )}
+        </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-[100px_repeat(6,1fr)] gap-x-1 gap-y-2 items-center px-4 pb-4">
-        {/* Time headers */}
-        <div></div>
-        {timeBlocks.map((time) => {
-          const hour = Number.parseInt(time, 10);
-          const label = formatHourLabel(hour, unit);
-          return (
-            <div
-              key={time}
-              className={`text-sm text-center ${time === activeTime && isToday ? "text-cyan-400 font-semibold" : "text-gray-400"}`}
-            >
-              {label}
-            </div>
-          );
-        })}
-
-        {/* Condition rows */}
-
-        {conditions.map((condition) => (
-          <React.Fragment key={String(condition)}>
-            <div className="capitalize text-sm text-gray-300">
-              {conditionLabels[String(condition)] ?? String(condition)}
-            </div>
+        {/* Grid */}
+        <div className="mt-2 min-w-0">
+          <div
+            className="grid gap-x-1.5 gap-y-2 items-center w-full"
+            style={{ gridTemplateColumns: `minmax(72px,auto) repeat(6, minmax(${timeTrack}, 1fr))` }}
+          >
+            {/* Time headers */}
+            <div className="text-[11px] text-slate-300/85 font-medium">Time</div>
             {timeBlocks.map((time) => {
-              const rawValue = day.conditions[condition]?.[time];
-              const level = mapValueToLevel(String(condition), rawValue ?? 0);
-              const colorClass = levelColors[level] ?? "bg-gray-700";
+              const hour = Number.parseInt(time, 10);
+              const raw = formatHourLabel(hour, unit);
+              const label = unit === "us" ? raw.replace(" ", "\u202F") : raw;
               const isActive = time === activeTime && isToday;
 
-              const hour = Number.parseInt(time, 10);
-              const label = formatHourLabel(hour, unit);
-
               return (
-                <div
-                  key={`${String(condition)}-${time}`}
-                  className={`w-6 h-6 mx-auto rounded ${colorClass} ${isActive ? "ring-2 ring-cyan-400" : ""
-                    }`}
-                  title={`${String(condition)} at ${label} = ${rawValue ?? "N/A"}`}
-                />
+                <div key={time} className="flex justify-center min-w-0">
+                  <div
+                    className={[
+                      "text-[10px] px-2 py-0.5 rounded-full text-center leading-4 whitespace-nowrap",
+                      pillMinW,
+                      "transition-colors duration-200",
+                      isActive
+                        ? "bg-sky-500/15 text-sky-200 ring-1 ring-sky-400/30"
+                        : "text-slate-300/70",
+                    ].join(" ")}
+                    aria-current={isActive ? "time" : undefined}
+                  >
+                    {label}
+                  </div>
+                </div>
               );
             })}
-          </React.Fragment>
-        ))}
+
+            {/* Condition rows */}
+            {conditions.map((condition) => (
+              <React.Fragment key={String(condition)}>
+                <div className="flex items-center gap-1.5 text-[13px] text-slate-200">
+                  <span className="text-slate-300/80">
+                    <ConditionIcon name={String(condition)} />
+                  </span>
+                  <span className="capitalize">
+                    {conditionLabels[String(condition)] ?? String(condition)}
+                  </span>
+                </div>
+
+                {timeBlocks.map((time) => {
+                  const rawValue = day.conditions[condition]?.[time];
+                  const level = mapValueToLevel(String(condition), rawValue ?? 0);
+                  const colorClass = levelColors[level] ?? "bg-gray-600";
+                  const isActive = time === activeTime && isToday;
+
+                  const hour = Number.parseInt(time, 10);
+                  const raw = formatHourLabel(hour, unit);
+                  const label = unit === "us" ? raw.replace(" ", "\u202F") : raw;
+
+                  return (
+                    <div key={`${String(condition)}-${time}`} className="flex justify-center min-w-0">
+                      <div
+                        className={[
+                          "w-5 h-5 shrink-0 rounded-full",
+                          colorClass,
+                          "transition-transform duration-150",
+                          "group-hover:scale-[1.05]",
+                          isActive ? "outline outline-2 outline-sky-300" : "",
+                        ].join(" ")}
+                        title={`${String(condition)} at ${label} = ${rawValue ?? "N/A"}`}
+                        aria-label={`${String(condition)} at ${label} = ${rawValue ?? "N/A"}`}
+                      />
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Mini legend */}
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-[10px] text-slate-300/80">Worst</span>
+            <div className="relative mx-2 h-1.5 w-full rounded-full overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-yellow-500 to-green-600 opacity-95" />
+            </div>
+            <span className="text-[10px] text-slate-300/80">Best</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -120,110 +211,51 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
 
 export default WeatherCard;
 
-const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
-  weekday: "short",
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-};
-
-function formatWeatherDate(
-  isoDate: string,
-  timeZone?: string,
-  utcOffsetSeconds?: number,
-): string {
-  if (!isoDate) return "";
-
-  const fallbackDate = new Date(`${isoDate}T00:00:00Z`);
-  const formatWithZone = (tz?: string) => {
-    const opts: Intl.DateTimeFormatOptions = { ...DATE_FORMAT_OPTIONS };
-    if (tz) {
-      opts.timeZone = tz;
-    }
-    return new Intl.DateTimeFormat(undefined, opts).format(fallbackDate);
-  };
-
-  try {
-    if (typeof utcOffsetSeconds !== "number" || Number.isNaN(utcOffsetSeconds)) {
-      return formatWithZone("UTC");
-    }
-
-    const offset = formatOffset(utcOffsetSeconds);
-    const zonedDate = new Date(`${isoDate}T00:00:00${offset}`);
-    const formatOptions: Intl.DateTimeFormatOptions = { ...DATE_FORMAT_OPTIONS };
-    if (timeZone) {
-      formatOptions.timeZone = timeZone;
-    }
-
-    return new Intl.DateTimeFormat(undefined, formatOptions).format(zonedDate);
-  } catch (err) {
-    console.error("Failed to format weather date", err);
-    return formatWithZone("UTC");
-  }
-}
-
-function formatOffset(seconds: number): string {
-  const sign = seconds >= 0 ? "+" : "-";
-  const absSeconds = Math.abs(seconds);
-  const hours = Math.floor(absSeconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const minutes = Math.floor((absSeconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${sign}${hours}:${minutes}`;
-}
-
+/* ---------------------------- Value → Level Map --------------------------- */
 export function mapValueToLevel(condition: string, value: number): number {
   if (value == null || isNaN(value)) return 1;
 
   switch (condition) {
     case "clouds":
     case "cloudcover":
-      // % of sky covered — lower is better
-      if (value <= 10) return 5;        // Crystal clear
-      if (value <= 30) return 4;        // Mostly clear
-      if (value <= 55) return 3;        // Partly cloudy
-      if (value <= 80) return 2;        // Mostly cloudy
-      return 1;                         // Overcast
+      if (value <= 10) return 5;
+      if (value <= 30) return 4;
+      if (value <= 55) return 3;
+      if (value <= 80) return 2;
+      return 1;
 
     case "seeing":
-      // boundary layer height in metres — lower is better for astronomical viewing
-      if (value <= 300) return 5;       // Excellent (very stable)
-      if (value <= 600) return 4;       // Great (low mixing)
-      if (value <= 900) return 3;       // Good (moderate mixing)
-      if (value <= 1200) return 2;      // Fair (higher turbulence)
-      return 1;                         // Very turbulent boundary layer
+      if (value <= 300) return 5;
+      if (value <= 600) return 4;
+      if (value <= 900) return 3;
+      if (value <= 1200) return 2;
+      return 1;
 
     case "transparency":
     case "humidity":
     case "relative_humidity_2m":
-      // % — lower is better
-      if (value < 35) return 5;         // Dry and transparent
-      if (value < 50) return 4;         // Good
-      if (value < 65) return 3;         // Fair
-      if (value < 80) return 2;         // Humid
-      return 1;                         // Very humid / poor transparency
+      if (value < 35) return 5;
+      if (value < 50) return 4;
+      if (value < 65) return 3;
+      if (value < 80) return 2;
+      return 1;
 
     case "visibility":
-      // metres — higher is better. Open-Meteo tops out around 24 km.
-      if (value >= 24000) return 5;    // Crystal clear horizon
-      if (value >= 20000) return 4;    // Excellent
-      if (value >= 16000) return 3;    // Good
-      if (value >= 10000) return 2;    // Fair
-      return 1;                        // Poor
+      if (value >= 24000) return 5;
+      if (value >= 20000) return 4;
+      if (value >= 16000) return 3;
+      if (value >= 10000) return 2;
+      return 1;
 
     case "precipitation":
     case "precipitation_probability":
-      // % — lower is better
-      if (value < 5) return 5;         // Dry
-      if (value < 15) return 4;        // Slight chance
-      if (value < 30) return 3;        // Moderate risk
-      if (value < 60) return 2;        // High chance
-      return 1;                        // Very likely
+      if (value < 5) return 5;
+      if (value < 15) return 4;
+      if (value < 30) return 3;
+      if (value < 60) return 2;
+      return 1;
 
     default:
       return 1;
   }
 }
-

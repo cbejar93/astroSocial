@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+// src/pages/LoungePostDetailPage.tsx
+import React, { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
 import Comments, { type CommentsHandle } from "../components/Comments/Comments";
@@ -10,10 +11,10 @@ import {
   Reply,
   Flag,
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 
+/* ---------------------------- Types ---------------------------- */
 interface Post {
   id: string;
   title: string;
@@ -27,191 +28,186 @@ interface Post {
   images?: string[];
 }
 
+/* ------------------------- Aurora Wrapper ------------------------- */
+const AuroraBorder: React.FC<React.PropsWithChildren<{ className?: string }>> = ({
+  className = "",
+  children,
+}) => (
+  <div
+    className={[
+      "rounded-2xl p-[1px]",
+      "bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]",
+      "min-w-0",
+      className,
+    ].join(" ")}
+  >
+    <div className="rounded-2xl bg-[#0E1626]/80 ring-1 ring-white/10 backdrop-blur-md shadow-[0_16px_60px_rgba(2,6,23,.55)] h-full flex flex-col min-w-0 overflow-hidden">
+      {children}
+    </div>
+  </div>
+);
+
+/* ------------------------- Pill Button ------------------------- */
+const PillButton: React.FC<
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    icon?: React.ReactNode;
+    variant?: "primary" | "outline" | "danger";
+  }
+> = ({ className = "", icon, children, variant = "primary", ...props }) => {
+  const base =
+    "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition focus:outline-none";
+  const styles =
+    variant === "primary"
+      ? "text-white border-0 bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:shadow-lg hover:brightness-[1.05]"
+      : variant === "danger"
+      ? "text-red-300 border border-red-500/30 hover:bg-red-500/10"
+      : "text-gray-200 border border-white/10 hover:bg-white/10";
+  return (
+    <button {...props} className={[base, styles, className].join(" ")}>
+      {icon}
+      {children}
+    </button>
+  );
+};
+
+/* ----------------------------- Page ---------------------------- */
 const LoungePostDetailPage: React.FC = () => {
-  const { loungeName, postId } = useParams<{ loungeName: string; postId: string }>();
+  const { loungeName, postId } = useParams<{ loungeName?: string; postId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const commentsRef = useRef<CommentsHandle>(null);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+  /* ---------------------- Fetch Post ---------------------- */
   useEffect(() => {
     if (!postId) return;
     apiFetch(`/posts/${postId}`)
-      .then(res => res.json())
-      .then((data) => {
-        setPost(data);
-        setActiveImageIndex(0);
-      })
+      .then((res) => res.json())
+      .then((data) => setPost(data))
       .catch(() => setError("Could not load post."))
       .finally(() => setLoading(false));
   }, [postId]);
 
+  /* ---------------------- Close menu when clicking outside ---------------------- */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleDelete = async () => {
-    if (!post) return;
-    setMenuOpen(false);
-    try {
-      const res = await apiFetch(`/posts/delete/${post.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || "Failed to delete post");
-      }
-      navigate(`/lounge/${encodeURIComponent(loungeName ?? "")}`);
-    } catch (err) {
-      console.error("Delete post error:", err);
-    }
+  /* ---------------------- Back button behavior ---------------------- */
+  const handleBack = () => {
+    if (loungeName) navigate(`/lounge/${encodeURIComponent(loungeName)}`);
+    else if (window.history.length > 1) navigate(-1);
+    else navigate("/feed");
   };
 
-  const imageSources = React.useMemo(() => {
-    if (!post) return [] as string[];
-
-    const fromArray = Array.isArray(post.images)
-      ? post.images.filter((src): src is string => typeof src === "string" && src.trim().length > 0)
-      : [];
-
-    if (fromArray.length > 0) {
-      return fromArray.slice(0, 4);
-    }
-
-    if (post.imageUrl && typeof post.imageUrl === "string" && post.imageUrl.trim().length > 0) {
-      return [post.imageUrl];
-    }
-
-    return [] as string[];
-  }, [post]);
-
-  if (loading)
-    return (
-      <div className="w-full py-8 flex justify-center">
-        <div className="w-full max-w-3xl px-0 sm:px-4">Loading...</div>
-      </div>
-    );
-  if (error)
-    return (
-      <div className="w-full py-8 flex justify-center">
-        <div className="w-full max-w-3xl px-0 sm:px-4">{error}</div>
-      </div>
-    );
-  if (!post)
-    return (
-      <div className="w-full py-8 flex justify-center">
-        <div className="w-full max-w-3xl px-0 sm:px-4">Post not found.</div>
-      </div>
-    );
-
-  const isOwn = user?.username === post.username;
-
-  const authorJoined = post.authorJoinedAt
-    ? formatDistanceToNow(new Date(post.authorJoinedAt), { addSuffix: true })
-    : null;
-  const encodedAuthorUsername = encodeURIComponent(post.username);
-
+  /* ---------------------- Post actions ---------------------- */
   const handleQuotePost = () => {
     if (!post) return;
-    commentsRef.current?.quote({
-      username: post.username,
-      text: post.caption,
-    });
+    commentsRef.current?.quote({ username: post.username, text: post.caption });
   };
 
   const handleReplyToPost = () => {
     commentsRef.current?.focusEditor();
   };
 
-  const goToImage = (index: number) => {
-    if (imageSources.length === 0) return;
-    const wrapped = (index + imageSources.length) % imageSources.length;
-    setActiveImageIndex(wrapped);
+  const handleReportPost = async () => {
+    if (!post) return;
+    setReporting(true);
+    try {
+      await apiFetch(`/posts/report/${post.id}`, { method: "POST" });
+      setReportSuccess(true);
+      setTimeout(() => setShowReportModal(false), 1200);
+    } catch (err) {
+      console.error("Report error", err);
+    } finally {
+      setReporting(false);
+    }
   };
 
-  const handlePreviousImage = () => {
-    goToImage(activeImageIndex - 1);
-  };
+  if (loading || error || !post) {
+    return (
+      <div className="h-screen flex items-center justify-center text-gray-400">
+        {error || "Loading..."}
+      </div>
+    );
+  }
 
-  const handleNextImage = () => {
-    goToImage(activeImageIndex + 1);
-  };
+  const imageSources =
+    post.images?.filter((src) => src && src.trim().length > 0) ||
+    (post.imageUrl ? [post.imageUrl] : []);
 
+  const isOwn = user?.username === post.username;
+  const authorJoined = post.authorJoinedAt
+    ? formatDistanceToNow(new Date(post.authorJoinedAt), { addSuffix: true })
+    : null;
+
+  /* ---------------------- Render ---------------------- */
   return (
-    <div className="w-full py-8 flex justify-center">
-      <div className="w-full max-w-3xl px-0 sm:px-4 space-y-8">
-        {loungeName && (
-          <div className="flex">
-            <Link
-              to={`/lounge/${encodeURIComponent(loungeName)}`}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-200 transition hover:bg-white/10"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to {loungeName}
-            </Link>
-          </div>
-        )}
-        <article className="rounded-2xl border border-white/10 bg-gray-950/80 shadow-2xl backdrop-blur">
-          <div className="flex flex-col md:flex-row">
-            <aside className="md:w-60 border-b md:border-b-0 md:border-r border-white/10 bg-gray-950/60 p-5 text-center">
-              <img
-                src={post.avatarUrl ?? '/defaultPfp.png'}
-                alt={`${post.username} avatar`}
-                className="mx-auto h-20 w-20 rounded-full object-cover"
-              />
-              <Link
-                to={`/users/${encodedAuthorUsername}/posts`}
-                className="mt-3 block text-sm font-semibold text-teal-400 hover:underline"
+    <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+      {/* Mobile stacked; Desktop two columns */}
+      <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+        {/* LEFT COLUMN */}
+        <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
+          <AuroraBorder>
+            <div className="relative flex flex-col justify-between h-full min-w-0">
+              <button
+                onClick={handleBack}
+                className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
+                aria-label="Back"
+                title="Back"
               >
-                @{post.username}
-              </Link>
-              <div className="mt-4 space-y-2 text-xs text-gray-400">
-                <div>
-                  Joined{' '}
-                  <span className="font-semibold text-gray-200">
-                    {authorJoined ?? '—'}
-                  </span>
-                </div>
-                <div>
-                  Posts{' '}
-                  <span className="font-semibold text-gray-200">
-                    {post.authorPostCount ?? 0}
-                  </span>
-                </div>
-              </div>
-            </aside>
-            <div className="flex-1 p-6 space-y-6">
-              <header className="flex flex-col gap-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-100">{post.title}</h1>
-                    <p className="text-xs text-gray-400">
-                      Posted {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
-                    </p>
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+
+              <div className="p-5 pt-14 space-y-5 overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* ✅ Perfect circle avatar */}
+                    <div className="relative w-10 h-10 flex-none rounded-full overflow-hidden ring-1 ring-white/10">
+                      <img
+                        src={post.avatarUrl ?? "/defaultPfp.png"}
+                        alt={post.username}
+                        className="absolute inset-0 w-full h-full object-cover block"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-100 truncate">
+                        @{post.username}
+                      </h3>
+                      <p className="text-xs text-gray-400">
+                        Joined {authorJoined ?? "—"} • {post.authorPostCount ?? 0} posts
+                      </p>
+                    </div>
                   </div>
+
                   {isOwn && (
                     <div ref={menuRef} className="relative">
                       <button
                         type="button"
                         onClick={() => setMenuOpen((o) => !o)}
-                        className="rounded-full p-2 text-gray-400 transition hover:text-gray-200"
+                        className="rounded-full p-2 text-gray-400 hover:text-gray-200"
                       >
                         <MoreVertical className="h-5 w-5" />
                       </button>
                       {menuOpen && (
-                        <div className="absolute right-0 mt-2 w-36 rounded-lg border border-white/10 bg-gray-900 shadow-lg">
+                        <div className="absolute right-0 mt-2 w-36 rounded-lg border border-white/10 bg-[#0B1220] shadow-xl overflow-hidden">
                           <button
-                            onClick={handleDelete}
-                            className="block w-full px-4 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10"
+                            onClick={() => navigate(-1)}
+                            className="block w-full px-4 py-2 text-left text-sm text-red-300 transition hover:bg-red-500/10"
                           >
                             Delete Post
                           </button>
@@ -220,108 +216,104 @@ const LoungePostDetailPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={handleQuotePost}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-200 transition hover:bg-white/10"
-                  >
-                    <Quote className="h-4 w-4" /> Quote
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleReplyToPost}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-200 transition hover:bg-white/10"
-                  >
-                    <Reply className="h-4 w-4" /> Reply
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-200 transition hover:bg-white/10"
-                  >
-                    <Flag className="h-4 w-4" /> Report
-                  </button>
+
+                <div className="min-w-0">
+                  <h1 className="text-lg font-bold text-gray-100 mb-2 break-words">
+                    {post.title}
+                  </h1>
+                  <p className="text-sm text-gray-300 leading-relaxed break-words [overflow-wrap:anywhere]">
+                    <span dangerouslySetInnerHTML={{ __html: post.caption }} />
+                  </p>
                 </div>
-              </header>
-              {imageSources.length > 0 && (
-                <div className="space-y-3">
-                  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50">
+
+                {imageSources.length > 0 && (
+                  <div className="rounded-xl overflow-hidden ring-1 ring-white/10">
                     <img
-                      src={imageSources[activeImageIndex]}
-                      alt={`Lounge post image ${activeImageIndex + 1} of ${imageSources.length}`}
-                      className="h-full w-full max-h-[28rem] object-cover"
-                      loading="lazy"
+                      src={imageSources[0]}
+                      alt="Post"
+                      className="w-full object-cover max-h-[45vh]"
                     />
-                    {imageSources.length > 1 && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handlePreviousImage}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-gray-100 transition hover:bg-black/80"
-                          aria-label="Previous image"
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleNextImage}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-gray-100 transition hover:bg-black/80"
-                          aria-label="Next image"
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </button>
-                        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
-                          {imageSources.map((_, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => goToImage(idx)}
-                              className={`h-2 w-2 rounded-full transition ${
-                                idx === activeImageIndex ? "bg-white" : "bg-white/50"
-                              }`}
-                              aria-label={`Go to image ${idx + 1}`}
-                              aria-current={idx === activeImageIndex}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
                   </div>
-                  {imageSources.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {imageSources.map((src, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => goToImage(idx)}
-                          className={`overflow-hidden rounded-xl border transition ${
-                            idx === activeImageIndex
-                              ? "border-teal-400 ring-2 ring-teal-400/50"
-                              : "border-white/10 hover:border-white/30"
-                          }`}
-                          aria-label={`Select image ${idx + 1}`}
-                        >
-                          <img
-                            src={src}
-                            alt={`Thumbnail ${idx + 1}`}
-                            className="h-20 w-full object-cover"
-                            loading="lazy"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              <div
-                className="prose prose-invert max-w-none text-sm leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: post.caption }}
-              />
+                )}
+              </div>
+
+              <div className="border-t border-white/10 p-4 flex justify-center gap-2 bg-[#0E1626]/50 rounded-b-2xl">
+                <PillButton onClick={handleQuotePost} icon={<Quote className="h-4 w-4" />}>
+                  Quote
+                </PillButton>
+                <PillButton onClick={handleReplyToPost} icon={<Reply className="h-4 w-4" />}>
+                  Reply
+                </PillButton>
+                <PillButton
+                  variant="danger"
+                  onClick={() => setShowReportModal(true)}
+                  icon={<Flag className="h-4 w-4" />}
+                >
+                  Report
+                </PillButton>
+              </div>
             </div>
-          </div>
-        </article>
-        <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+          </AuroraBorder>
+        </div>
+
+        {/* RIGHT COLUMN — mobile under, desktop side-by-side */}
+        <aside className="flex flex-col mt-4 lg:mt-0 lg:h-full lg:justify-center lg:min-w-0 order-2">
+          <AuroraBorder>
+            <div className="flex flex-col lg:h-[80vh] min-w-0">
+              <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
+                  Thread Replies
+                </h2>
+              </div>
+
+              <div className="px-5 py-4 space-y-4 min-w-0 overflow-visible lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden">
+                <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
+                  <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+                </div>
+              </div>
+
+              <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
+                Be kind and respectful in your replies 💬
+              </div>
+            </div>
+          </AuroraBorder>
+        </aside>
       </div>
+
+      {/* REPORT MODAL */}
+      {showReportModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[130]">
+          <div className="bg-[#0E1626]/95 ring-1 ring-white/10 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-2xl">
+            {reportSuccess ? (
+              <div className="text-green-400 font-medium">✅ Reported successfully!</div>
+            ) : (
+              <>
+                <AlertTriangle className="mx-auto mb-3 text-yellow-400 h-8 w-8" />
+                <h3 className="text-gray-100 font-semibold mb-2">Report this post?</h3>
+                <p className="text-gray-400 text-sm mb-5">
+                  This will flag the post for moderator review.
+                </p>
+                <div className="flex justify-center gap-3">
+                  <button
+                    onClick={() => setShowReportModal(false)}
+                    disabled={reporting}
+                    className="px-4 py-2 rounded-lg text-gray-300 bg-white/10 hover:bg-white/20 transition text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReportPost}
+                    disabled={reporting}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:brightness-[1.1]"
+                  >
+                    {reporting ? "Reporting..." : "Confirm"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

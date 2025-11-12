@@ -1,4 +1,5 @@
-import React from 'react'
+// src/components/Comments/CommentsSkeleton.tsx
+import React from "react";
 
 const CommentsSkeleton: React.FC<{ count?: number }> = ({ count = 3 }) => {
   return (
@@ -17,7 +18,7 @@ const CommentsSkeleton: React.FC<{ count?: number }> = ({ count = 3 }) => {
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default CommentsSkeleton
+export default CommentsSkeleton;
