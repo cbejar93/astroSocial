@@ -62,8 +62,15 @@ const AuthModal: React.FC<{
   const passwordInputId = `auth-password-${mode}`;
   const confirmPasswordInputId = `auth-confirm-password-${mode}`;
   const isSignupMode = mode === "signup";
+  const passwordCharacterClass = "A-Za-z0-9!@#$%^&*()_+.,?-";
+  const passwordPattern = new RegExp(`^[${passwordCharacterClass}]{8,20}$`);
+  const passwordPatternAttribute = `[${passwordCharacterClass}]{8,20}`;
+  const passwordRequirementsMessage =
+    "Passwords must be 8-20 characters and can include letters, numbers, and !@#$%^&*()_+.,?-";
+  const isPasswordValid = !isSignupMode || passwordPattern.test(password);
   const isSignupDisabled =
-    isSignupMode && (!confirmPassword.trim() || confirmPassword !== password);
+    isSignupMode &&
+    (!password.trim() || !confirmPassword.trim() || confirmPassword !== password || !isPasswordValid);
 
   const handleGoogle = () => (window.location.href = `${base}/auth/google`);
 
@@ -100,6 +107,14 @@ const AuthModal: React.FC<{
     event.preventDefault();
     if (!email.trim() || !password.trim()) {
       setMessage({ tone: "error", text: "Email and password are required." });
+      return;
+    }
+
+    if (isSignupMode && !passwordPattern.test(password)) {
+      setMessage({
+        tone: "error",
+        text: passwordRequirementsMessage,
+      });
       return;
     }
 
@@ -247,9 +262,16 @@ const AuthModal: React.FC<{
               placeholder="Enter a secure password"
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               disabled={submitting}
-              minLength={6}
+              minLength={8}
+              maxLength={20}
+              pattern={passwordPatternAttribute}
               required
             />
+            {isSignupMode && password && !isPasswordValid && (
+              <p className="mt-1 text-sm text-red-300" aria-live="polite">
+                {passwordRequirementsMessage}
+              </p>
+            )}
           </div>
           {isSignupMode && (
             <div>
@@ -268,7 +290,9 @@ const AuthModal: React.FC<{
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
                 disabled={submitting}
-                minLength={6}
+                minLength={8}
+                maxLength={20}
+                pattern={passwordPatternAttribute}
                 required
               />
               {confirmPassword && confirmPassword !== password && (
