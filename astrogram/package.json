@@ -11,6 +11,7 @@
     "test": "node --test --loader ./ts-esm-loader.mjs src/components/Weather/__tests__/*.test.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.51.0",
     "@tailwindcss/vite": "^4.1.11",
     "date-fns": "^4.1.0",
     "icons": "^1.0.0",

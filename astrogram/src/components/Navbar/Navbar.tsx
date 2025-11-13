@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import { search, type SearchResponse } from "../../lib/api";
+import supabase from "../../lib/supabaseClient";
 
 /* ---- Brand Icons ---- */
 const GoogleG: React.FC<{ className?: string }> = ({ className }) => (
@@ -28,15 +29,6 @@ const GoogleG: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const FacebookF: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      fill="currentColor"
-      d="M22 12.06C22 6.55 17.52 2.08 12 2.08S2 6.55 2 12.06c0 4.98 3.66 9.11 8.44 9.88v-6.99H7.9V12.1h2.55V9.83c0-2.52 1.5-3.92 3.8-3.92 1.1 0 2.25.2 2.25.2v2.47h-1.27c-1.25 0-1.64.78-1.64 1.58v1.94h2.79l-.45 2.85h-2.34v6.99C18.34 21.17 22 17.04 22 12.06z"
-    />
-  </svg>
-);
-
 /* ---- Auth Modal ---- */
 type AuthMode = "signup" | "login";
 
@@ -49,9 +41,23 @@ const AuthModal: React.FC<{
   const base = import.meta.env.VITE_API_BASE_URL || "/api";
   const firstButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<
+    | null
+    | {
+        tone: "error" | "info" | "success";
+        text: string;
+      }
+  >(null);
+
+  const emailInputId = `auth-email-${mode}`;
+  const passwordInputId = `auth-password-${mode}`;
 
   const handleGoogle = () => (window.location.href = `${base}/auth/google`);
-  const handleFacebook = () => (window.location.href = `${base}/auth/facebook`);
 
   useEffect(() => {
     if (!open) return;
@@ -66,6 +72,89 @@ const AuthModal: React.FC<{
       clearTimeout(t);
     };
   }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open) {
+      setEmail("");
+      setPassword("");
+      setMessage(null);
+      setSubmitting(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    setMessage(null);
+  }, [mode]);
+
+  const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setMessage({ tone: "error", text: "Email and password are required." });
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage(null);
+
+    try {
+      const result =
+        mode === "login"
+          ? await supabase.auth.signInWithPassword({ email, password })
+          : await supabase.auth.signUp({ email, password });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      const session = result.data.session;
+      if (!session?.access_token) {
+        setMessage({
+          tone: "info",
+          text:
+            mode === "signup"
+              ? "Check your inbox to confirm your email before signing in."
+              : "Unable to retrieve a Supabase session. Please try again.",
+        });
+        return;
+      }
+
+      const response = await fetch(`${base}/auth/supabase`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ accessToken: session.access_token }),
+      });
+      const payload = (await response
+        .json()
+        .catch(() => null)) as { accessToken?: string; message?: string } | null;
+
+      if (!response.ok || !payload?.accessToken) {
+        throw new Error(payload?.message ?? "Unable to complete authentication.");
+      }
+
+      const authedUser = await login(payload.accessToken);
+      setEmail("");
+      setPassword("");
+      setMessage(null);
+      onClose();
+
+      if (!authedUser?.profileComplete) {
+        navigate("/completeProfile");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      setMessage({
+        tone: "error",
+        text:
+          err instanceof Error
+            ? err.message
+            : "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (!open) return null;
 
@@ -106,14 +195,77 @@ const AuthModal: React.FC<{
           <span className="w-full text-center">Continue with Google</span>
         </button>
 
-        {/* Facebook Button */}
-        <button
-          onClick={handleFacebook}
-          className="relative w-full flex items-center justify-center px-4 py-3 rounded-lg bg-[#1877F2] text-white font-medium shadow-[0_4px_10px_rgba(24,119,242,0.3)] hover:shadow-[0_6px_20px_rgba(24,119,242,0.5)] transition-all duration-300 ease-out hover:-translate-y-0.5 animate-slideIn active:scale-95"
-        >
-          <FacebookF className="absolute left-6 w-6 h-6 text-white" />
-          <span className="w-full text-center">Continue with Facebook</span>
-        </button>
+        <form onSubmit={handleEmailSubmit} className="space-y-4 mt-6">
+          <div>
+            <label
+              htmlFor={emailInputId}
+              className="block text-sm font-medium text-gray-200 mb-1"
+            >
+              Email
+            </label>
+            <input
+              id={emailInputId}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-400/60 focus:border-transparent disabled:opacity-60"
+              placeholder="you@example.com"
+              autoComplete="email"
+              disabled={submitting}
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor={passwordInputId}
+              className="block text-sm font-medium text-gray-200 mb-1"
+            >
+              Password
+            </label>
+            <input
+              id={passwordInputId}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-400/60 focus:border-transparent disabled:opacity-60"
+              placeholder="Enter a secure password"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              disabled={submitting}
+              minLength={6}
+              required
+            />
+          </div>
+
+          {message && (
+            <p
+              className={`text-sm ${
+                message.tone === "error"
+                  ? "text-red-300"
+                  : message.tone === "info"
+                    ? "text-amber-200"
+                    : "text-emerald-200"
+              }`}
+              aria-live="polite"
+            >
+              {message.text}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition-all duration-200 disabled:opacity-60"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {mode === "login" ? "Signing you in…" : "Creating your account…"}
+              </>
+            ) : (
+              <span>{mode === "login" ? "Continue with email" : "Create account"}</span>
+            )}
+          </button>
+        </form>
 
         <div className="text-center text-gray-300 mt-6 text-sm">
           {mode === "login" ? (
