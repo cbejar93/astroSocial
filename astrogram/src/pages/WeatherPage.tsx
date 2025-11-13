@@ -172,13 +172,13 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   // Precipitation maps — tolerate different backend keys safely
   const c = (todayData?.conditions as any) ?? {};
   const precipProbMap: HourlyNumberMap =
-    (c.precipprob ??
+    (c.precipitation ??
+      c.precipprob ??
       c.precipProb ??
       c.precipProbability ??
       EMPTY_NUM_MAP) as HourlyNumberMap; // %
   const precipAmtMmMap: HourlyNumberMap =
-    (c.precipitation ??
-      c.precip ??
+    (c.precip ??
       c.precip_mm ??
       c.precipAmount ??
       EMPTY_NUM_MAP) as HourlyNumberMap; // mm/hr
