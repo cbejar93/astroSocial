@@ -672,7 +672,8 @@ const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                setAuthMode("signup");
+                // Always show the login form first when opening the auth modal
+                setAuthMode("login");
                 setAuthOpen(true);
               }}
               className="rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-2 text-sm font-semibold text-white shadow ring-1 ring-white/20 hover:brightness-110"
