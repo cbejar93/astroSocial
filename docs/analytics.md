@@ -1,6 +1,6 @@
 # Analytics instrumentation
 
-AstroSocial now ships with a lightweight analytics pipeline that respects user
+AstroLounge now ships with a lightweight analytics pipeline that respects user
 privacy while giving administrators the metrics they need.
 
 ## Data collection
