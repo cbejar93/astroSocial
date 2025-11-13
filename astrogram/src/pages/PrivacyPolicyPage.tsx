@@ -13,11 +13,11 @@ const PrivacyPolicyPage: FC = () => {
         </div>
 
         <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">
-          Privacy Policy for AstroSocial
+          Privacy Policy for AstroLounge
         </h1>
 
         <p className="mt-2 text-[13.5px] sm:text-[14.5px] leading-7 text-slate-300">
-          AstroSocial (“we,” “us,” or “our”) provides this Privacy Policy to explain how
+          AstroLounge (“we,” “us,” or “our”) provides this Privacy Policy to explain how
           we collect, use, share, and safeguard personal information when you use our
           website and related services (the “Services”). By accessing or using the
           Services, you acknowledge you’ve read and understood this Policy.

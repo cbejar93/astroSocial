@@ -185,7 +185,7 @@ const AdminAnalyticsDashboard: React.FC = () => {
             </span>
           </div>
           <p className="mt-2 text-sm text-gray-300">
-            AstroSocial honors each browser&apos;s Do Not Track signal and lets admins toggle
+            AstroLounge honors each browser&apos;s Do Not Track signal and lets admins toggle
             analytics locally. Events are only sent while tracking is enabled.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
