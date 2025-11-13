@@ -117,16 +117,6 @@ const SignupPage: React.FC = () => {
           {headingText}
         </h1>
 
-        <button
-          onClick={handleGoogleSignIn}
-          className="relative w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-        >
-          <FaGoogle className="absolute left-6 w-5 h-5" />
-          <span className="w-full text-center text-gray-800 dark:text-gray-100 font-medium">
-            Continue with Google
-          </span>
-        </button>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -184,10 +174,46 @@ const SignupPage: React.FC = () => {
                 {isLoginRoute ? "Signing you in…" : "Creating your account…"}
               </>
             ) : (
-              <span>{isLoginRoute ? "Log in with email" : "Create account"}</span>
+              <span>{isLoginRoute ? "Log in" : "Create account"}</span>
             )}
           </button>
         </form>
+
+        <button
+          onClick={handleGoogleSignIn}
+          className="relative w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+        >
+          <FaGoogle className="absolute left-6 w-5 h-5" />
+          <span className="w-full text-center text-gray-800 dark:text-gray-100 font-medium">
+            Continue with Google
+          </span>
+        </button>
+
+        <div className="text-center text-sm text-gray-600 dark:text-gray-300">
+          {isLoginRoute ? (
+            <>
+              Not a user?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/signup")}
+                className="text-sky-500 hover:underline"
+              >
+                Sign up
+              </button>
+            </>
+          ) : (
+            <>
+              Already a user?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="text-sky-500 hover:underline"
+              >
+                Log in
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

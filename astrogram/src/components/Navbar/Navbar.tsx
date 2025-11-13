@@ -105,6 +105,7 @@ const AuthModal: React.FC<{
         text:
           "Email/password authentication is not available. Please configure Supabase credentials and try again.",
       });
+      setSubmitting(false);
       return;
     }
 
@@ -198,17 +199,7 @@ const AuthModal: React.FC<{
           {mode === "login" ? "Welcome Back" : "Create Your Account"}
         </h1>
 
-        {/* Google Button */}
-        <button
-          ref={firstButtonRef}
-          onClick={handleGoogle}
-          className="relative w-full flex items-center justify-center px-4 py-3 mb-4 rounded-lg bg-white text-gray-800 font-medium shadow-[0_4px_10px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.25)] transition-all duration-300 ease-out hover:-translate-y-0.5 animate-floatUp active:scale-95"
-        >
-          <GoogleG className="absolute left-6 w-6 h-6" />
-          <span className="w-full text-center">Continue with Google</span>
-        </button>
-
-        <form onSubmit={handleEmailSubmit} className="space-y-4 mt-6">
+        <form onSubmit={handleEmailSubmit} className="space-y-4 mt-2">
           <div>
             <label
               htmlFor={emailInputId}
@@ -265,6 +256,7 @@ const AuthModal: React.FC<{
           )}
 
           <button
+            ref={firstButtonRef}
             type="submit"
             disabled={submitting}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition-all duration-200 disabled:opacity-60"
@@ -275,15 +267,24 @@ const AuthModal: React.FC<{
                 {mode === "login" ? "Signing you in…" : "Creating your account…"}
               </>
             ) : (
-              <span>{mode === "login" ? "Continue with email" : "Create account"}</span>
+              <span>{mode === "login" ? "Log in" : "Create account"}</span>
             )}
           </button>
         </form>
 
+        {/* Google Button */}
+        <button
+          onClick={handleGoogle}
+          className="relative w-full flex items-center justify-center px-4 py-3 mt-4 rounded-lg bg-white text-gray-800 font-medium shadow-[0_4px_10px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.25)] transition-all duration-300 ease-out hover:-translate-y-0.5 animate-floatUp active:scale-95"
+        >
+          <GoogleG className="absolute left-6 w-6 h-6" />
+          <span className="w-full text-center">Continue with Google</span>
+        </button>
+
         <div className="text-center text-gray-300 mt-6 text-sm">
           {mode === "login" ? (
             <>
-              Don’t have an account?{" "}
+              Not a user?{" "}
               <button
                 type="button"
                 onClick={() => setMode("signup")}
@@ -294,7 +295,7 @@ const AuthModal: React.FC<{
             </>
           ) : (
             <>
-              Already have an account?{" "}
+              Already a user?{" "}
               <button
                 type="button"
                 onClick={() => setMode("login")}
@@ -318,7 +319,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
 
   const [authOpen, setAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<AuthMode>("signup");
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [accountOpen, setAccountOpen] = useState(false);
 
   const btnRef = useRef<HTMLButtonElement | null>(null);
