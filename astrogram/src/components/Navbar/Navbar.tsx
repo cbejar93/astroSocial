@@ -48,6 +48,7 @@ const AuthModal: React.FC<{
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<
     | null
@@ -59,6 +60,17 @@ const AuthModal: React.FC<{
 
   const emailInputId = `auth-email-${mode}`;
   const passwordInputId = `auth-password-${mode}`;
+  const confirmPasswordInputId = `auth-confirm-password-${mode}`;
+  const isSignupMode = mode === "signup";
+  const passwordCharacterClass = "A-Za-z0-9!@#$%";
+  const passwordPattern = new RegExp(`^[${passwordCharacterClass}]{8,20}$`);
+  const passwordPatternAttribute = `[${passwordCharacterClass}]{8,20}`;
+  const passwordRequirementsMessage =
+    "Passwords must be 8-20 characters and can include letters, numbers, and !@#$%";
+  const isPasswordValid = !isSignupMode || passwordPattern.test(password);
+  const isSignupDisabled =
+    isSignupMode &&
+    (!password.trim() || !confirmPassword.trim() || confirmPassword !== password || !isPasswordValid);
 
   const handleGoogle = () => (window.location.href = `${base}/auth/google`);
 
@@ -81,18 +93,33 @@ const AuthModal: React.FC<{
       setEmail("");
       setPassword("");
       setMessage(null);
+      setConfirmPassword("");
       setSubmitting(false);
     }
   }, [open]);
 
   useEffect(() => {
     setMessage(null);
+    setConfirmPassword("");
   }, [mode]);
 
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!email.trim() || !password.trim()) {
       setMessage({ tone: "error", text: "Email and password are required." });
+      return;
+    }
+
+    if (isSignupMode && !passwordPattern.test(password)) {
+      setMessage({
+        tone: "error",
+        text: passwordRequirementsMessage,
+      });
+      return;
+    }
+
+    if (isSignupMode && password !== confirmPassword) {
+      setMessage({ tone: "error", text: "Passwords must match." });
       return;
     }
 
@@ -235,10 +262,46 @@ const AuthModal: React.FC<{
               placeholder="Enter a secure password"
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               disabled={submitting}
-              minLength={6}
+              minLength={8}
+              maxLength={20}
+              pattern={passwordPatternAttribute}
               required
             />
+            {isSignupMode && password && !isPasswordValid && (
+              <p className="mt-1 text-sm text-red-300" aria-live="polite">
+                {passwordRequirementsMessage}
+              </p>
+            )}
           </div>
+          {isSignupMode && (
+            <div>
+              <label
+                htmlFor={confirmPasswordInputId}
+                className="block text-sm font-medium text-gray-200 mb-1"
+              >
+                Confirm password
+              </label>
+              <input
+                id={confirmPasswordInputId}
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-400/60 focus:border-transparent disabled:opacity-60"
+                placeholder="Re-enter your password"
+                autoComplete="new-password"
+                disabled={submitting}
+                minLength={8}
+                maxLength={20}
+                pattern={passwordPatternAttribute}
+                required
+              />
+              {confirmPassword && confirmPassword !== password && (
+                <p className="mt-1 text-sm text-red-300" aria-live="polite">
+                  Passwords do not match.
+                </p>
+              )}
+            </div>
+          )}
 
           {message && (
             <p
@@ -258,7 +321,7 @@ const AuthModal: React.FC<{
           <button
             ref={firstButtonRef}
             type="submit"
-            disabled={submitting}
+            disabled={submitting || isSignupDisabled}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition-all duration-200 disabled:opacity-60"
           >
             {submitting ? (
@@ -672,7 +735,8 @@ const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                setAuthMode("signup");
+                // Always show the login form first when opening the auth modal
+                setAuthMode("login");
                 setAuthOpen(true);
               }}
               className="rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-2 text-sm font-semibold text-white shadow ring-1 ring-white/20 hover:brightness-110"
