@@ -1,12 +1,17 @@
 import {
+  Body,
   Controller,
+  ForbiddenException,
   Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
   Logger,
+  Post,
   Redirect,
   Req,
   Res,
   UseGuards,
-  Post,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type {
@@ -14,9 +19,11 @@ import type {
   Response as ExpressResponse,
 } from 'express';
 import { JwtService } from '@nestjs/jwt';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { AuthService } from './auth.service';
 import { FacebookAuthGuard } from './facebook.guard';
 import { JwtRefreshGuard } from './jwt-refresh-guard';
+import { SupabaseAuthDto } from './dto/supabase-auth.dto';
 
 interface AuthRequest extends ExpressRequest {
   user: {
@@ -42,6 +49,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    @Inject('SUPABASE_CLIENT') private readonly supabase: SupabaseClient,
   ) {}
 
   private getRefreshCookieDomain(isProd: boolean): string {
@@ -156,6 +164,55 @@ export class AuthController {
       secret: process.env.JWT_SECRET,
       expiresIn: '15m',
     });
+    return { accessToken };
+  }
+
+  @Post('supabase')
+  @HttpCode(HttpStatus.OK)
+  async supabaseAuth(
+    @Body() supabaseAuthDto: SupabaseAuthDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    const { accessToken: supabaseAccessToken } = supabaseAuthDto;
+    const { data, error } = await this.supabase.auth.getUser(supabaseAccessToken);
+
+    if (error || !data?.user) {
+      this.logger.warn(`Supabase authentication failed: ${error?.message ?? 'no user returned'}`);
+      throw new ForbiddenException('Invalid Supabase access token');
+    }
+
+    const user = data.user;
+
+    if (!user.email_confirmed_at) {
+      throw new ForbiddenException('Supabase user email not confirmed');
+    }
+
+    const email = user.email ?? user.user_metadata?.email;
+
+    if (!email) {
+      throw new ForbiddenException('Supabase user missing email');
+    }
+
+    const name = user.user_metadata?.full_name ?? email;
+
+    const { accessToken, refreshToken } = await this.authService.validateOAuthLogin(
+      user.id,
+      email,
+      name,
+      'supabase',
+    );
+
+    const isProd = process.env.NODE_ENV === 'production';
+
+    res.cookie('jid', refreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'lax' : 'none',
+      domain: this.getRefreshCookieDomain(isProd),
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return { accessToken };
   }
 }
