@@ -55,9 +55,18 @@ const SignupPage: React.FC = () => {
 
     try {
       const supabase = getSupabaseClient();
+      const emailRedirectTo =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/completeProfile`
+          : "/completeProfile";
+
       const result = isLoginRoute
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo },
+          });
 
       if (result.error) {
         throw result.error;
