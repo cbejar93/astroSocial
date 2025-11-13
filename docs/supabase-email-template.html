@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>Welcome to AstroSocial</title>
+    <style>
+      :root {
+        color-scheme: light only;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0d0b1c;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: #ece7ff;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      .email-wrapper {
+        width: 100%;
+        background: #0d0b1c;
+        padding: 32px 12px;
+      }
+      .email-container {
+        max-width: 560px;
+        margin: 0 auto;
+        background: radial-gradient(circle at 20% 20%, rgba(255, 87, 205, 0.2), rgba(13, 11, 28, 0.95)),
+          #141126;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        box-shadow: 0 25px 60px rgba(4, 0, 32, 0.45);
+        overflow: hidden;
+      }
+      .header {
+        padding: 40px 40px 24px;
+        text-align: center;
+      }
+      .icon-circle {
+        display: inline-flex;
+        width: 72px;
+        height: 72px;
+        border-radius: 999px;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #ff63d2, #7c4dff);
+        box-shadow: 0 12px 30px rgba(124, 77, 255, 0.45);
+        margin-bottom: 16px;
+      }
+      .icon-circle img {
+        width: 48px;
+        height: 48px;
+        display: block;
+        object-fit: contain;
+      }
+      .title {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+        color: #fff8ff;
+        letter-spacing: -0.4px;
+      }
+      .subtitle {
+        margin: 12px auto 0;
+        max-width: 420px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      .cta-block {
+        padding: 32px 40px;
+        text-align: center;
+      }
+      .cta-button {
+        display: inline-block;
+        padding: 16px 48px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f04bb3, #5aa2ff);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: 0.5px;
+        text-decoration: none;
+        box-shadow: 0 12px 30px rgba(90, 162, 255, 0.35);
+      }
+      .token-box {
+        margin-top: 20px;
+        padding: 16px 20px;
+        border: 1px dashed rgba(255, 255, 255, 0.4);
+        border-radius: 12px;
+        font-family: 'JetBrains Mono', 'Fira Mono', 'SFMono-Regular', monospace;
+        color: #ffe7ff;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .token-label {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .token-value {
+        margin-top: 6px;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 6px;
+      }
+      .meta {
+        padding: 0 40px 48px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .meta strong {
+        color: rgba(255, 255, 255, 0.88);
+      }
+      .footer {
+        padding: 32px 24px;
+        text-align: center;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      @media screen and (max-width: 520px) {
+        .email-container {
+          border-radius: 0;
+        }
+        .header,
+        .cta-block,
+        .meta {
+          padding: 32px 24px;
+        }
+        .title {
+          font-size: 24px;
+        }
+        .subtitle {
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <center class="email-wrapper" role="presentation" aria-hidden="true">
+      <table role="presentation" class="email-container">
+        <tr>
+          <td class="header">
+            <div class="icon-circle">
+              <img
+                src="https://xvilibukznymodfvmanw.supabase.co/storage/v1/object/public/posts/AstroLounge%20Final%20favicon_v.png"
+                alt="AstroSocial logo"
+                width="48"
+                height="48"
+                style="display: block; border: 0; width: 48px; height: 48px; object-fit: contain;"
+              />
+            </div>
+            <h1 class="title">Confirm your orbit with AstroSocial</h1>
+            <p class="subtitle">
+              Tap the button below to finish signing in. This link works for the next 24 hours and can only be used once.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td class="cta-block">
+            <a href="{{ .ConfirmationURL }}" class="cta-button">Complete sign in</a>
+            <!-- Supabase injects the short-lived numeric/alpha token into {{ .Token }} for passwordless/OTP flows -->
+            <div class="token-box">
+              <div class="token-label">Or enter this one-time code:</div>
+              <div class="token-value">{{ .Token }}</div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="meta">
+            <p>
+              You received this message because an attempt was made to sign in to <strong>AstroSocial</strong> using this email address.
+              If this wasn’t you, feel free to ignore this email—nothing else will happen.
+            </p>
+            <p>
+              Need help? Reply to this email or visit our <a href="https://astro.social/support" style="color: #ff63d2; text-decoration: none;">support portal</a>.
+            </p>
+          </td>
+        </tr>
+      </table>
+      <div class="footer">
+        Sent with ✦ from the AstroSocial crew · 123 Cosmic Ave · Orbit City
+      </div>
+    </center>
+  </body>
+</html>
