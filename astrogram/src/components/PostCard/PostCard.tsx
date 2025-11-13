@@ -416,7 +416,7 @@ const PostCard: React.FC<PostCardProps> = ({
               className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition"
             >
               <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
-              <span className="font-medium leading-none">Like({starCount})</span>
+              <span className="font-medium leading-none">Star({starCount})</span>
             </button>
 
             <button
@@ -427,7 +427,7 @@ const PostCard: React.FC<PostCardProps> = ({
             >
               <Repeat2 className="w-4 h-4" />
               <span className="font-medium leading-none">
-                {reposted ? "Re-orbited" : "Re-orbit"}({repostCount})
+                {reposted ? "Reposted" : "Repost"}({repostCount})
               </span>
             </button>
 
