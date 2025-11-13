@@ -10,6 +10,7 @@ import { UsersModule } from '../users/users.module';
 import { FacebookStrategy } from './facebook.strategy';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import { JwtRefreshGuard } from './jwt-refresh-guard';
+import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { JwtRefreshGuard } from './jwt-refresh-guard';
       }),
     }),
     UsersModule,
+    SupabaseModule.forRoot(),
   ],
   providers: [
     AuthService,
