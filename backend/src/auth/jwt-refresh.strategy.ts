@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtPayload } from './jwt.strategy'; // or wherever you keep that interface
 import type { Request } from 'express';
+import { decryptRefreshToken } from './token-crypto.util';
 
 interface RequestWithCookies extends Request {
   cookies: Record<string, string>;
@@ -29,7 +30,17 @@ export class JwtRefreshStrategy extends PassportStrategy(
 
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: RequestWithCookies): string | null => req.cookies['jid'] ?? null,
+        (req: RequestWithCookies): string | null => {
+          const encryptedToken = req.cookies['jid'];
+          if (!encryptedToken) {
+            return null;
+          }
+          try {
+            return decryptRefreshToken(encryptedToken);
+          } catch {
+            return null;
+          }
+        },
       ]),
       ignoreExpiration: false,
       secretOrKey: secret,

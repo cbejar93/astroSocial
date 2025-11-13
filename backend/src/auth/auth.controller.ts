@@ -24,6 +24,7 @@ import { AuthService } from './auth.service';
 import { FacebookAuthGuard } from './facebook.guard';
 import { JwtRefreshGuard } from './jwt-refresh-guard';
 import { SupabaseAuthDto } from './dto/supabase-auth.dto';
+import { encryptRefreshToken } from './token-crypto.util';
 
 interface AuthRequest extends ExpressRequest {
   user: {
@@ -96,7 +97,7 @@ export class AuthController {
     }
 
     // 2) Set the refresh token as an HttpOnly cookie
-    res.cookie('jid', refreshToken, {
+    res.cookie('jid', encryptRefreshToken(refreshToken), {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'lax' : 'none',
@@ -138,7 +139,7 @@ export class AuthController {
 
     // set the refresh-token cookie
     this.logger.log('🍪 Setting refresh-token cookie (jid)');
-    res.cookie('jid', refreshToken, {
+    res.cookie('jid', encryptRefreshToken(refreshToken), {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'lax' : 'none',
@@ -204,7 +205,7 @@ export class AuthController {
 
     const isProd = process.env.NODE_ENV === 'production';
 
-    res.cookie('jid', refreshToken, {
+    res.cookie('jid', encryptRefreshToken(refreshToken), {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'lax' : 'none',
