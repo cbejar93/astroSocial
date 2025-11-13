@@ -3,7 +3,10 @@ import { FaGoogle } from "react-icons/fa";
 import { Loader2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import supabase from "../lib/supabaseClient";
+import {
+  getSupabaseClient,
+  isSupabaseConfigured,
+} from "../lib/supabaseClient";
 
 const SignupPage: React.FC = () => {
   const base = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -39,10 +42,19 @@ const SignupPage: React.FC = () => {
       return;
     }
 
+    if (!isSupabaseConfigured()) {
+      setMessage({
+        tone: "error",
+        text: "Email/password authentication is not available. Please configure Supabase credentials and try again.",
+      });
+      return;
+    }
+
     setSubmitting(true);
     setMessage(null);
 
     try {
+      const supabase = getSupabaseClient();
       const result = isLoginRoute
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({ email, password });

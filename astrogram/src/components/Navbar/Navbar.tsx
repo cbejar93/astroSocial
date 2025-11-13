@@ -5,7 +5,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import { search, type SearchResponse } from "../../lib/api";
-import supabase from "../../lib/supabaseClient";
+import {
+  getSupabaseClient,
+  isSupabaseConfigured,
+} from "../../lib/supabaseClient";
 
 /* ---- Brand Icons ---- */
 const GoogleG: React.FC<{ className?: string }> = ({ className }) => (
@@ -96,7 +99,17 @@ const AuthModal: React.FC<{
     setSubmitting(true);
     setMessage(null);
 
+    if (!isSupabaseConfigured()) {
+      setMessage({
+        tone: "error",
+        text:
+          "Email/password authentication is not available. Please configure Supabase credentials and try again.",
+      });
+      return;
+    }
+
     try {
+      const supabase = getSupabaseClient();
       const result =
         mode === "login"
           ? await supabase.auth.signInWithPassword({ email, password })
