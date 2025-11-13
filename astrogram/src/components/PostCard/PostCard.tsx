@@ -427,7 +427,7 @@ const PostCard: React.FC<PostCardProps> = ({
             >
               <Repeat2 className="w-4 h-4" />
               <span className="font-medium leading-none">
-                {reposted ? "Retweeted" : "Retweet"}({repostCount})
+                {reposted ? "Re-orbited" : "Re-orbit"}({repostCount})
               </span>
             </button>
 
