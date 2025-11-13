@@ -30,7 +30,7 @@ const sessionState: AnalyticsSessionState = {
 
 let fetcher: AnalyticsFetcher | null = null;
 let analyticsEnabled = true;
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
 
 export interface TrackEventOptions {
   keepalive?: boolean;

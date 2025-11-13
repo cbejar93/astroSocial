@@ -18,7 +18,8 @@ import {
   updateTemperaturePreference as updateTemperaturePreferenceApi,
 } from "../lib/api";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || "/api";
+const storage = typeof window !== 'undefined' ? window.localStorage : null;
 
 export interface User {
   id: string;
@@ -61,21 +62,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const res = await apiFetch('/users/me');
     const me: User = await res.json();
     setUser(me);
-    localStorage.setItem('USER_SNAPSHOT', JSON.stringify(me));
+    storage?.setItem('USER_SNAPSHOT', JSON.stringify(me));
     return me;
   }, []);
 
   // on mount, rehydrate access token + user snapshot then validate
   useEffect(() => {
-    const savedToken = localStorage.getItem("ACCESS_TOKEN");
-    const savedUser = localStorage.getItem("USER_SNAPSHOT");
+    const savedToken = storage?.getItem("ACCESS_TOKEN");
+    const savedUser = storage?.getItem("USER_SNAPSHOT");
     if (savedToken) {
       setAccessToken(savedToken);
       if (savedUser) {
         try {
           setUser(JSON.parse(savedUser));
         } catch {
-          localStorage.removeItem("USER_SNAPSHOT");
+          storage?.removeItem("USER_SNAPSHOT");
         }
       }
       (async () => {
@@ -87,7 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (!res.ok) throw new Error("Not authenticated");
           const me = await res.json();
           setUser(me);
-          localStorage.setItem("USER_SNAPSHOT", JSON.stringify(me));
+          storage?.setItem("USER_SNAPSHOT", JSON.stringify(me));
         } catch {
           try {
             const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
@@ -97,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (!refreshRes.ok) throw new Error("Refresh failed");
             const { accessToken: newToken } = await refreshRes.json();
             setAccessToken(newToken);
-            localStorage.setItem("ACCESS_TOKEN", newToken);
+            storage?.setItem("ACCESS_TOKEN", newToken);
             const userRes = await fetch(`${API_BASE}/users/me`, {
               headers: { Authorization: `Bearer ${newToken}` },
               credentials: "include",
@@ -105,12 +106,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (!userRes.ok) throw new Error("Not authenticated");
             const me = await userRes.json();
             setUser(me);
-            localStorage.setItem("USER_SNAPSHOT", JSON.stringify(me));
+            storage?.setItem("USER_SNAPSHOT", JSON.stringify(me));
           } catch {
             setUser(null);
             setAccessToken("");
-            localStorage.removeItem("ACCESS_TOKEN");
-            localStorage.removeItem("USER_SNAPSHOT");
+            storage?.removeItem("ACCESS_TOKEN");
+            storage?.removeItem("USER_SNAPSHOT");
           }
         } finally {
           setLoading(false);
@@ -128,7 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (accessToken: string) => {
     // 1) store new access token
     setAccessToken(accessToken);
-    localStorage.setItem("ACCESS_TOKEN", accessToken);
+    storage?.setItem("ACCESS_TOKEN", accessToken);
 
     // 2) fetch the user profile
     setLoading(true);
@@ -144,8 +145,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // drop everything
     setUser(null);
     setAccessToken("");
-    localStorage.removeItem("ACCESS_TOKEN");
-    localStorage.removeItem("USER_SNAPSHOT");
+    storage?.removeItem("ACCESS_TOKEN");
+    storage?.removeItem("USER_SNAPSHOT");
     // optionally call your backend /logout endpoint to clear the refresh cookie
   }, []);
 
@@ -164,7 +165,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ? [...current, loungeId]
           : current.filter((id) => id !== loungeId);
         const updated = { ...prev, followedLounges };
-        localStorage.setItem("USER_SNAPSHOT", JSON.stringify(updated));
+        storage?.setItem("USER_SNAPSHOT", JSON.stringify(updated));
         return updated;
       });
     } catch {
@@ -187,7 +188,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ? [...current, userId]
           : current.filter((id) => id !== userId);
         const updated = { ...prev, following };
-        localStorage.setItem("USER_SNAPSHOT", JSON.stringify(updated));
+        storage?.setItem("USER_SNAPSHOT", JSON.stringify(updated));
         return updated;
       });
     } catch {
@@ -199,7 +200,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     async (temperature: 'C' | 'F'): Promise<User> => {
       const updated = await updateTemperaturePreferenceApi(temperature);
       setUser(updated);
-      localStorage.setItem('USER_SNAPSHOT', JSON.stringify(updated));
+      storage?.setItem('USER_SNAPSHOT', JSON.stringify(updated));
       return updated;
     },
     [],
