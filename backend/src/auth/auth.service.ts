@@ -1,6 +1,6 @@
-import { Injectable }   from '@nestjs/common';
-import { JwtService }   from '@nestjs/jwt';
-import { PrismaClient } from '@prisma/client';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { encryptEmail, hashEmail } from '../utils/crypto';
 
 @Injectable()
@@ -10,6 +10,31 @@ export class AuthService {
 
   private clean(s: string) {
     return s.replace(/\u0000/g, '');
+  }
+
+  private describeProvider(provider: string) {
+    switch (provider) {
+      case 'google':
+        return 'Google';
+      case 'supabase':
+        return 'email/password';
+      default:
+        return provider;
+    }
+  }
+
+  private throwLinkedAccountConflict(existingProvider: string) {
+    const providerLabel = this.describeProvider(existingProvider);
+    throw new ConflictException(
+      `An account with this email already exists via ${providerLabel}. Please continue with ${providerLabel} instead.`,
+    );
+  }
+
+  private isEmailHashConstraint(error: Prisma.PrismaClientKnownRequestError) {
+    if (error.code !== 'P2002') return false;
+    const target = error.meta?.target;
+    if (!target) return false;
+    return Array.isArray(target) ? target.includes('emailHash') : target === 'emailHash';
   }
 
   /**
@@ -33,17 +58,40 @@ export class AuthService {
     const emailEncrypted = encryptEmail(cleanEmail);
     const emailHash      = hashEmail(cleanEmail);
 
-    const user = await this.prisma.user.upsert({
-      where:  { provider_providerId: { provider, providerId: cleanProviderId } },
-      create: {
-        emailEncrypted: emailEncrypted,
-        emailHash:      emailHash,
-        name:           cleanName,
-        provider,
-        providerId:     cleanProviderId,
-      },
-      update: { name: cleanName, emailEncrypted: emailEncrypted, emailHash: emailHash },
-    });
+    const conflictingUser = await this.prisma.user.findUnique({ where: { emailHash } });
+
+    if (
+      conflictingUser &&
+      (conflictingUser.provider !== provider || conflictingUser.providerId !== cleanProviderId)
+    ) {
+      this.throwLinkedAccountConflict(conflictingUser.provider);
+    }
+
+    let user;
+
+    try {
+      user = await this.prisma.user.upsert({
+        where:  { provider_providerId: { provider, providerId: cleanProviderId } },
+        create: {
+          emailEncrypted: emailEncrypted,
+          emailHash:      emailHash,
+          name:           cleanName,
+          provider,
+          providerId:     cleanProviderId,
+        },
+        update: { name: cleanName, emailEncrypted: emailEncrypted, emailHash: emailHash },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && this.isEmailHashConstraint(error)) {
+        if (conflictingUser) {
+          this.throwLinkedAccountConflict(conflictingUser.provider);
+        }
+        throw new ConflictException(
+          'An account with this email already exists via another sign-in method. Please continue with your existing login.',
+        );
+      }
+      throw error;
+    }
 
     const payload = { sub: user.id, email: cleanEmail };
 

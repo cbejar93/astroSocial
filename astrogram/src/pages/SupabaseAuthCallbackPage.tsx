@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
@@ -7,14 +7,21 @@ const SupabaseAuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const base = import.meta.env.VITE_API_BASE_URL || "/api";
+  const [status, setStatus] = useState<{ state: "loading" | "error"; message?: string }>({
+    state: "loading",
+  });
 
   useEffect(() => {
+    setStatus({ state: "loading" });
     const fragment = hash.startsWith("#") ? hash.slice(1) : hash;
     const params = new URLSearchParams(fragment);
     const supabaseAccessToken = params.get("access_token");
 
     if (!supabaseAccessToken) {
-      navigate("/signup", { replace: true });
+      setStatus({
+        state: "error",
+        message: "This confirmation link is missing an access token. Please restart the sign-in flow.",
+      });
       return;
     }
 
@@ -43,8 +50,14 @@ const SupabaseAuthCallbackPage: React.FC = () => {
         } else {
           navigate("/", { replace: true });
         }
-      } catch {
-        navigate("/signup", { replace: true });
+      } catch (err) {
+        setStatus({
+          state: "error",
+          message:
+            err instanceof Error
+              ? err.message
+              : "Unable to complete authentication. Please try again.",
+        });
       }
     };
 
@@ -52,8 +65,31 @@ const SupabaseAuthCallbackPage: React.FC = () => {
   }, [hash, base, login, navigate]);
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      Completing your sign in…
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#050816] text-white px-4">
+      {status.state === "loading" ? (
+        <div className="text-lg font-medium tracking-wide">Completing your sign in…</div>
+      ) : (
+        <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/10 px-8 py-10 text-center shadow-2xl backdrop-blur-xl space-y-6">
+          <div className="text-2xl font-semibold">We couldn’t finish signing you in</div>
+          <p className="text-base text-white/80">{status.message}</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={() => navigate("/signup", { replace: true })}
+              className="flex-1 rounded-full border border-white/30 px-4 py-3 text-white font-semibold transition hover:bg-white/10"
+            >
+              Back to sign up
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/login", { replace: true })}
+              className="flex-1 rounded-full bg-white text-gray-900 font-semibold px-4 py-3 transition hover:brightness-110"
+            >
+              Try logging in
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
