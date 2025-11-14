@@ -114,18 +114,11 @@ const CompleteProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen isolate overflow-hidden bg-[#030712]">
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-black opacity-90" />
-        <div className="absolute -top-24 right-0 h-72 w-72 rounded-full bg-sky-500/20 blur-[120px]" />
-        <div className="absolute -bottom-32 left-0 h-80 w-80 rounded-full bg-fuchsia-500/15 blur-[140px]" />
-      </div>
-
-      <div className="relative z-10 flex items-center justify-center px-4 py-12 lg:py-16">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-lg space-y-6 rounded-3xl border border-white/10 bg-white/10 px-6 py-8 text-white shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
-        >
+    <div className="relative isolate flex min-h-[calc(100vh-5rem)] items-center justify-center px-4 py-12 lg:py-16">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-lg space-y-6 rounded-3xl border border-white/10 bg-white/10 px-6 py-8 text-white shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
+      >
           <div className="space-y-2 text-center">
             <p className="text-xs uppercase tracking-[0.3em] text-white/70">step 02</p>
             <h2 className="text-2xl font-semibold">Complete Your Profile</h2>
