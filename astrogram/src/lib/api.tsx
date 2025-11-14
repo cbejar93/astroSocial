@@ -1,12 +1,13 @@
 // src/lib/api.ts
 import { trackEvent, setAnalyticsFetcher } from './analytics';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
+const storage = typeof window !== 'undefined' ? window.localStorage : null;
 // Some endpoints like the lounges API live at the root without the `/api` prefix.
 // Strip a trailing `/api` segment from the base URL so we can reuse the origin
 // when constructing those absolute URLs.
 
-let accessToken = localStorage.getItem('ACCESS_TOKEN') || '';
+let accessToken = storage?.getItem('ACCESS_TOKEN') || '';
 
 
 export function setAccessToken(token: string) {
@@ -17,7 +18,7 @@ export function setAccessToken(token: string) {
 export async function handleLogin(token: string) {
   setAccessToken(token);
   // optionally persist in localStorage
-  localStorage.setItem('ACCESS_TOKEN', token);
+  storage?.setItem('ACCESS_TOKEN', token);
 }
 
 let refreshPromise: Promise<string> | null = null;
@@ -34,8 +35,8 @@ async function refreshToken(): Promise<string> {
         }
         const { accessToken: newToken } = await res.json();
         setAccessToken(newToken);
-        localStorage.setItem('ACCESS_TOKEN', newToken);
-        localStorage.setItem('jwt', newToken);
+        storage?.setItem('ACCESS_TOKEN', newToken);
+        storage?.setItem('jwt', newToken);
         return newToken;
       })
       .finally(() => {
@@ -78,8 +79,8 @@ export async function apiFetch(
         res = await fetch(url, init);
       } catch {
         setAccessToken('');
-        localStorage.removeItem('ACCESS_TOKEN');
-        localStorage.removeItem('jwt');
+        storage?.removeItem('ACCESS_TOKEN');
+        storage?.removeItem('jwt');
         window.dispatchEvent(new Event('auth-logout'));
         const text = await getErrorText(res);
         throw new Error(`API error ${res.status} ${res.statusText}: ${text}`);

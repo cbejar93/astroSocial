@@ -89,6 +89,7 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
             >
               {bars.map((bar) => {
                 const heightPercent = bar.value === 0 ? 4 : bar.value;
+                const opacity = 0.3 + (bar.value / 100) * 0.7;
 
                 return (
                   <div
@@ -98,10 +99,10 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
                     <span className="text-xs font-semibold text-sky-600 dark:text-sky-300">
                       {bar.value}%
                     </span>
-                    <div className="w-full flex-1 flex items-end justify-center">
+                    <div className="w-full flex-1 flex items-end justify-center h-[120px] sm:h-[150px]">
                       <div
                         className="w-full max-w-[1.75rem] rounded-t-lg bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 transition-all duration-500"
-                        style={{ height: `${heightPercent}%` }}
+                        style={{ height: `${heightPercent}%`, opacity }}
                         aria-hidden="true"
                         title={`${bar.label}: ${bar.value}% chance of precipitation`}
                       />

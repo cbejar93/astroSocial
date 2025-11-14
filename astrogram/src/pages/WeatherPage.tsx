@@ -20,7 +20,7 @@ import type { WeatherData } from "../types/weather";
 import type { TimeBlock } from "../types/weather";
 import { useAuth } from "../hooks/useAuth";
 
-export { parseTimeParts } from "../lib/time";
+export { isWithinDaylight, parseTimeParts } from "../lib/time";
 
 interface WeatherPageProps {
   weather: WeatherData | null;
@@ -80,13 +80,6 @@ const EMPTY_NUM_MAP: HourlyNumberMap = {};
 const SLOTS_24 = [0, 3, 6, 12, 18, 21] as const;
 const circularDiff = (a: number, b: number) =>
   Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
-
-/* ---------------------------- Local converters ---------------------------- */
-const toDisplayTemp = (c: number, unit: "metric" | "us") =>
-  unit === "us" ? Math.round((c * 9) / 5 + 32) : Math.round(c);
-
-const toDisplaySpeed = (kmh: number, unit: "metric" | "us") =>
-  unit === "us" ? Math.round(kmh / 1.60934) : Math.round(kmh);
 
 /* --------------------------------- Page ---------------------------------- */
 const WeatherPage: React.FC<WeatherPageProps> = ({
@@ -179,13 +172,13 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
   // Precipitation maps — tolerate different backend keys safely
   const c = (todayData?.conditions as any) ?? {};
   const precipProbMap: HourlyNumberMap =
-    (c.precipprob ??
+    (c.precipitation ??
+      c.precipprob ??
       c.precipProb ??
       c.precipProbability ??
       EMPTY_NUM_MAP) as HourlyNumberMap; // %
   const precipAmtMmMap: HourlyNumberMap =
-    (c.precipitation ??
-      c.precip ??
+    (c.precip ??
       c.precip_mm ??
       c.precipAmount ??
       EMPTY_NUM_MAP) as HourlyNumberMap; // mm/hr
@@ -260,10 +253,10 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
         }, hourKeys[0]!)
       : "0";
 
-  // Raw values from backend (°C, km/h)
-  const rawWindSpeedKmh = speedMap[chosenKey] ?? 0;
+  // Raw values from backend (already in requested unit)
+  const rawWindSpeed = speedMap[chosenKey] ?? 0;
   const rawWindDirection = directionMap[chosenKey] ?? 0;
-  const rawTempC = tempMap[chosenKey] ?? 0;
+  const rawTemp = tempMap[chosenKey] ?? 0;
 
   const currentCondition = (() => {
     const v = conditionMap[chosenKey];
@@ -291,8 +284,6 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
 
   const toTimeBlock = (n: number): TimeBlock => String(n) as TimeBlock;
 
-  const displayTemp = toDisplayTemp(rawTempC, unit);
-  const displayWind = toDisplaySpeed(rawWindSpeedKmh, unit);
   const windUnitLabel = unit === "us" ? "mph" : "km/h";
 
   return (
@@ -323,7 +314,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                   className="max-w-none"
                   location={String(weather.coordinates)}
                   date={zonedNow.formattedDate}
-                  temperature={displayTemp}
+                  temperature={rawTemp}
                   condition={currentCondition}
                   icon={icon}
                   sunrise={sunrise}
@@ -379,7 +370,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                     />
                     <WindCard
                       className={`h-full ${SECONDARY_CARD_HEIGHT}`}
-                      speed={displayWind}
+                      speed={rawWindSpeed}
                       direction={rawWindDirection}
                       unit={windUnitLabel}
                     />
