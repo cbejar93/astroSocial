@@ -196,7 +196,6 @@ const CompleteProfilePage: React.FC = () => {
             )}
           </button>
         </form>
-      </div>
     </div>
   );
 };
