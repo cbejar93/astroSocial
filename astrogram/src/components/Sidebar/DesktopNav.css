@@ -7,10 +7,12 @@
 .desktop-nav__collapse-inline{display:inline-flex;align-items:center;justify-content:center;background:rgba(30,41,59,.6);color:#e6edff;border:0;border-radius:.75rem;padding:.4rem;cursor:pointer;transition:background-color .2s ease,color .2s ease,box-shadow .2s ease}
 .desktop-nav__collapse-inline:hover,.desktop-nav__collapse-inline:focus-visible{background:#1e293b;color:#f8fbff;box-shadow:0 12px 28px rgba(15,23,42,.35)}
 .desktop-nav__collapse-icon{width:1.1rem;height:1.1rem}
-.desktop-nav__scroll{flex:1;display:flex;flex-direction:column;gap:.5rem;overflow:auto;padding-right:.25rem}
+.desktop-nav__scroll{flex:1;display:flex;flex-direction:column;gap:.5rem;overflow:auto;padding-right:.25rem;position:relative}
+.desktop-nav__active-indicator{position:absolute;left:.25rem;right:.25rem;border-radius:1rem;background:linear-gradient(90deg,#f04bb3 0%,#5aa2ff 100%);box-shadow:0 10px 24px rgba(15,23,42,.45),inset 0 0 0 1px rgba(255,255,255,.18);transform-origin:top center;transition:transform .4s cubic-bezier(.4,.1,.2,1),height .4s cubic-bezier(.4,.1,.2,1),opacity .2s ease;pointer-events:none;z-index:0}
+.desktop-nav__link,.desktop-nav__group{position:relative;z-index:1}
 .desktop-nav__link{display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.625rem 1rem;font-size:1.125rem;font-weight:700;color:#e6edff;text-decoration:none;transition:background-color .2s ease,color .2s ease,box-shadow .2s ease,transform .2s ease}
 .desktop-nav__link:hover,.desktop-nav__link:focus-visible{background-color:rgba(30,41,59,.6);color:#f8fbff;text-decoration:none}
-.desktop-nav__link--active{background:linear-gradient(90deg,#f04bb3 0%,#5aa2ff 100%);color:#fff;box-shadow:0 12px 28px rgba(15,23,42,.45),inset 0 0 0 1px rgba(255,255,255,.2)}
+.desktop-nav__link--active{color:#fff}
 .desktop-nav__icon{width:1.75rem;height:1.75rem;color:#7fd2ff;transition:transform .2s ease,color .2s ease}
 .desktop-nav__link:hover .desktop-nav__icon,.desktop-nav__link:focus-visible .desktop-nav__icon{transform:scale(1.05);color:#b3e5ff}
 .desktop-nav__link--active .desktop-nav__icon{color:#fff}
