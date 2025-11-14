@@ -13,6 +13,7 @@ import { useWeatherService } from "./hooks/useWeatherService";
 
 import SignupPage from "./pages/SignupPage";
 import AuthSuccessPage from "./pages/AuthSuccessPage";
+import SupabaseAuthCallbackPage from "./pages/SupabaseAuthCallbackPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import { RequireProfileCompletion } from "./components/auth/RequireProfileCompletion";
 import RequireAdmin from "./components/auth/RequireAdmin";
@@ -87,6 +88,7 @@ const App: React.FC = () => {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/login" element={<SignupPage />} />
               <Route path="/auth/success" element={<AuthSuccessPage />} />
+              <Route path="/auth/supabase" element={<SupabaseAuthCallbackPage />} />
 
               <Route element={<RequireProfileCompletion />}>
                 <Route path="/" element={<Feed />} />

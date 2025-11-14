@@ -138,10 +138,11 @@ const AuthModal: React.FC<{
 
     try {
       const supabase = getSupabaseClient();
+      const callbackPath = "/auth/supabase";
       const emailRedirectTo =
         typeof window !== "undefined"
-          ? `${window.location.origin}/completeProfile`
-          : "/completeProfile";
+          ? `${window.location.origin}${callbackPath}`
+          : callbackPath;
 
       const result =
         mode === "login"
