@@ -55,9 +55,19 @@ const SignupPage: React.FC = () => {
 
     try {
       const supabase = getSupabaseClient();
+      const callbackPath = "/auth/supabase";
+      const emailRedirectTo =
+        typeof window !== "undefined"
+          ? `${window.location.origin}${callbackPath}`
+          : callbackPath;
+
       const result = isLoginRoute
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo },
+          });
 
       if (result.error) {
         throw result.error;
