@@ -96,7 +96,7 @@ const DesktopNav: React.FC = () => {
   }, [collapsed]);
 
   const recalcIndicator = useCallback(() => {
-    if (!activeLabel || collapsed) {
+    if (!activeLabel) {
       setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
       return;
     }
@@ -118,11 +118,11 @@ const DesktopNav: React.FC = () => {
       height: targetRect.height,
       opacity: 1,
     });
-  }, [activeLabel, collapsed]);
+  }, [activeLabel]);
 
   useLayoutEffect(() => {
     recalcIndicator();
-  }, [recalcIndicator]);
+  }, [recalcIndicator, collapsed]);
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
