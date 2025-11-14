@@ -241,12 +241,9 @@ const DesktopNav: React.FC = () => {
             }
 
             return (
-              <div
-                key="lounges-group"
-                title="Lounges"
-                ref={registerNavNode(label)}
-              >
+              <div key="lounges-group" title="Lounges">
                 <div
+                  ref={registerNavNode(label)}
                   className={[
                     "desktop-nav__link",
                     groupActive ? "desktop-nav__link--active" : "",
