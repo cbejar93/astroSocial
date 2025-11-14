@@ -15,25 +15,8 @@ export interface PrecipitationCardProps {
 }
 
 const toInches = (mm: number) => mm / 25.4;
-
-const coerceNumber = (value: unknown): number | null => {
-  if (value === null || value === undefined) return null;
-  const numeric = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
-};
-
-const coercePercent = (value: unknown): number | null => {
-  const numeric = coerceNumber(value);
-  if (numeric === null) return null;
-  if (numeric <= 0) return 0;
-  if (numeric >= 100) return 100;
-  return Math.round(numeric);
-};
-
-const safeNum = (value: unknown, fallback = 0): number => {
-  const numeric = coerceNumber(value);
-  return numeric === null ? fallback : numeric;
-};
+const safeNum = (v: unknown, d = 0) =>
+  Number.isFinite(v as number) ? (v as number) : d;
 
 const PrecipitationCard: React.FC<PrecipitationCardProps> = ({
   hourlyProbability = {},
@@ -45,14 +28,11 @@ const PrecipitationCard: React.FC<PrecipitationCardProps> = ({
   // sanitize keys to "0"…"23"
   const probMap = useMemo(() => {
     const out: Partial<Record<TimeBlock, number>> = {};
-    if (!hourlyProbability) return out;
-
     for (let h = 0; h < 24; h++) {
-      const key = String(h) as TimeBlock;
-      const percent = coercePercent(hourlyProbability[key]);
-      if (percent !== null) out[key] = percent;
+      const k = String(h);
+      const v = hourlyProbability[k];
+      if (typeof v === "number" && Number.isFinite(v)) out[k as TimeBlock] = v;
     }
-
     return out;
   }, [hourlyProbability]);
 
