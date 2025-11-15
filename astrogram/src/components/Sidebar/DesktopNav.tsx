@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  ChartArea,
 } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
 import { fetchLounges } from "../../lib/api";
@@ -41,6 +42,8 @@ const navItems: NavItem[] = [
   { label: "Lounges", to: "/lounge", icon: LavaLampIcon, matchStartsWith: "/lounge" },
   { label: "Profile", to: "/profile", icon: User },
   { label: "Settings", to: "/settings", icon: Settings },
+  { label: "Admin", to: "/admin/lounge", icon: ChartArea },
+
 ];
 
 const slugFromName = (name: string) => encodeURIComponent(name);
