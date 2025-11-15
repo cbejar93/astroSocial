@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { formatHourLabel } from "../../lib/time";
 import type { WeatherDay, TimeBlock } from "../../types/weather";
 
@@ -8,6 +8,8 @@ type WeatherCardProps = {
   unit?: "metric" | "us";
   className?: string;
   forcedActiveBlock?: TimeBlock;
+  timezone?: string;
+  utcOffsetSeconds?: number;
 };
 
 /* ------------------------------ Styling Maps ------------------------------ */
@@ -77,6 +79,8 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   unit = "metric",
   className = "",
   forcedActiveBlock,
+  timezone = "UTC",
+  utcOffsetSeconds = 0,
 }) => {
   const activeTime: TimeBlock | null = isToday
     ? (forcedActiveBlock ?? getClosestTimeBlock())
@@ -90,12 +94,32 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
       ? "min-w-[36px] sm:min-w-[52px]"
       : "min-w-[32px] sm:min-w-[40px]";
 
-  const dateLabel = new Date(day.date).toLocaleDateString(undefined, {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const dateLabel = useMemo(() => {
+    if (!day?.date) return "";
+
+    const [yearStr, monthStr, dayStr] = day.date.split("-");
+    const year = Number.parseInt(yearStr ?? "", 10);
+    const month = Number.parseInt(monthStr ?? "", 10);
+    const dateNum = Number.parseInt(dayStr ?? "", 10);
+
+    if ([year, month, dateNum].some((n) => Number.isNaN(n))) return day.date;
+
+    const localMidnightUtcMs = Date.UTC(year, month - 1, dateNum, 0, 0, 0);
+    const offsetMs = (utcOffsetSeconds ?? 0) * 1000;
+    const timestamp = localMidnightUtcMs - offsetMs;
+
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        timeZone: timezone || "UTC",
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }).format(new Date(timestamp));
+    } catch (error) {
+      return day.date;
+    }
+  }, [day.date, timezone, utcOffsetSeconds]);
 
   return (
     <div

@@ -34,9 +34,12 @@ describe('AppController (e2e)', () => {
       })
       .overrideProvider(WeatherService)
       .useValue({
-        fetchVisibility: jest
-          .fn()
-          .mockResolvedValue([{ date: '2024-01-01', conditions: {} }]),
+        fetchVisibility: jest.fn().mockResolvedValue({
+          daily: [{ date: '2024-01-01', conditions: {} }],
+          timezone: 'UTC',
+          timezoneAbbreviation: 'UTC',
+          utcOffsetSeconds: 0,
+        }),
         fetchAstronomy: jest.fn().mockResolvedValue([
           {
             datetime: '2024-01-01',
@@ -44,7 +47,7 @@ describe('AppController (e2e)', () => {
             sunset: '19:00',
             moonrise: '09:00',
             moonset: '21:00',
-            moonphase: 0.5,
+            moonphase: 0.85,
           },
         ]),
         fetchLocationName: jest.fn().mockResolvedValue('Test City'),
@@ -70,6 +73,9 @@ describe('AppController (e2e)', () => {
     expect(res.body).toEqual({
       status: 'ok',
       coordinates: 'Test City',
+      timezone: 'UTC',
+      timezoneAbbreviation: 'UTC',
+      utcOffsetSeconds: 0,
       data: [
         {
           date: '2024-01-01',
@@ -79,7 +85,7 @@ describe('AppController (e2e)', () => {
             sunset: '19:00',
             moonrise: '09:00',
             moonset: '21:00',
-            moonPhase: { phase: 'Full Moon', illumination: 50 },
+            moonPhase: { phase: 'Waning Crescent', illumination: 21 },
           },
         },
       ],
