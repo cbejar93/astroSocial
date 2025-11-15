@@ -95,6 +95,6 @@ function mapPhaseName(fraction: number): string {
 
 function calculateIllumination(fraction: number): number {
   const normalized = ((fraction % 1) + 1) % 1;
-  const illumination = 1 - Math.abs(0.5 - normalized) / 0.5;
+  const illumination = 0.5 * (1 - Math.cos(2 * Math.PI * normalized));
   return Math.round(illumination * 100);
 }
