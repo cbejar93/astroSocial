@@ -60,7 +60,7 @@ export class WeatherController {
           moonset: astroRaw.moonset,
           moonPhase: {
             phase: mapPhaseName(astroRaw.moonphase),
-            illumination: Math.round(astroRaw.moonphase * 100),
+            illumination: calculateIllumination(astroRaw.moonphase),
           },
         },
       };
@@ -91,4 +91,10 @@ function mapPhaseName(fraction: number): string {
   if (fraction === 0.75) return 'Last Quarter';
   if (fraction > 0.75 && fraction < 1) return 'Waning Crescent';
   return 'New Moon';
+}
+
+function calculateIllumination(fraction: number): number {
+  const normalized = ((fraction % 1) + 1) % 1;
+  const illumination = 1 - Math.abs(0.5 - normalized) / 0.5;
+  return Math.round(illumination * 100);
 }
