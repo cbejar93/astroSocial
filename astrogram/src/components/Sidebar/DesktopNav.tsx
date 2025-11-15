@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import logoUrl from "../../../public/logo.png";
 import {
@@ -15,6 +15,7 @@ import {
 import LavaLampIcon from "../Icons/LavaLampIcons";
 import { fetchLounges } from "../../lib/api";
 import "./DesktopNav.css";
+import { useAuth } from "../../hooks/useAuth";
 
 type IconComponent = React.ComponentType<{ className?: string }>;
 
@@ -51,6 +52,7 @@ const BRAND_NAME = "AstroLounge";
 
 const DesktopNav: React.FC = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const [loungesOpen, setLoungesOpen] = useState<boolean>(
     location.pathname.startsWith("/lounge")
   );
@@ -72,6 +74,12 @@ const DesktopNav: React.FC = () => {
       setOpenLoungeId(null);
     }
   }, [collapsed]);
+
+  const filteredNavItems = useMemo(() => {
+    return navItems.filter((item) =>
+      item.label === "Admin" ? user?.role === "ADMIN" : true
+    );
+  }, [user]);
 
   return (
     <nav
@@ -126,7 +134,7 @@ const DesktopNav: React.FC = () => {
 
       {/* NAVIGATION LINKS */}
       <div id="desktop-nav-scroll" className="desktop-nav__scroll">
-        {navItems.map(({ label, to, icon: Icon, matchStartsWith }) => {
+        {filteredNavItems.map(({ label, to, icon: Icon, matchStartsWith }) => {
           const isActive = matchStartsWith
             ? location.pathname.startsWith(matchStartsWith)
             : location.pathname === to;
