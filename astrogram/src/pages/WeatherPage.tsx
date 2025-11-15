@@ -346,6 +346,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                             day={day}
                             isToday={index === 0}
                             unit={unit}
+                            timezone={timeZone}
+                            utcOffsetSeconds={weather?.utcOffsetSeconds ?? 0}
                             forcedActiveBlock={
                               index === 0 ? toTimeBlock(activeSlot24) : undefined
                             }
@@ -417,6 +419,8 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                     day={day}
                     isToday={index === 0}
                     unit={unit}
+                    timezone={timeZone}
+                    utcOffsetSeconds={weather?.utcOffsetSeconds ?? 0}
                     forcedActiveBlock={
                       index === 0 ? toTimeBlock(activeSlot24) : undefined
                     }
