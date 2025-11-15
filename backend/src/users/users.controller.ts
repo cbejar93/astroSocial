@@ -14,6 +14,7 @@ import {
   Delete,
   Param,
   HttpException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
@@ -133,6 +134,20 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async deleteMe(@Req() req: Request & { user: { sub: string } }) {
     await this.usersService.deleteUser(req.user.sub);
+    return { success: true };
+  }
+
+  @Delete('admin/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteUserAsAdmin(
+    @Req() req: Request & { user: { role: string } },
+    @Param('id') userId: string,
+  ) {
+    if (req.user.role !== 'ADMIN') {
+      throw new ForbiddenException();
+    }
+
+    await this.usersService.deleteUser(userId);
     return { success: true };
   }
 
