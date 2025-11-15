@@ -1,4 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import logoUrl from "../../../public/logo.png";
 import {
@@ -57,6 +64,24 @@ const DesktopNav: React.FC = () => {
   const [openLoungeId, setOpenLoungeId] = useState<string | null>(null);
   const [loungesList, setLoungesList] = useState<LoungeInfo[]>([]);
   const [collapsed, setCollapsed] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const navNodeRefs = useRef<Record<string, HTMLElement | null>>({});
+  const [indicatorStyle, setIndicatorStyle] = useState({
+    top: 0,
+    height: 0,
+    opacity: 0,
+  });
+
+  const activeTopLevelItem = useMemo(() => {
+    return (
+      navItems.find(({ to, matchStartsWith }) =>
+        matchStartsWith
+          ? location.pathname.startsWith(matchStartsWith)
+          : location.pathname === to
+      ) ?? null
+    );
+  }, [location.pathname]);
+  const activeLabel = activeTopLevelItem?.label ?? null;
 
   useEffect(() => {
     fetchLounges<LoungeInfo>().then(setLoungesList).catch(() => {});
@@ -72,6 +97,60 @@ const DesktopNav: React.FC = () => {
       setOpenLoungeId(null);
     }
   }, [collapsed]);
+
+  const recalcIndicator = useCallback(() => {
+    if (!activeLabel) {
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+      return;
+    }
+
+    const scrollEl = scrollRef.current;
+    const targetNode = navNodeRefs.current[activeLabel];
+
+    if (!scrollEl || !targetNode) {
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+      return;
+    }
+
+    const scrollRect = scrollEl.getBoundingClientRect();
+    const targetRect = targetNode.getBoundingClientRect();
+    const top = targetRect.top - scrollRect.top + scrollEl.scrollTop;
+
+    setIndicatorStyle({
+      top,
+      height: targetRect.height,
+      opacity: 1,
+    });
+  }, [activeLabel]);
+
+  useLayoutEffect(() => {
+    recalcIndicator();
+  }, [recalcIndicator, collapsed]);
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    scrollEl.addEventListener("scroll", recalcIndicator, { passive: true });
+    window.addEventListener("resize", recalcIndicator);
+
+    return () => {
+      scrollEl.removeEventListener("scroll", recalcIndicator);
+      window.removeEventListener("resize", recalcIndicator);
+    };
+  }, [recalcIndicator]);
+
+  const registerNavNode = useCallback(
+    (label: string) => (node: HTMLElement | null) => {
+      navNodeRefs.current[label] = node;
+      if (label === activeLabel) {
+        requestAnimationFrame(() => {
+          recalcIndicator();
+        });
+      }
+    },
+    [activeLabel, recalcIndicator]
+  );
 
   return (
     <nav
@@ -125,7 +204,19 @@ const DesktopNav: React.FC = () => {
       </div>
 
       {/* NAVIGATION LINKS */}
-      <div id="desktop-nav-scroll" className="desktop-nav__scroll">
+      <div
+        id="desktop-nav-scroll"
+        ref={scrollRef}
+        className="desktop-nav__scroll"
+      >
+        <div
+          className="desktop-nav__active-indicator"
+          style={{
+            opacity: indicatorStyle.opacity,
+            transform: `translateY(${indicatorStyle.top}px)`,
+            height: `${indicatorStyle.height}px`,
+          }}
+        />
         {navItems.map(({ label, to, icon: Icon, matchStartsWith }) => {
           const isActive = matchStartsWith
             ? location.pathname.startsWith(matchStartsWith)
@@ -138,6 +229,7 @@ const DesktopNav: React.FC = () => {
                 <NavLink
                   key="lounges-collapsed"
                   to="/lounge"
+                  ref={registerNavNode(label)}
                   className={({ isActive: a }) =>
                     ["desktop-nav__link", a || groupActive ? "desktop-nav__link--active" : ""]
                       .filter(Boolean)
@@ -154,6 +246,7 @@ const DesktopNav: React.FC = () => {
             return (
               <div key="lounges-group" title="Lounges">
                 <div
+                  ref={registerNavNode(label)}
                   className={[
                     "desktop-nav__link",
                     groupActive ? "desktop-nav__link--active" : "",
@@ -282,6 +375,7 @@ const DesktopNav: React.FC = () => {
             <NavLink
               key={label}
               to={to}
+              ref={registerNavNode(label)}
               className={({ isActive: navLinkActive }) => {
                 const active = navLinkActive || isActive;
                 return ["desktop-nav__link", active ? "desktop-nav__link--active" : ""]
