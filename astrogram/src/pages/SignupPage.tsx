@@ -7,6 +7,7 @@ import {
   getSupabaseClient,
   isSupabaseConfigured,
 } from "../lib/supabaseClient";
+import { fireAccountCreationConversion } from "../lib/googleAds";
 
 const SignupPage: React.FC = () => {
   const base = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -71,6 +72,10 @@ const SignupPage: React.FC = () => {
 
       if (result.error) {
         throw result.error;
+      }
+
+      if (!isLoginRoute) {
+        fireAccountCreationConversion();
       }
 
       const session = result.data.session;
