@@ -9,6 +9,7 @@ import {
   getSupabaseClient,
   isSupabaseConfigured,
 } from "../../lib/supabaseClient";
+import { fireAccountCreationConversion } from "../../lib/googleAds";
 
 /* ---- Brand Icons ---- */
 const GoogleG: React.FC<{ className?: string }> = ({ className }) => (
@@ -155,6 +156,10 @@ const AuthModal: React.FC<{
 
       if (result.error) {
         throw result.error;
+      }
+
+      if (mode === "signup") {
+        fireAccountCreationConversion();
       }
 
       const session = result.data.session;
