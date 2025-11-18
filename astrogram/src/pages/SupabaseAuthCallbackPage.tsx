@@ -16,6 +16,10 @@ const SupabaseAuthCallbackPage: React.FC = () => {
     const fragment = hash.startsWith("#") ? hash.slice(1) : hash;
     const params = new URLSearchParams(fragment);
     const supabaseAccessToken = params.get("access_token");
+    console.log('[SupabaseAuthCallback] Hash parsed', {
+      hasToken: Boolean(supabaseAccessToken),
+      tokenLength: supabaseAccessToken?.length ?? 0,
+    });
 
     if (!supabaseAccessToken) {
       setStatus({
@@ -33,9 +37,17 @@ const SupabaseAuthCallbackPage: React.FC = () => {
           credentials: "include",
           body: JSON.stringify({ accessToken: supabaseAccessToken }),
         });
+        console.log('[SupabaseAuthCallback] Posted to backend', {
+          status: response.status,
+          ok: response.ok,
+        });
         const payload = (await response
           .json()
           .catch(() => null)) as { accessToken?: string; message?: string } | null;
+        console.log('[SupabaseAuthCallback] Backend payload parsed', {
+          hasAccessToken: Boolean(payload?.accessToken),
+          message: payload?.message,
+        });
 
         if (!response.ok || !payload?.accessToken) {
           throw new Error(payload?.message ?? "Unable to complete authentication.");
@@ -51,6 +63,7 @@ const SupabaseAuthCallbackPage: React.FC = () => {
           navigate("/", { replace: true });
         }
       } catch (err) {
+        console.error('[SupabaseAuthCallback] Error completing auth', err);
         setStatus({
           state: "error",
           message:
