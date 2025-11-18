@@ -70,8 +70,6 @@ docker build \
 
 In CI (e.g., GitHub Actions) store the values as repository secrets and forward them as build args so the frontend bundle can initialize Supabase during the build.
 
-> ℹ️ If you keep the credentials in a GitHub *environment* (e.g., `prod`), make sure the workflow job declares the same `environment` so those secrets can be read when `flyctl deploy` or `docker build` runs.
-
 ### Backend (runtime variables)
 
 The NestJS backend reads `SUPA_URL` and `SUPA_SERVICE_KEY` via `process.env`. When deploying to Fly.io (or any other runtime) set them through the platform’s secret manager, for example:
