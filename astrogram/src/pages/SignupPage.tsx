@@ -38,6 +38,11 @@ const SignupPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log('[SignupPage] Form submitted', {
+      isLoginRoute,
+      emailProvided: Boolean(email.trim()),
+      supabaseConfigured: isSupabaseConfigured(),
+    });
     if (!email.trim() || !password.trim()) {
       setMessage({ tone: "error", text: "Email and password are required." });
       return;
@@ -56,11 +61,13 @@ const SignupPage: React.FC = () => {
 
     try {
       const supabase = getSupabaseClient();
+      console.log('[SignupPage] Obtained Supabase client. Starting auth flow.', { mode: isLoginRoute ? 'login' : 'signup' });
       const callbackPath = "/auth/supabase";
       const emailRedirectTo =
         typeof window !== "undefined"
           ? `${window.location.origin}${callbackPath}`
           : callbackPath;
+      console.log('[SignupPage] Using email redirect', { emailRedirectTo });
 
       const result = isLoginRoute
         ? await supabase.auth.signInWithPassword({ email, password })
@@ -69,6 +76,10 @@ const SignupPage: React.FC = () => {
             password,
             options: { emailRedirectTo },
           });
+      console.log('[SignupPage] Supabase response received', {
+        error: result.error?.message,
+        hasSession: Boolean(result.data.session?.access_token),
+      });
 
       if (result.error) {
         throw result.error;
@@ -95,9 +106,17 @@ const SignupPage: React.FC = () => {
         credentials: "include",
         body: JSON.stringify({ accessToken: session.access_token }),
       });
+      console.log('[SignupPage] Backend /auth/supabase response', {
+        status: response.status,
+        ok: response.ok,
+      });
       const payload = (await response
         .json()
         .catch(() => null)) as { accessToken?: string; message?: string } | null;
+      console.log('[SignupPage] Backend payload parsed', {
+        hasAccessToken: Boolean(payload?.accessToken),
+        message: payload?.message,
+      });
 
       if (!response.ok || !payload?.accessToken) {
         throw new Error(payload?.message ?? "Unable to complete authentication.");
@@ -113,6 +132,7 @@ const SignupPage: React.FC = () => {
         navigate("/", { replace: true });
       }
     } catch (err) {
+      console.error('[SignupPage] Error during Supabase flow', err);
       setMessage({
         tone: "error",
         text:
