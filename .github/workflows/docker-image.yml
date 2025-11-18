@@ -9,10 +9,13 @@ on:
 env:
   FLY_REGISTRY: registry.fly.io/astrosocial
   VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: prod
     outputs:
       image: ${{ steps.meta.outputs.image }}
       digest: ${{ steps.meta.outputs.digest }}
@@ -38,6 +41,8 @@ jobs:
           file: Dockerfile
           build-args: |
             VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+            VITE_SUPABASE_URL=${{ env.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ env.VITE_SUPABASE_ANON_KEY }}
           tags: ${{ env.FLY_REGISTRY }}:${{ github.sha }}
           push: ${{ github.event_name == 'push' }}
           cache-from: type=gha
