@@ -106,6 +106,11 @@ const AuthModal: React.FC<{
 
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log('[AuthModal] Email auth submit', {
+      mode,
+      emailProvided: Boolean(email.trim()),
+      supabaseConfigured: isSupabaseConfigured(),
+    });
     if (!email.trim() || !password.trim()) {
       setMessage({ tone: "error", text: "Email and password are required." });
       return;
@@ -139,11 +144,13 @@ const AuthModal: React.FC<{
 
     try {
       const supabase = getSupabaseClient();
+      console.log('[AuthModal] Obtained Supabase client. Beginning auth flow.');
       const callbackPath = "/auth/supabase";
       const emailRedirectTo =
         typeof window !== "undefined"
           ? `${window.location.origin}${callbackPath}`
           : callbackPath;
+      console.log('[AuthModal] Email redirect URL', { emailRedirectTo });
 
       const result =
         mode === "login"
@@ -153,6 +160,10 @@ const AuthModal: React.FC<{
               password,
               options: { emailRedirectTo },
             });
+      console.log('[AuthModal] Supabase response received', {
+        error: result.error?.message,
+        hasSession: Boolean(result.data.session?.access_token),
+      });
 
       if (result.error) {
         throw result.error;
@@ -180,9 +191,17 @@ const AuthModal: React.FC<{
         credentials: "include",
         body: JSON.stringify({ accessToken: session.access_token }),
       });
+      console.log('[AuthModal] Backend /auth/supabase response', {
+        status: response.status,
+        ok: response.ok,
+      });
       const payload = (await response
         .json()
         .catch(() => null)) as { accessToken?: string; message?: string } | null;
+      console.log('[AuthModal] Backend payload parsed', {
+        hasAccessToken: Boolean(payload?.accessToken),
+        message: payload?.message,
+      });
 
       if (!response.ok || !payload?.accessToken) {
         throw new Error(payload?.message ?? "Unable to complete authentication.");
@@ -200,6 +219,7 @@ const AuthModal: React.FC<{
         navigate("/");
       }
     } catch (err) {
+      console.error('[AuthModal] Error during Supabase flow', err);
       setMessage({
         tone: "error",
         text:
