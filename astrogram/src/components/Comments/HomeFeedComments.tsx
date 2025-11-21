@@ -198,9 +198,11 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
     const renderComment = (comment: HomeFeedCommentItem, depth = 0): JSX.Element => (
       <div
         key={comment.id}
-        className={`rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_6px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl backdrop-saturate-150 ${
-          depth ? "ml-5" : ""
-        }`}
+        className={
+          depth
+            ? "ml-6 border-l border-white/10 pl-4 py-3"
+            : "rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_6px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl backdrop-saturate-150"
+        }
       >
         <div className="flex gap-3">
           <Link
@@ -272,7 +274,7 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
             </div>
 
             {(repliesByParent.get(comment.id) ?? []).length > 0 && (
-              <div className="space-y-3 border-l border-white/10 pl-4">
+              <div className="space-y-3">
                 {repliesByParent.get(comment.id)?.map((reply) => renderComment(reply, depth + 1))}
               </div>
             )}
