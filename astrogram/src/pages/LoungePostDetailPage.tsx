@@ -158,7 +158,7 @@ const LoungePostDetailPage: React.FC = () => {
   return (
     <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
       {/* Mobile stacked; Desktop two columns */}
-      <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+      <div className="w-full max-w-6xl mx-auto px-2 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN */}
         <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
           <AuroraBorder>
@@ -258,7 +258,11 @@ const LoungePostDetailPage: React.FC = () => {
 
         {/* RIGHT COLUMN — mobile under, desktop side-by-side */}
         <aside className="flex flex-col mt-4 lg:mt-0 lg:h-full lg:justify-center lg:min-w-0 order-2">
-          <AuroraBorder>
+          <div className="lg:hidden">
+            <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+          </div>
+
+          <AuroraBorder className="hidden lg:block">
             <div className="flex flex-col lg:h-[80vh] min-w-0">
               <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-100 tracking-wide">

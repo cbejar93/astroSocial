@@ -164,7 +164,7 @@ const PostPage: React.FC = () => {
   return (
     <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
-      <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+      <div className="w-full max-w-6xl mx-auto px-1 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">
           <AuroraBorder>
@@ -256,27 +256,7 @@ const PostPage: React.FC = () => {
 
           {/* MOBILE THREAD (stacked under the post) */}
           <div className="mt-4 lg:hidden">
-            <AuroraBorder>
-              <div className="flex flex-col min-w-0">
-                <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
-                    Thread Replies
-                  </h2>
-                </div>
-                <div className="px-5 py-4 space-y-4">
-                  <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
-                    <HomeFeedComments
-                      ref={commentsRef}
-                      postId={String(post.id)}
-                      pageSize={10}
-                    />
-                  </div>
-                </div>
-                <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
-                  Be kind and respectful in your replies 💬
-                </div>
-              </div>
-            </AuroraBorder>
+            <HomeFeedComments ref={commentsRef} postId={String(post.id)} pageSize={10} />
           </div>
         </div>
 
