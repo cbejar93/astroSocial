@@ -117,7 +117,7 @@ const PostPage: React.FC = () => {
         <div className="lg:h-full lg:flex lg:flex-col lg:min-w-0">
           <AuroraBorder>
             <div className="relative flex flex-col h-full min-w-0">
-              <div className="p-3 sm:p-5 pt-4 sm:pt-6 overflow-hidden">
+              <div className="p-3 sm:p-5 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
