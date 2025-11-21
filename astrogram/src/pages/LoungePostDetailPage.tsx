@@ -106,7 +106,7 @@ const LoungePostDetailPage: React.FC = () => {
           <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
             <AuroraBorder>
               <div
-                className="relative flex flex-col h-full min-w-0 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.45)] bg-white/5 sm:bg-[#0E1626]/80"
+                className="relative flex flex-col h-full min-w-0 rounded-2xl backdrop-blur-xl backdrop-saturate-150 border border-white/10 shadow-[0_6px_30px_rgba(0,0,0,0.35)] bg-white/[0.04]"
               >
                 <button
                   onClick={handleBack}
@@ -134,7 +134,7 @@ const LoungePostDetailPage: React.FC = () => {
                         @{post.username}
                       </h3>
                       <p className="text-xs text-gray-400">
-                        Joined {authorJoined ?? "—"} • {post.authorPostCount ?? 0} posts
+                        Joined {authorJoined ?? "—"}
                       </p>
                     </div>
                   </div>

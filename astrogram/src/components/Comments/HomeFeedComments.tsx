@@ -323,7 +323,7 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="w-full rounded-3xl bg-white/[0.04] border border-white/10 px-4 py-3 pr-28 text-sm text-white placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/50 min-h-[112px] resize-none pretty-scroll scrollbar-cute"
+                className="w-full rounded-3xl bg-white/[0.04] border border-white/10 px-4 py-2.5 pr-28 text-sm text-white placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/50 min-h-[88px] resize-none pretty-scroll scrollbar-cute"
                 placeholder="Share your thoughts..."
               />
               <button
