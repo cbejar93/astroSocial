@@ -1,6 +1,6 @@
 // src/pages/PostPage.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
 import HomeFeedComments, {
@@ -135,7 +135,7 @@ const PostPage: React.FC = () => {
                 <ArrowLeft className="h-4 w-4" />
               </button>
 
-              <div className="p-3 sm:p-5 pt-4 sm:pt-6 space-y-5 overflow-hidden">
+              <div className="p-3 sm:p-5 pt-4 sm:pt-6 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
@@ -143,14 +143,17 @@ const PostPage: React.FC = () => {
                       alt={post.username}
                       className="w-10 h-10 rounded-full ring-1 ring-white/10 shrink-0"
                     />
-                    <div className="min-w-0 flex items-center gap-2">
+                    <Link
+                      to={`/profile/${post.username}`}
+                      className="min-w-0 flex items-center gap-2 hover:text-white transition"
+                    >
                       <h3 className="text-sm font-semibold text-gray-100 truncate">
                         @{post.username}
                       </h3>
                       <span className="text-xs text-gray-400 whitespace-nowrap">
                         • {timeSincePost}
                       </span>
-                    </div>
+                    </Link>
                   </div>
 
                   {isOwn && (
@@ -176,7 +179,7 @@ const PostPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 space-y-2">
                   {post.title && (
                     <h1 className="text-lg font-bold text-gray-100 mb-2 break-words">{post.title}</h1>
                   )}
@@ -186,7 +189,7 @@ const PostPage: React.FC = () => {
                 </div>
 
                 {imageSources.length > 0 && (
-                  <div className="rounded-xl overflow-hidden ring-1 ring-white/10">
+                  <div className="rounded-xl overflow-hidden ring-1 ring-white/10 w-full mt-4">
                     <img
                       src={imageSources[0]}
                       alt="Post"
