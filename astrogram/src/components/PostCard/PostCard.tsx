@@ -347,13 +347,13 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Reposted badge */}
         {repostedBy && (
-          <div className="px-4 sm:px-6 pt-3 text-xs text-slate-300">
+          <div className="px-0 sm:px-6 pt-3 text-xs text-slate-300">
             Reposted by {repostedBy}
           </div>
         )}
 
         {/* Header */}
-        <div className="relative z-[1] px-4 sm:px-6 pt-3 pb-2 flex justify-between items-start">
+        <div className="relative z-[1] px-0 sm:px-6 pt-3 pb-2 flex justify-between items-start">
           <Link
             to={`/users/${encodedUsername}/posts`}
             onClick={(e) => e.stopPropagation()}
@@ -376,13 +376,13 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
 
         {/* Caption */}
-        <div className="relative z-[1] px-4 sm:px-6 pb-2 text-[14px] leading-snug text-slate-200/95">
+        <div className="relative z-[1] px-0 sm:px-6 pb-2 text-[14px] leading-snug text-slate-200/95">
           {caption}
         </div>
 
         {/* Media */}
         {imageUrl && (
-          <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
+          <div className="relative z-[1] w-full px-0 sm:px-6 pb-1.5">
             <div className="overflow-hidden rounded-md border border-white/10 bg-black/10">
               <div className="aspect-[2/1] md:aspect-[21/9]">
                 <img
@@ -400,7 +400,7 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
 
         {/* Views */}
-        <div className="relative z-[1] px-4 sm:px-6 py-1">
+        <div className="relative z-[1] px-0 sm:px-6 py-1">
           <div className="flex items-center gap-2 text-[13px] text-slate-300" aria-label="Views">
             <Eye className="w-4 h-4 opacity-90" aria-hidden="true" />
             <span className="tabular-nums">{formatK(views)}</span>
@@ -408,36 +408,53 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
 
         {/* Actions */}
-        <div onClick={stop} className="relative z-[1] px-3 sm:px-6 pb-3 pt-1">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div onClick={stop} className="relative z-[1] px-0 sm:px-6 pb-3 pt-1">
+          <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-3">
             <button
               type="button"
               onClick={handleLike}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition"
+              className="group flex-1 sm:w-full inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs sm:text-sm hover:border-white/25 hover:bg-white/10 transition"
             >
-              <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
-              <span className="font-medium leading-none">Star({starCount})</span>
+              <Star
+                className="w-4 h-4"
+                fill={user && liked ? "currentColor" : "none"}
+                strokeWidth={liked ? 2.5 : 1.5}
+              />
+              <span className="font-medium leading-none flex items-center gap-2">
+                Star
+                <span className="flex items-center justify-center rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[11px] leading-none">
+                  {starCount}
+                </span>
+              </span>
             </button>
 
             <button
               type="button"
               onClick={handleRepost}
               disabled={repostPending}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition disabled:opacity-60"
+              className="group flex-1 sm:w-full inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs sm:text-sm hover:border-white/25 hover:bg-white/10 transition disabled:opacity-60"
             >
               <Repeat2 className="w-4 h-4" />
-              <span className="font-medium leading-none">
-                {reposted ? "Reposted" : "Repost"}({repostCount})
+              <span className="font-medium leading-none flex items-center gap-2">
+                {reposted ? "Reposted" : "Repost"}
+                <span className="flex items-center justify-center rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[11px] leading-none">
+                  {repostCount}
+                </span>
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => navigate(`/posts/${id}`)}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-xs sm:text-sm hover:bg-white/20 transition"
+              className="group flex-1 sm:w-full inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs sm:text-sm hover:border-white/25 hover:bg-white/10 transition"
             >
               <MessageCircle className="w-4 h-4" />
-              <span className="font-medium leading-none">Comment({commentCount})</span>
+              <span className="font-medium leading-none flex items-center gap-2">
+                Comment
+                <span className="flex items-center justify-center rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[11px] leading-none">
+                  {commentCount}
+                </span>
+              </span>
             </button>
           </div>
         </div>
