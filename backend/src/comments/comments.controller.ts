@@ -28,18 +28,15 @@ export class CommentsController {
     @Req() req: any,
     @Param('postId') postId: string,
     @Query('page') page = '1',
+    @Query('cursor') cursor: string | undefined,
     @Query('limit') limit = '20',
   ) {
     const userId = req.user?.sub as string | undefined;
     const parsedPage = Number.parseInt(page, 10) || 1;
     const parsedLimit = Number.parseInt(limit, 10) || 20;
-    this.logger.log(
-      `Fetching comments for post ${postId} (page=${parsedPage}, limit=${parsedLimit})`,
-    );
     return this.comments.getCommentsForPost(
       postId,
-      parsedPage,
-      parsedLimit,
+      { page: parsedPage, limit: parsedLimit, cursor: cursor ?? null },
       userId,
     );
   }

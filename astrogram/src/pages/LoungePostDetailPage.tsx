@@ -5,14 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
 import Comments, { type CommentsHandle } from "../components/Comments/Comments";
 import { useAuth } from "../hooks/useAuth";
-import {
-  MoreVertical,
-  Quote,
-  Reply,
-  Flag,
-  ArrowLeft,
-  AlertTriangle,
-} from "lucide-react";
+import { MoreVertical, ArrowLeft } from "lucide-react";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -47,29 +40,6 @@ const AuroraBorder: React.FC<React.PropsWithChildren<{ className?: string }>> = 
   </div>
 );
 
-/* ------------------------- Pill Button ------------------------- */
-const PillButton: React.FC<
-  React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    icon?: React.ReactNode;
-    variant?: "primary" | "outline" | "danger";
-  }
-> = ({ className = "", icon, children, variant = "primary", ...props }) => {
-  const base =
-    "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition focus:outline-none";
-  const styles =
-    variant === "primary"
-      ? "text-white border-0 bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:shadow-lg hover:brightness-[1.05]"
-      : variant === "danger"
-      ? "text-red-300 border border-red-500/30 hover:bg-red-500/10"
-      : "text-gray-200 border border-white/10 hover:bg-white/10";
-  return (
-    <button {...props} className={[base, styles, className].join(" ")}>
-      {icon}
-      {children}
-    </button>
-  );
-};
-
 /* ----------------------------- Page ---------------------------- */
 const LoungePostDetailPage: React.FC = () => {
   const { loungeName, postId } = useParams<{ loungeName?: string; postId: string }>();
@@ -80,9 +50,6 @@ const LoungePostDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reporting, setReporting] = useState(false);
-  const [reportSuccess, setReportSuccess] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const commentsRef = useRef<CommentsHandle>(null);
@@ -113,30 +80,6 @@ const LoungePostDetailPage: React.FC = () => {
     else navigate("/feed");
   };
 
-  /* ---------------------- Post actions ---------------------- */
-  const handleQuotePost = () => {
-    if (!post) return;
-    commentsRef.current?.quote({ username: post.username, text: post.caption });
-  };
-
-  const handleReplyToPost = () => {
-    commentsRef.current?.focusEditor();
-  };
-
-  const handleReportPost = async () => {
-    if (!post) return;
-    setReporting(true);
-    try {
-      await apiFetch(`/posts/report/${post.id}`, { method: "POST" });
-      setReportSuccess(true);
-      setTimeout(() => setShowReportModal(false), 1200);
-    } catch (err) {
-      console.error("Report error", err);
-    } finally {
-      setReporting(false);
-    }
-  };
-
   if (loading || error || !post) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-400">
@@ -155,24 +98,26 @@ const LoungePostDetailPage: React.FC = () => {
     : null;
 
   /* ---------------------- Render ---------------------- */
-  return (
-    <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
-      {/* Mobile stacked; Desktop two columns */}
-      <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
-        {/* LEFT COLUMN */}
-        <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
-          <AuroraBorder>
-            <div className="relative flex flex-col justify-between h-full min-w-0">
-              <button
-                onClick={handleBack}
-                className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
-                aria-label="Back"
-                title="Back"
+    return (
+      <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+        {/* Mobile stacked; Desktop two columns */}
+        <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+          {/* LEFT COLUMN */}
+          <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
+            <AuroraBorder>
+              <div
+                className="relative flex flex-col h-full min-w-0 rounded-2xl backdrop-blur-xl backdrop-saturate-150 border border-white/10 shadow-[0_6px_30px_rgba(0,0,0,0.35)] bg-white/[0.04]"
               >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
+                <button
+                  onClick={handleBack}
+                  className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
+                  aria-label="Back"
+                  title="Back"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
 
-              <div className="p-5 pt-14 space-y-5 overflow-hidden">
+                <div className="p-3 sm:p-5 pt-5 sm:pt-10 space-y-5 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* ✅ Perfect circle avatar */}
@@ -189,7 +134,7 @@ const LoungePostDetailPage: React.FC = () => {
                         @{post.username}
                       </h3>
                       <p className="text-xs text-gray-400">
-                        Joined {authorJoined ?? "—"} • {post.authorPostCount ?? 0} posts
+                        Joined {authorJoined ?? "—"}
                       </p>
                     </div>
                   </div>
@@ -236,29 +181,17 @@ const LoungePostDetailPage: React.FC = () => {
                   </div>
                 )}
               </div>
-
-              <div className="border-t border-white/10 p-4 flex justify-center gap-2 bg-[#0E1626]/50 rounded-b-2xl">
-                <PillButton onClick={handleQuotePost} icon={<Quote className="h-4 w-4" />}>
-                  Quote
-                </PillButton>
-                <PillButton onClick={handleReplyToPost} icon={<Reply className="h-4 w-4" />}>
-                  Reply
-                </PillButton>
-                <PillButton
-                  variant="danger"
-                  onClick={() => setShowReportModal(true)}
-                  icon={<Flag className="h-4 w-4" />}
-                >
-                  Report
-                </PillButton>
-              </div>
             </div>
           </AuroraBorder>
         </div>
 
         {/* RIGHT COLUMN — mobile under, desktop side-by-side */}
         <aside className="flex flex-col mt-4 lg:mt-0 lg:h-full lg:justify-center lg:min-w-0 order-2">
-          <AuroraBorder>
+          <div className="lg:hidden">
+            <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+          </div>
+
+          <AuroraBorder className="hidden lg:block">
             <div className="flex flex-col lg:h-[80vh] min-w-0">
               <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
@@ -280,40 +213,6 @@ const LoungePostDetailPage: React.FC = () => {
         </aside>
       </div>
 
-      {/* REPORT MODAL */}
-      {showReportModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[130]">
-          <div className="bg-[#0E1626]/95 ring-1 ring-white/10 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-2xl">
-            {reportSuccess ? (
-              <div className="text-green-400 font-medium">✅ Reported successfully!</div>
-            ) : (
-              <>
-                <AlertTriangle className="mx-auto mb-3 text-yellow-400 h-8 w-8" />
-                <h3 className="text-gray-100 font-semibold mb-2">Report this post?</h3>
-                <p className="text-gray-400 text-sm mb-5">
-                  This will flag the post for moderator review.
-                </p>
-                <div className="flex justify-center gap-3">
-                  <button
-                    onClick={() => setShowReportModal(false)}
-                    disabled={reporting}
-                    className="px-4 py-2 rounded-lg text-gray-300 bg-white/10 hover:bg-white/20 transition text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleReportPost}
-                    disabled={reporting}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:brightness-[1.1]"
-                  >
-                    {reporting ? "Reporting..." : "Confirm"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

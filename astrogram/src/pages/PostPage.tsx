@@ -1,18 +1,13 @@
 // src/pages/PostPage.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
-import Comments, { type CommentsHandle } from "../components/Comments/Comments";
+import HomeFeedComments, {
+  type HomeFeedCommentsHandle,
+} from "../components/Comments/HomeFeedComments";
 import { useAuth } from "../hooks/useAuth";
-import {
-  MoreVertical,
-  Quote,
-  Reply,
-  Flag,
-  ArrowLeft,
-  AlertTriangle,
-} from "lucide-react";
+import { MoreVertical } from "lucide-react";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -35,40 +30,16 @@ const AuroraBorder: React.FC<React.PropsWithChildren<{ className?: string }>> = 
 }) => (
   <div
     className={[
-      "rounded-2xl p-[1px]",
-      "bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]",
-      "min-w-0",
+      "rounded-2xl border border-white/10",
+      "bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150",
+      "shadow-[0_6px_30px_rgba(0,0,0,0.35)] min-w-0 overflow-hidden",
       className,
     ].join(" ")}
+    style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
   >
-    <div className="rounded-2xl bg-[#0E1626]/80 ring-1 ring-white/10 backdrop-blur-md shadow-[0_16px_60px_rgba(2,6,23,.55)] h-full flex flex-col min-w-0 overflow-hidden">
-      {children}
-    </div>
+    {children}
   </div>
 );
-
-/* ------------------------- Pill Button ------------------------- */
-const PillButton: React.FC<
-  React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    icon?: React.ReactNode;
-    variant?: "primary" | "outline" | "danger";
-  }
-> = ({ className = "", icon, children, variant = "primary", ...props }) => {
-  const base =
-    "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition focus:outline-none";
-  const styles =
-    variant === "primary"
-      ? "text-white border-0 bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:shadow-lg hover:brightness-[1.05]"
-      : variant === "danger"
-      ? "text-red-300 border border-red-500/30 hover:bg-red-500/10"
-      : "text-gray-200 border border-white/10 hover:bg-white/10";
-  return (
-    <button {...props} className={[base, styles, className].join(" ")}>
-      {icon}
-      {children}
-    </button>
-  );
-};
 
 /* ----------------------------- Page ---------------------------- */
 const PostPage: React.FC = () => {
@@ -80,12 +51,9 @@ const PostPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reporting, setReporting] = useState(false);
-  const [reportSuccess, setReportSuccess] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
-  const commentsRef = useRef<CommentsHandle>(null);
+  const commentsRef = useRef<HomeFeedCommentsHandle>(null);
 
   /* ---------------------- Fetch Post ---------------------- */
   useEffect(() => {
@@ -123,36 +91,6 @@ const PostPage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ---------------------- Back button behavior ---------------------- */
-  const handleBack = () => {
-    if (window.history.length > 1) navigate(-1);
-    else navigate("/feed");
-  };
-
-  /* ---------------------- Post actions ---------------------- */
-  const handleQuotePost = () => {
-    if (!post) return;
-    commentsRef.current?.quote({ username: post.username, text: post.caption });
-  };
-
-  const handleReplyToPost = () => {
-    commentsRef.current?.focusEditor();
-  };
-
-  const handleReportPost = async () => {
-    if (!post) return;
-    setReporting(true);
-    try {
-      await apiFetch(`/posts/report/${post.id}`, { method: "POST" });
-      setReportSuccess(true);
-      setTimeout(() => setShowReportModal(false), 1200);
-    } catch (err) {
-      console.error("Report error", err);
-    } finally {
-      setReporting(false);
-    }
-  };
-
   if (loading || error || !post) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-400">
@@ -166,29 +104,20 @@ const PostPage: React.FC = () => {
     (post.imageUrl ? [post.imageUrl] : []);
 
   const isOwn = user?.username === post.username;
-  const authorJoined = post.authorJoinedAt
-    ? formatDistanceToNow(new Date(post.authorJoinedAt), { addSuffix: true })
-    : null;
+  const timeSincePost = formatDistanceToNow(new Date(post.timestamp), {
+    addSuffix: true,
+  });
 
   /* ---------------------- Render ---------------------- */
   return (
-    <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+    <div className="relative w-full flex justify-center overflow-x-hidden pt-6 sm:pt-8">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
-      <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+      <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
-        <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">
+        <div className="lg:h-full lg:flex lg:flex-col lg:min-w-0">
           <AuroraBorder>
-            <div className="relative flex flex-col justify-between h-full min-w-0">
-              <button
-                onClick={handleBack}
-                className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
-                aria-label="Back"
-                title="Back"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-
-              <div className="p-5 pt-14 space-y-5 overflow-hidden">
+            <div className="relative flex flex-col h-full min-w-0">
+              <div className="p-3 sm:p-5 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
@@ -196,14 +125,17 @@ const PostPage: React.FC = () => {
                       alt={post.username}
                       className="w-10 h-10 rounded-full ring-1 ring-white/10 shrink-0"
                     />
-                    <div className="min-w-0">
+                    <Link
+                      to={`/users/${post.username}`}
+                      className="min-w-0 flex items-center gap-2 hover:text-white transition"
+                    >
                       <h3 className="text-sm font-semibold text-gray-100 truncate">
                         @{post.username}
                       </h3>
-                      <p className="text-xs text-gray-400">
-                        Joined {authorJoined ?? "—"} • {post.authorPostCount ?? 0} posts
-                      </p>
-                    </div>
+                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                        • {timeSincePost}
+                      </span>
+                    </Link>
                   </div>
 
                   {isOwn && (
@@ -229,7 +161,7 @@ const PostPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 space-y-2">
                   {post.title && (
                     <h1 className="text-lg font-bold text-gray-100 mb-2 break-words">{post.title}</h1>
                   )}
@@ -239,7 +171,7 @@ const PostPage: React.FC = () => {
                 </div>
 
                 {imageSources.length > 0 && (
-                  <div className="rounded-xl overflow-hidden ring-1 ring-white/10">
+                  <div className="rounded-xl overflow-hidden ring-1 ring-white/10 w-full mt-4">
                     <img
                       src={imageSources[0]}
                       alt="Post"
@@ -248,108 +180,23 @@ const PostPage: React.FC = () => {
                   </div>
                 )}
               </div>
-
-              <div className="border-t border-white/10 p-4 flex justify-center gap-2 bg-[#0E1626]/50 rounded-b-2xl">
-                <PillButton onClick={handleQuotePost} icon={<Quote className="h-4 w-4" />}>
-                  Quote
-                </PillButton>
-                <PillButton onClick={handleReplyToPost} icon={<Reply className="h-4 w-4" />}>
-                  Reply
-                </PillButton>
-                <PillButton
-                  variant="danger"
-                  onClick={() => setShowReportModal(true)}
-                  icon={<Flag className="h-4 w-4" />}
-                >
-                  Report
-                </PillButton>
-              </div>
             </div>
           </AuroraBorder>
 
           {/* MOBILE THREAD (stacked under the post) */}
           <div className="mt-4 lg:hidden">
-            <AuroraBorder>
-              <div className="flex flex-col min-w-0">
-                <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
-                    Thread Replies
-                  </h2>
-                </div>
-                <div className="px-5 py-4 space-y-4">
-                  <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
-                    <Comments ref={commentsRef} postId={String(post.id)} pageSize={10} />
-                  </div>
-                </div>
-                <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
-                  Be kind and respectful in your replies 💬
-                </div>
-              </div>
-            </AuroraBorder>
+            <HomeFeedComments ref={commentsRef} postId={String(post.id)} pageSize={10} />
           </div>
         </div>
 
         {/* RIGHT COLUMN (desktop thread) */}
-        <aside className="hidden lg:flex lg:h-full lg:flex-col lg:justify-center lg:min-w-0">
-          <AuroraBorder>
-            <div className="flex flex-col h-[80vh] min-w-0">
-              {/* Header */}
-              <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
-                  Thread Replies
-                </h2>
-              </div>
-
-              {/* Scrollable Comments */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 min-w-0">
-                <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
-                  <Comments ref={commentsRef} postId={String(post.id)} pageSize={10} />
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
-                Be kind and respectful in your replies 💬
-              </div>
-            </div>
-          </AuroraBorder>
+        <aside className="hidden lg:flex lg:h-full lg:flex-col lg:min-w-0">
+          <div className="w-full rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150 shadow-[0_6px_30px_rgba(0,0,0,0.35)] p-4" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
+            <HomeFeedComments ref={commentsRef} postId={String(post.id)} pageSize={10} />
+          </div>
         </aside>
       </div>
 
-      {/* REPORT MODAL */}
-      {showReportModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[130]">
-          <div className="bg-[#0E1626]/95 ring-1 ring-white/10 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-2xl">
-            {reportSuccess ? (
-              <div className="text-green-400 font-medium">✅ Reported successfully!</div>
-            ) : (
-              <>
-                <AlertTriangle className="mx-auto mb-3 text-yellow-400 h-8 w-8" />
-                <h3 className="text-gray-100 font-semibold mb-2">Report this post?</h3>
-                <p className="text-gray-400 text-sm mb-5">
-                  This will flag the post for moderator review.
-                </p>
-                <div className="flex justify-center gap-3">
-                  <button
-                    onClick={() => setShowReportModal(false)}
-                    disabled={reporting}
-                    className="px-4 py-2 rounded-lg text-gray-300 bg-white/10 hover:bg-white/20 transition text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleReportPost}
-                    disabled={reporting}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:brightness-[1.1]"
-                  >
-                    {reporting ? "Reporting..." : "Confirm"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

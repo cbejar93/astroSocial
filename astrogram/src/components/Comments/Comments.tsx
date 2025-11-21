@@ -54,7 +54,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
     // Load comments
     useEffect(() => {
       setLoading(true);
-      fetchCommentPage(postId, currentPage, pageSize)
+      fetchCommentPage(postId, { page: currentPage, limit: pageSize })
         .then((data) =>
           setPageData({
             ...data,
@@ -241,40 +241,10 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
           <span className="text-xs text-gray-400">{pageData?.total ?? 0} replies</span>
         </div>
 
-        {/* Scrollable container */}
-        <div className="max-h-[70vh] overflow-y-auto rounded-xl border border-white/10 p-3 pretty-scroll scrollbar-cute">
-          {loading ? (
-            <CommentsSkeleton />
-          ) : error ? (
-            <div className="text-red-300">{error}</div>
-          ) : (
-            <>
-              {pageData && pageData.comments.length > 0 ? (
-                <div className="space-y-4">{pageData.comments.map((c) => renderComment(c))}</div>
-              ) : (
-                <div className="text-gray-400 text-center py-6 border border-dashed border-white/10 rounded-xl">
-                  No replies yet — be the first to join the conversation.
-                </div>
-              )}
-
-              {pageData && pageData.total > pageData.comments.length && (
-                <div className="text-center mt-4">
-                  <button
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    className="text-sm text-teal-300 hover:underline"
-                  >
-                    Load more replies
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
         {user ? (
           <form
             onSubmit={handleSubmit}
-            className="space-y-3 mt-4 border border-white/10 bg-gray-950/70 rounded-xl p-3 backdrop-blur"
+            className="space-y-3 border border-white/10 bg-gray-950/70 rounded-xl p-3 backdrop-blur"
           >
             {replyParentId && (
               <div className="text-xs text-gray-300">
@@ -338,6 +308,36 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
             Sign in to join the discussion.
           </div>
         )}
+
+        {/* Scrollable container */}
+        <div className="max-h-[70vh] overflow-y-auto rounded-xl border border-white/10 p-3 pretty-scroll scrollbar-cute">
+          {loading ? (
+            <CommentsSkeleton />
+          ) : error ? (
+            <div className="text-red-300">{error}</div>
+          ) : (
+            <>
+              {pageData && pageData.comments.length > 0 ? (
+                <div className="space-y-4">{pageData.comments.map((c) => renderComment(c))}</div>
+              ) : (
+                <div className="text-gray-400 text-center py-6 border border-dashed border-white/10 rounded-xl">
+                  No replies yet — be the first to join the conversation.
+                </div>
+              )}
+
+              {pageData && pageData.total > pageData.comments.length && (
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    className="text-sm text-teal-300 hover:underline"
+                  >
+                    Load more replies
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     );
   }

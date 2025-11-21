@@ -16,6 +16,7 @@ import AuthSuccessPage from "./pages/AuthSuccessPage";
 import SupabaseAuthCallbackPage from "./pages/SupabaseAuthCallbackPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import { RequireProfileCompletion } from "./components/auth/RequireProfileCompletion";
+import CompleteProfileGuard from "./components/auth/CompleteProfileGuard";
 import RequireAdmin from "./components/auth/RequireAdmin";
 
 import PostPage from "./pages/PostPage";
@@ -104,7 +105,14 @@ const App: React.FC = () => {
                 <Route path="/search" element={<SearchPage />} />
                 {/* <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} /> */}
                 <Route path="/upload" element={<UploadForm />} />
-                <Route path="/completeProfile" element={<CompleteProfilePage />} />
+                <Route
+                  path="/completeProfile"
+                  element={
+                    <CompleteProfileGuard>
+                      <CompleteProfilePage />
+                    </CompleteProfileGuard>
+                  }
+                />
                 <Route path="/profile" element={<ProfileOverviewPage />} />
                 <Route path="/profile/:tab" element={<ProfilePage />} />
 
