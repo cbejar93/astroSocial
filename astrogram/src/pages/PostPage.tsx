@@ -7,7 +7,7 @@ import HomeFeedComments, {
   type HomeFeedCommentsHandle,
 } from "../components/Comments/HomeFeedComments";
 import { useAuth } from "../hooks/useAuth";
-import { MoreVertical, ArrowLeft } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -91,12 +91,6 @@ const PostPage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ---------------------- Back button behavior ---------------------- */
-  const handleBack = () => {
-    if (window.history.length > 1) navigate(-1);
-    else navigate("/feed");
-  };
-
   if (loading || error || !post) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-400">
@@ -120,18 +114,9 @@ const PostPage: React.FC = () => {
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
       <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
-        <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">
+        <div className="lg:h-full lg:flex lg:flex-col lg:min-w-0">
           <AuroraBorder>
             <div className="relative flex flex-col h-full min-w-0">
-              <button
-                onClick={handleBack}
-                className="hidden sm:inline-flex absolute top-2 left-4 items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
-                aria-label="Back"
-                title="Back"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-
               <div className="p-3 sm:p-5 pt-4 sm:pt-6 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
@@ -205,7 +190,7 @@ const PostPage: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN (desktop thread) */}
-        <aside className="hidden lg:flex lg:h-full lg:flex-col lg:justify-center lg:min-w-0">
+        <aside className="hidden lg:flex lg:h-full lg:flex-col lg:min-w-0">
           <div className="w-full rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150 shadow-[0_6px_30px_rgba(0,0,0,0.35)] p-4" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
             <HomeFeedComments ref={commentsRef} postId={String(post.id)} pageSize={10} />
           </div>
