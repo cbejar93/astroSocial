@@ -30,15 +30,14 @@ const AuroraBorder: React.FC<React.PropsWithChildren<{ className?: string }>> = 
 }) => (
   <div
     className={[
-      "rounded-2xl p-[1px]",
-      "bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]",
-      "min-w-0",
+      "rounded-2xl border border-white/10",
+      "bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150",
+      "shadow-[0_6px_30px_rgba(0,0,0,0.35)] min-w-0 overflow-hidden",
       className,
     ].join(" ")}
+    style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
   >
-    <div className="rounded-2xl bg-[#0E1626]/80 ring-1 ring-white/10 backdrop-blur-md shadow-[0_16px_60px_rgba(2,6,23,.55)] h-full flex flex-col min-w-0 overflow-hidden">
-      {children}
-    </div>
+    {children}
   </div>
 );
 
@@ -123,9 +122,7 @@ const PostPage: React.FC = () => {
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">
           <AuroraBorder>
-            <div
-              className="relative flex flex-col h-full min-w-0 rounded-2xl backdrop-blur-xl backdrop-saturate-150 border border-white/10 shadow-[0_6px_30px_rgba(0,0,0,0.35)] bg-white/[0.04]"
-            >
+            <div className="relative flex flex-col h-full min-w-0">
               <button
                 onClick={handleBack}
                 className="hidden sm:inline-flex absolute top-2 left-4 items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
