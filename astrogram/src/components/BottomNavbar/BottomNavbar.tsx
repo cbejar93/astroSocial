@@ -1,6 +1,6 @@
 // src/components/BottomNavbar.tsx
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Home, CloudSun, User, Settings } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
 
@@ -31,6 +31,8 @@ const BAR_HEIGHT = "h-14";
 const SEGMENT_HEIGHT = "h-12";
 
 const BottomNavbar: React.FC = () => {
+  const { pathname } = useLocation();
+
   return (
     <nav
       className="
@@ -68,7 +70,7 @@ const BottomNavbar: React.FC = () => {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
 
           {TABS.map((tab) => (
-            <Segment key={tab.name} tab={tab} />
+            <Segment key={tab.name} tab={tab} pathname={pathname} />
           ))}
         </div>
       </div>
@@ -76,63 +78,70 @@ const BottomNavbar: React.FC = () => {
   );
 };
 
-const Segment: React.FC<{ tab: Tab }> = ({ tab }) => {
+const Segment: React.FC<{ tab: Tab; pathname: string }> = ({ tab, pathname }) => {
   const Icon = tab.icon as IconComponent;
   const isHome = tab.path === "/";
+  const derivedActive = isHome
+    ? pathname === "/" || pathname.startsWith("/post")
+    : pathname === tab.path || pathname.startsWith(`${tab.path}/`);
 
   return (
     <NavLink
       to={tab.path}
-      end={isHome} // home only active on exact "/"
+      end={isHome}
       role="tab"
       aria-label={tab.name}
       className="group relative grid flex-1 place-items-center px-1"
     >
-      {({ isActive }) => (
-        <div className={["relative w-full max-w-[86px]", SEGMENT_HEIGHT].join(" ")}>
-          {/* Active pill */}
-          <div
-            className={[
-              "absolute inset-0 rounded-xl transition-all duration-300",
-              isActive ? "opacity-100 scale-[1.02]" : "opacity-0 scale-100",
-              ACTIVE_GRADIENT,
-              "ring-1 ring-white/25 shadow-[0_8px_20px_rgba(15,23,42,0.45)]",
-            ].join(" ")}
-          />
-          {/* Inner gloss when active */}
-          <div
-            className={[
-              "pointer-events-none absolute inset-0 rounded-xl transition-opacity duration-300",
-              isActive ? "opacity-25" : "opacity-0",
-            ].join(" ")}
-            style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,.32), transparent 60%)",
-            }}
-          />
+      {({ isActive }) => {
+        const active = derivedActive || isActive;
 
-          {/* Content */}
-          <div className="relative z-10 grid h-full w-full place-items-center">
-            <div className="flex flex-col items-center justify-center">
-              <Icon
-                className={[
-                  ICON_CLASS,
-                  "transition-transform duration-200",
-                  isActive ? "scale-[1.03]" : "group-active:scale-95",
-                ].join(" ")}
-              />
-              <span
-                className={[
-                  "mt-1 font-medium tracking-wide",
-                  LABEL_CLASS,
-                  isActive ? "text-white" : "text-white/80",
-                ].join(" ")}
-              >
-                {tab.name}
-              </span>
+        return (
+          <div className={["relative w-full max-w-[86px]", SEGMENT_HEIGHT].join(" ")}>
+            {/* Active pill */}
+            <div
+              className={[
+                "absolute inset-0 rounded-xl transition-all duration-300",
+                active ? "opacity-100 scale-[1.02]" : "opacity-0 scale-100",
+                ACTIVE_GRADIENT,
+                "ring-1 ring-white/25 shadow-[0_8px_20px_rgba(15,23,42,0.45)]",
+              ].join(" ")}
+            />
+            {/* Inner gloss when active */}
+            <div
+              className={[
+                "pointer-events-none absolute inset-0 rounded-xl transition-opacity duration-300",
+                active ? "opacity-25" : "opacity-0",
+              ].join(" ")}
+              style={{
+                background: "linear-gradient(180deg, rgba(255,255,255,.32), transparent 60%)",
+              }}
+            />
+
+            {/* Content */}
+            <div className="relative z-10 grid h-full w-full place-items-center">
+              <div className="flex flex-col items-center justify-center">
+                <Icon
+                  className={[
+                    ICON_CLASS,
+                    "transition-transform duration-200",
+                    active ? "scale-[1.03]" : "group-active:scale-95",
+                  ].join(" ")}
+                />
+                <span
+                  className={[
+                    "mt-1 font-medium tracking-wide",
+                    LABEL_CLASS,
+                    active ? "text-white" : "text-white/80",
+                  ].join(" ")}
+                >
+                  {tab.name}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      }}
     </NavLink>
   );
 };

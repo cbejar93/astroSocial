@@ -164,21 +164,21 @@ const PostPage: React.FC = () => {
   return (
     <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
-      <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+      <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">
           <AuroraBorder>
             <div className="relative flex flex-col justify-between h-full min-w-0">
               <button
                 onClick={handleBack}
-                className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
+                className="hidden sm:inline-flex absolute top-2 left-4 items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
                 aria-label="Back"
                 title="Back"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
 
-              <div className="p-5 pt-14 space-y-5 overflow-hidden">
+              <div className="p-4 sm:p-5 pt-8 sm:pt-14 space-y-5 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <img

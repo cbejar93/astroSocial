@@ -135,8 +135,11 @@ const DesktopNav: React.FC = () => {
       {/* NAVIGATION LINKS */}
       <div id="desktop-nav-scroll" className="desktop-nav__scroll">
         {filteredNavItems.map(({ label, to, icon: Icon, matchStartsWith }) => {
+          const isHome = label === "Home";
           const isActive = matchStartsWith
             ? location.pathname.startsWith(matchStartsWith)
+            : isHome
+            ? location.pathname === "/" || location.pathname.startsWith("/post")
             : location.pathname === to;
 
           if (label === "Lounges") {
