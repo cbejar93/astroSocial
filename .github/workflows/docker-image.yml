@@ -15,7 +15,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: prod
     outputs:
       image: ${{ steps.meta.outputs.image }}
       digest: ${{ steps.meta.outputs.digest }}
