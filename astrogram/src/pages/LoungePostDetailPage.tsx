@@ -105,7 +105,9 @@ const LoungePostDetailPage: React.FC = () => {
           {/* LEFT COLUMN */}
           <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
             <AuroraBorder>
-              <div className="relative flex flex-col h-full min-w-0 bg-white/5 sm:bg-[#0E1626]/80 backdrop-blur-xl">
+              <div
+                className="relative flex flex-col h-full min-w-0 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.45)] bg-white/5 sm:bg-[#0E1626]/80"
+              >
                 <button
                   onClick={handleBack}
                   className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
@@ -115,7 +117,7 @@ const LoungePostDetailPage: React.FC = () => {
                   <ArrowLeft className="h-4 w-4" />
                 </button>
 
-                <div className="p-3 sm:p-5 pt-11 sm:pt-14 space-y-5 overflow-hidden">
+                <div className="p-3 sm:p-5 pt-5 sm:pt-10 space-y-5 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* ✅ Perfect circle avatar */}

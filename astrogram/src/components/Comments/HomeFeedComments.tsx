@@ -288,77 +288,81 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
 
     return (
       <div className="space-y-3">
-        <div
-          className="rounded-3xl border border-white/10 px-5 py-4"
-          style={{ backgroundColor: "rgba(11,20,34,0.62)" }}
-        >
-          {user ? (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {replyParentId && replyUsername && (
-                <div
-                  className="flex items-center justify-between rounded-xl px-3 py-2 text-xs text-slate-200"
-                  style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-                >
-                  <span>
-                    Replying to <span className="text-sky-200">@{replyUsername}</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setReplyParentId(null);
-                      setReplyUsername(null);
-                    }}
-                    className="text-slate-400 hover:text-white"
-                  >
-                    <span className="sr-only">Cancel reply</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
+        {user ? (
+          <form
+            onSubmit={handleSubmit}
+            className="group relative rounded-3xl bg-white/[0.06] hover:bg-white/[0.08] backdrop-blur-xl border border-white/10 text-white p-3 sm:p-4 shadow-[0_8px_28px_rgba(2,6,23,0.45)] transition"
+          >
+            <div className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-40 group-focus-within:opacity-60 transition">
+              <div className="h-full w-full rounded-3xl bg-gradient-to-r from-fuchsia-500/30 via-sky-500/30 to-emerald-500/30 blur-[6px]" />
+            </div>
+
+            <div className="relative flex items-start gap-3">
+              <img
+                src={user.avatarUrl ?? "/defaultPfp.png"}
+                alt={user.username ?? "You"}
+                className="w-10 h-10 rounded-full object-cover ring-1 ring-white/20"
+              />
+              <div className="flex-1 space-y-3">
+                {replyParentId && replyUsername && (
+                  <div className="flex items-center justify-between rounded-2xl bg-white/5 px-3 py-2 text-xs text-slate-200 border border-white/10">
+                    <span>
+                      Replying to <span className="text-sky-200">@{replyUsername}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReplyParentId(null);
+                        setReplyUsername(null);
+                      }}
+                      className="text-slate-400 hover:text-white"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                      <span className="sr-only">Cancel reply</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  className="w-full rounded-2xl bg-white/[0.06] border border-white/10 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/50 min-h-[96px] resize-none pretty-scroll scrollbar-cute"
+                  placeholder="Share your thoughts..."
+                />
+                <div className="flex items-center justify-end">
+                  <button
+                    type="submit"
+                    disabled={!input.trim() || submitting}
+                    className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(90deg,#60f5e5,#5f8bff)] px-4 py-2 text-sm font-semibold text-[#08111f] shadow-lg shadow-cyan-500/20 disabled:opacity-60"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Posting
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" /> Post reply
+                      </>
+                    )}
                   </button>
                 </div>
-              )}
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/50 min-h-[96px] resize-none pretty-scroll scrollbar-cute"
-                style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-                placeholder="Share your thoughts..."
-              />
-              <div className="flex items-center justify-end">
-                <button
-                  type="submit"
-                  disabled={!input.trim() || submitting}
-                  className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(90deg,#60f5e5,#5f8bff)] px-4 py-2 text-sm font-semibold text-[#08111f] shadow-lg shadow-cyan-500/20 disabled:opacity-60"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Posting
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" /> Post reply
-                    </>
-                  )}
-                </button>
               </div>
-            </form>
-          ) : (
-            <div
-              className="text-center text-sm text-slate-200 border border-white/10 rounded-2xl px-3 py-4"
-              style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-            >
-              Sign in to join the discussion.
             </div>
-          )}
-        </div>
+          </form>
+        ) : (
+          <div className="text-center text-sm text-slate-200 border border-white/10 rounded-2xl px-3 py-4" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
+            Sign in to join the discussion.
+          </div>
+        )}
 
         <div className="max-h-[70vh] overflow-y-auto space-y-3 pretty-scroll scrollbar-cute">
           {loading ? (
