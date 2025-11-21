@@ -327,16 +327,26 @@ export interface PaginatedCommentsResponse<T = CommentResponse> {
   comments: T[];
   replies: T[];
   total: number;
-  page: number;
+  page?: number;
   limit: number;
+  nextCursor?: string | null;
+  hasMore?: boolean;
 }
 
 export async function fetchCommentPage<T = CommentResponse>(
   postId: string,
-  page: number = 1,
-  limit: number = 20,
+  options?: { page?: number; limit?: number; cursor?: string | null },
 ): Promise<PaginatedCommentsResponse<T>> {
-  const res = await apiFetch(`/posts/${postId}/comments?page=${page}&limit=${limit}`);
+  const { page = 1, limit = 20, cursor } = options ?? {};
+  const params = new URLSearchParams();
+  params.set("limit", String(limit));
+  if (cursor) {
+    params.set("cursor", cursor);
+  } else {
+    params.set("page", String(page));
+  }
+
+  const res = await apiFetch(`/posts/${postId}/comments?${params.toString()}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch comments (${res.status})`);
   }

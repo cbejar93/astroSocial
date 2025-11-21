@@ -7,14 +7,7 @@ import HomeFeedComments, {
   type HomeFeedCommentsHandle,
 } from "../components/Comments/HomeFeedComments";
 import { useAuth } from "../hooks/useAuth";
-import {
-  MoreVertical,
-  Quote,
-  Reply,
-  Flag,
-  ArrowLeft,
-  AlertTriangle,
-} from "lucide-react";
+import { MoreVertical, Reply, Flag, ArrowLeft, AlertTriangle } from "lucide-react";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -132,11 +125,6 @@ const PostPage: React.FC = () => {
   };
 
   /* ---------------------- Post actions ---------------------- */
-  const handleQuotePost = () => {
-    if (!post) return;
-    commentsRef.current?.quote({ username: post.username, text: post.caption });
-  };
-
   const handleReplyToPost = () => {
     commentsRef.current?.focusEditor();
   };
@@ -252,9 +240,6 @@ const PostPage: React.FC = () => {
               </div>
 
               <div className="border-t border-white/10 p-4 flex justify-center gap-2 bg-[#0E1626]/50 rounded-b-2xl">
-                <PillButton onClick={handleQuotePost} icon={<Quote className="h-4 w-4" />}>
-                  Quote
-                </PillButton>
                 <PillButton onClick={handleReplyToPost} icon={<Reply className="h-4 w-4" />}>
                   Reply
                 </PillButton>

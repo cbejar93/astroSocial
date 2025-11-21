@@ -95,33 +95,55 @@ export class CommentsService {
 
   async getCommentsForPost(
     postId: string,
-    page: number,
-    limit: number,
+    options: { page?: number; limit?: number; cursor?: string | null },
     currentUserId?: string,
   ) {
-    const safePage = Math.max(1, page);
-    const safeLimit = Math.max(1, Math.min(limit, 100));
+    const safePage = Math.max(1, options.page ?? 1);
+    const safeLimit = Math.max(1, Math.min(options.limit ?? 20, 100));
+    const useCursor = Boolean(options.cursor);
+    const skip = useCursor ? 0 : (safePage - 1) * safeLimit;
+    const take = useCursor ? safeLimit + 1 : safeLimit;
 
-    this.logger.log(
-      `Fetching comments for post ${postId} (page=${safePage}, limit=${safeLimit})`,
-    );
+    const cursorComment = options.cursor
+      ? await this.prisma.comment.findUnique({
+          where: { id: options.cursor },
+          select: { id: true, postId: true, createdAt: true, parentId: true },
+        })
+      : null;
 
-    const skip = (safePage - 1) * safeLimit;
+    if (cursorComment && (cursorComment.postId !== postId || cursorComment.parentId)) {
+      throw new BadRequestException('Invalid cursor');
+    }
+
+    const cursorFilter: Prisma.CommentWhereInput = cursorComment
+      ? {
+          OR: [
+            { createdAt: { gt: cursorComment.createdAt } },
+            { createdAt: cursorComment.createdAt, id: { gt: cursorComment.id } },
+          ],
+        }
+      : {};
 
     const [total, list] = await Promise.all([
       this.prisma.comment.count({ where: { postId, parentId: null } }),
       this.prisma.comment.findMany({
-        where: { postId, parentId: null },
-        orderBy: { createdAt: 'asc' },
+        where: { postId, parentId: null, ...cursorFilter },
+        orderBy: [
+          { createdAt: 'asc' },
+          { id: 'asc' },
+        ],
         skip,
-        take: safeLimit,
+        take,
         include: {
           author: { select: { username: true, avatarUrl: true } },
           likedBy: currentUserId
             ? { where: { userId: currentUserId }, select: { id: true } }
             : false,
           replies: {
-            orderBy: { createdAt: 'asc' },
+            orderBy: [
+              { createdAt: 'asc' },
+              { id: 'asc' },
+            ],
             include: {
               author: { select: { username: true, avatarUrl: true } },
               likedBy: currentUserId
@@ -155,14 +177,25 @@ export class CommentsService {
     });
 
     const comments = list.map((c) => formatComment(c));
-    const replies = list.flatMap((c) => c.replies.map((r) => formatComment(r)));
+    const replies = list
+      .slice(0, safeLimit)
+      .flatMap((c) => c.replies.map((r) => formatComment(r)));
+
+    const hasMore = useCursor
+      ? list.length > safeLimit
+      : skip + list.length < total;
+    const nextCursor = hasMore
+      ? comments[Math.min(safeLimit - 1, comments.length - 1)]?.id ?? null
+      : null;
 
     return {
       total,
-      page: safePage,
+      page: useCursor ? undefined : safePage,
       limit: safeLimit,
-      comments,
+      comments: comments.slice(0, safeLimit),
       replies,
+      nextCursor,
+      hasMore,
     };
   }
 

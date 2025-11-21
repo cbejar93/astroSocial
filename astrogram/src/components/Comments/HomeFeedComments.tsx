@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Send, Star, Loader2, Reply, RefreshCw, Trash2, Quote } from "lucide-react";
+import { Send, Star, Loader2, Reply, RefreshCw, Trash2 } from "lucide-react";
 import {
   createComment,
   deleteComment,
@@ -23,7 +23,6 @@ export interface HomeFeedCommentItem extends CommentResponse {
 }
 
 export interface HomeFeedCommentsHandle {
-  quote(source: { id?: string; username: string; text: string; parentId?: string | null }): void;
   focusEditor(): void;
 }
 
@@ -37,12 +36,6 @@ function sanitizeHtml(value: string): string {
   el.innerHTML = value;
   el.querySelectorAll("script,style").forEach((node) => node.remove());
   return el.innerHTML;
-}
-
-function toPlainText(html: string): string {
-  const el = document.createElement("div");
-  el.innerHTML = html;
-  return el.textContent || "";
 }
 
 function toParagraphHtml(value: string): string {
@@ -66,7 +59,6 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [page, setPage] = useState(1);
     const [input, setInput] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [replyParentId, setReplyParentId] = useState<string | null>(null);
@@ -74,14 +66,10 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
-      setPage(1);
-    }, [postId, pageSize]);
-
-    useEffect(() => {
       let isMounted = true;
       setLoading(true);
       setError(null);
-      fetchCommentPage(postId, 1, pageSize)
+      fetchCommentPage(postId, { limit: pageSize })
         .then((data) => {
           if (!isMounted) return;
           setPageData({
@@ -108,23 +96,13 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
       return map;
     }, [pageData]);
 
-    const hasMore = pageData ? pageData.total > pageData.comments.length : false;
+    const hasMore = !!pageData?.nextCursor;
 
     const focusEditor = () => {
       inputRef.current?.focus();
     };
 
     useImperativeHandle(ref, () => ({
-      quote: (source) => {
-        const safeText = toPlainText(source.text ?? "");
-        setReplyParentId(source.parentId ?? source.id ?? null);
-        setReplyUsername(source.username);
-        setInput((prev) => {
-          if (!prev.trim()) return `@${source.username}: ${safeText}`.trim();
-          return `${prev}\n\n@${source.username}: ${safeText}`;
-        });
-        focusEditor();
-      },
       focusEditor,
     }));
 
@@ -132,13 +110,12 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchCommentPage(postId, 1, pageSize);
+        const data = await fetchCommentPage(postId, { limit: pageSize });
         setPageData({
           ...data,
           comments: data.comments.map((c) => ({ ...c, parentId: c.parentId ?? null })),
           replies: data.replies.map((r) => ({ ...r, parentId: r.parentId ?? null })),
         });
-        setPage(1);
       } catch (e) {
         setError("Could not refresh comments");
       } finally {
@@ -148,10 +125,12 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
 
     const loadMore = async () => {
       if (!hasMore || loadingMore) return;
-      const nextPage = page + 1;
       setLoadingMore(true);
       try {
-        const data = await fetchCommentPage(postId, nextPage, pageSize);
+        const data = await fetchCommentPage(postId, {
+          cursor: pageData?.nextCursor ?? null,
+          limit: pageSize,
+        });
         setPageData((prev) =>
           prev
             ? {
@@ -166,10 +145,11 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
                 ],
                 total: data.total,
                 page: data.page,
+                nextCursor: data.nextCursor,
+                hasMore: data.hasMore,
               }
             : data
         );
-        setPage(nextPage);
       } catch {
         setError("Could not load more comments");
       } finally {
@@ -277,22 +257,6 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
                 className="inline-flex items-center gap-1 rounded-full px-3 py-1 border border-white/5 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10 transition"
               >
                 <Reply className="h-4 w-4" /> Reply
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setInput((prev) => {
-                    const quoteText = toPlainText(comment.text ?? "");
-                    setReplyParentId(comment.parentId ?? comment.id ?? null);
-                    setReplyUsername(comment.username);
-                    return prev.trim()
-                      ? `${prev}\n\n@${comment.username}: ${quoteText}`
-                      : `@${comment.username}: ${quoteText}`;
-                  })
-                }
-                className="inline-flex items-center gap-1 rounded-full px-3 py-1 border border-white/5 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10 transition"
-              >
-                <Quote className="h-4 w-4" /> Quote
               </button>
             </div>
 

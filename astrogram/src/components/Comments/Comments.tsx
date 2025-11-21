@@ -54,7 +54,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
     // Load comments
     useEffect(() => {
       setLoading(true);
-      fetchCommentPage(postId, currentPage, pageSize)
+      fetchCommentPage(postId, { page: currentPage, limit: pageSize })
         .then((data) =>
           setPageData({
             ...data,
