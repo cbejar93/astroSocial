@@ -110,7 +110,7 @@ const PostPage: React.FC = () => {
 
   /* ---------------------- Render ---------------------- */
   return (
-    <div className="relative w-full flex justify-center overflow-x-hidden">
+    <div className="relative w-full flex justify-center overflow-x-hidden pt-6 sm:pt-8">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
       <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
