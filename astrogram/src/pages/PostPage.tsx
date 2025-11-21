@@ -321,7 +321,7 @@ const PostPage: React.FC = () => {
 
   /* ---------------------- Render ---------------------- */
   return (
-    <div className="relative w-full flex justify-center overflow-x-hidden pt-6 sm:pt-8">
+    <div className="relative w-full flex justify-center overflow-x-hidden pt-3 sm:pt-8">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
       <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
@@ -403,7 +403,7 @@ const PostPage: React.FC = () => {
                 </div>
 
                 {imageSources.length > 0 && (
-                  <div className="rounded-xl overflow-hidden ring-1 ring-white/10 w-full mt-4">
+                  <div className="rounded-xl overflow-hidden ring-1 ring-white/10 w-full mt-2 sm:mt-4">
                     <img
                       src={imageSources[0]}
                       alt="Post"
@@ -420,7 +420,10 @@ const PostPage: React.FC = () => {
                       aria-label="Star post"
                       className="flex-1 sm:w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-xs sm:text-sm font-semibold text-white/90 backdrop-blur-lg shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:bg-white/20 transition"
                     >
-                      <Star className="w-4 h-4" fill={user && liked ? "currentColor" : "none"} />
+                      <Star
+                        className="w-4 h-4 text-amber-200"
+                        fill={user && liked ? "currentColor" : "none"}
+                      />
                       <span className="tabular-nums leading-none">{formatK(starCount)}</span>
                     </button>
 
