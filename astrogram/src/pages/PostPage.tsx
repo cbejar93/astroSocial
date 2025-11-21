@@ -206,32 +206,9 @@ const PostPage: React.FC = () => {
 
         {/* RIGHT COLUMN (desktop thread) */}
         <aside className="hidden lg:flex lg:h-full lg:flex-col lg:justify-center lg:min-w-0">
-          <AuroraBorder>
-            <div className="flex flex-col h-[80vh] min-w-0">
-              {/* Header */}
-              <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
-                  Thread Replies
-                </h2>
-              </div>
-
-              {/* Scrollable Comments */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 min-w-0">
-                <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
-                  <HomeFeedComments
-                    ref={commentsRef}
-                    postId={String(post.id)}
-                    pageSize={10}
-                  />
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
-                Be kind and respectful in your replies 💬
-              </div>
-            </div>
-          </AuroraBorder>
+          <div className="w-full rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150 shadow-[0_6px_30px_rgba(0,0,0,0.35)] p-4" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
+            <HomeFeedComments ref={commentsRef} postId={String(post.id)} pageSize={10} />
+          </div>
         </aside>
       </div>
 
