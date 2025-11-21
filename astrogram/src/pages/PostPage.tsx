@@ -3,7 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "../lib/api";
-import Comments, { type CommentsHandle } from "../components/Comments/Comments";
+import HomeFeedComments, {
+  type HomeFeedCommentsHandle,
+} from "../components/Comments/HomeFeedComments";
 import { useAuth } from "../hooks/useAuth";
 import {
   MoreVertical,
@@ -85,7 +87,7 @@ const PostPage: React.FC = () => {
   const [reportSuccess, setReportSuccess] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
-  const commentsRef = useRef<CommentsHandle>(null);
+  const commentsRef = useRef<HomeFeedCommentsHandle>(null);
 
   /* ---------------------- Fetch Post ---------------------- */
   useEffect(() => {
@@ -278,7 +280,11 @@ const PostPage: React.FC = () => {
                 </div>
                 <div className="px-5 py-4 space-y-4">
                   <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
-                    <Comments ref={commentsRef} postId={String(post.id)} pageSize={10} />
+                    <HomeFeedComments
+                      ref={commentsRef}
+                      postId={String(post.id)}
+                      pageSize={10}
+                    />
                   </div>
                 </div>
                 <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
@@ -303,7 +309,11 @@ const PostPage: React.FC = () => {
               {/* Scrollable Comments */}
               <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 min-w-0">
                 <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
-                  <Comments ref={commentsRef} postId={String(post.id)} pageSize={10} />
+                  <HomeFeedComments
+                    ref={commentsRef}
+                    postId={String(post.id)}
+                    pageSize={10}
+                  />
                 </div>
               </div>
 
