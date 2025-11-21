@@ -111,9 +111,9 @@ const PostPage: React.FC = () => {
     (post.imageUrl ? [post.imageUrl] : []);
 
   const isOwn = user?.username === post.username;
-  const authorJoined = post.authorJoinedAt
-    ? formatDistanceToNow(new Date(post.authorJoinedAt), { addSuffix: true })
-    : null;
+  const timeSincePost = formatDistanceToNow(new Date(post.timestamp), {
+    addSuffix: true,
+  });
 
   /* ---------------------- Render ---------------------- */
   return (
@@ -135,7 +135,7 @@ const PostPage: React.FC = () => {
                 <ArrowLeft className="h-4 w-4" />
               </button>
 
-              <div className="p-3 sm:p-5 pt-5 sm:pt-10 space-y-5 overflow-hidden">
+              <div className="p-3 sm:p-5 pt-4 sm:pt-6 space-y-5 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
@@ -143,13 +143,13 @@ const PostPage: React.FC = () => {
                       alt={post.username}
                       className="w-10 h-10 rounded-full ring-1 ring-white/10 shrink-0"
                     />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex items-center gap-2">
                       <h3 className="text-sm font-semibold text-gray-100 truncate">
                         @{post.username}
                       </h3>
-                      <p className="text-xs text-gray-400">
-                        Joined {authorJoined ?? "—"}
-                      </p>
+                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                        • {timeSincePost}
+                      </span>
                     </div>
                   </div>
 
