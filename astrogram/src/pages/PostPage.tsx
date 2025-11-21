@@ -110,7 +110,7 @@ const PostPage: React.FC = () => {
 
   /* ---------------------- Render ---------------------- */
   return (
-    <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+    <div className="relative w-full flex justify-center overflow-x-hidden">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
       <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
@@ -126,7 +126,7 @@ const PostPage: React.FC = () => {
                       className="w-10 h-10 rounded-full ring-1 ring-white/10 shrink-0"
                     />
                     <Link
-                      to={`/profile/${post.username}`}
+                      to={`/users/${post.username}`}
                       className="min-w-0 flex items-center gap-2 hover:text-white transition"
                     >
                       <h3 className="text-sm font-semibold text-gray-100 truncate">
