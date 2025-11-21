@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Send, Star, Loader2, Reply, RefreshCw, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   createComment,
   deleteComment,
@@ -197,25 +198,33 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
     const renderComment = (comment: HomeFeedCommentItem, depth = 0): JSX.Element => (
       <div
         key={comment.id}
-        className={`rounded-2xl border border-white/5 bg-[#0B1220]/80 p-4 shadow-[0_6px_30px_rgba(0,0,0,0.35)] ${
+        className={`rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_6px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl backdrop-saturate-150 ${
           depth ? "ml-5" : ""
         }`}
       >
         <div className="flex gap-3">
-          <img
-            src={comment.avatarUrl ?? "/defaultPfp.png"}
-            alt={comment.username}
-            className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10"
-          />
+          <Link
+            to={`/users/${encodeURIComponent(comment.username)}/posts`}
+            className="shrink-0"
+          >
+            <img
+              src={comment.avatarUrl ?? "/defaultPfp.png"}
+              alt={comment.username}
+              className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10 bg-black/30"
+            />
+          </Link>
           <div className="flex-1 space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-white flex items-center gap-2">
+                <Link
+                  to={`/users/${encodeURIComponent(comment.username)}/posts`}
+                  className="text-sm font-semibold text-white flex items-center gap-2 hover:text-sky-200 transition"
+                >
                   @{comment.username}
                   <span className="text-[11px] font-normal text-slate-400">
                     {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
                   </span>
-                </div>
+                </Link>
                 <div
                   className="prose prose-invert max-w-none text-sm text-slate-100 leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.text) }}
@@ -247,17 +256,19 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
                 />
                 <span>{comment.likes}</span>
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setReplyParentId(comment.id);
-                  setReplyUsername(comment.username);
-                  focusEditor();
-                }}
-                className="inline-flex items-center gap-1 rounded-full px-3 py-1 border border-white/5 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10 transition"
-              >
-                <Reply className="h-4 w-4" /> Reply
-              </button>
+              {depth === 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplyParentId(comment.id);
+                    setReplyUsername(comment.username);
+                    focusEditor();
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 border border-white/5 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10 transition"
+                >
+                  <Reply className="h-4 w-4" /> Reply
+                </button>
+              )}
             </div>
 
             {(repliesByParent.get(comment.id) ?? []).length > 0 && (
@@ -272,7 +283,7 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
 
     return (
       <div className="space-y-4">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-[#0E1626] via-[#0B1422] to-[#0A1020] shadow-[0_12px_60px_rgba(0,0,0,0.45)]">
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_60px_rgba(0,0,0,0.45)]">
           <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.2em] text-sky-300/80">Discussion</p>
