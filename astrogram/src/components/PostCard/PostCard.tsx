@@ -383,18 +383,16 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Media */}
         {imageUrl && (
           <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
-            <div className="overflow-hidden rounded-md border border-white/10 bg-black/10">
-              <div className="aspect-[2/1] md:aspect-[21/9]">
-                <img
-                  src={imageUrl}
-                  alt={`Post by ${username}: ${caption}`}
-                  className="object-cover w-full h-full"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
-                  }}
-                />
-              </div>
+            <div className="flex items-center justify-center rounded-md border border-white/10 bg-black/10">
+              <img
+                src={imageUrl}
+                alt={`Post by ${username}: ${caption}`}
+                className="h-auto max-h-[70vh] max-w-full object-contain"
+                loading="lazy"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
+                }}
+              />
             </div>
           </div>
         )}
