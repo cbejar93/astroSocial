@@ -288,57 +288,6 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
 
     return (
       <div className="space-y-3">
-        <div className="max-h-[70vh] overflow-y-auto space-y-3 pretty-scroll scrollbar-cute">
-          {loading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className="animate-pulse rounded-2xl border border-white/5"
-                  style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-                >
-                  <div className="flex items-center gap-3 p-4">
-                    <div className="h-10 w-10 rounded-full bg-white/10" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 w-32 rounded-full bg-white/10" />
-                      <div className="h-3 w-full rounded-full bg-white/10" />
-                      <div className="h-3 w-2/3 rounded-full bg-white/10" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-red-300 text-sm">{error}</div>
-          ) : pageData && pageData.comments.length > 0 ? (
-            <div className="space-y-3">
-              {pageData.comments.map((comment) => renderComment(comment))}
-              {hasMore && (
-                <div className="pt-1 text-center">
-                  <button
-                    type="button"
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                    className="inline-flex items-center gap-2 text-sm text-sky-200 border border-white/10 rounded-full px-4 py-2 hover:bg-white/10 disabled:opacity-60"
-                  >
-                    {loadingMore ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Loading
-                      </>
-                    ) : (
-                      "Load more"
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center text-sm text-slate-400 border border-dashed border-white/10 rounded-2xl py-6">
-              Be the first to start the conversation.
-            </div>
-          )}
-        </div>
-
         <div
           className="rounded-3xl border border-white/10 px-5 py-4"
           style={{ backgroundColor: "rgba(11,20,34,0.62)" }}
@@ -346,7 +295,8 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
           {user ? (
             <form onSubmit={handleSubmit} className="space-y-3">
               {replyParentId && replyUsername && (
-                <div className="flex items-center justify-between rounded-xl px-3 py-2 text-xs text-slate-200"
+                <div
+                  className="flex items-center justify-between rounded-xl px-3 py-2 text-xs text-slate-200"
                   style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
                 >
                   <span>
@@ -406,6 +356,57 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
               style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
             >
               Sign in to join the discussion.
+            </div>
+          )}
+        </div>
+
+        <div className="max-h-[70vh] overflow-y-auto space-y-3 pretty-scroll scrollbar-cute">
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="animate-pulse rounded-2xl border border-white/5"
+                  style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                >
+                  <div className="flex items-center gap-3 p-4">
+                    <div className="h-10 w-10 rounded-full bg-white/10" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-32 rounded-full bg-white/10" />
+                      <div className="h-3 w-full rounded-full bg-white/10" />
+                      <div className="h-3 w-2/3 rounded-full bg-white/10" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-red-300 text-sm">{error}</div>
+          ) : pageData && pageData.comments.length > 0 ? (
+            <div className="space-y-3">
+              {pageData.comments.map((comment) => renderComment(comment))}
+              {hasMore && (
+                <div className="pt-1 text-center">
+                  <button
+                    type="button"
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="inline-flex items-center gap-2 text-sm text-sky-200 border border-white/10 rounded-full px-4 py-2 hover:bg-white/10 disabled:opacity-60"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Loading
+                      </>
+                    ) : (
+                      "Load more"
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center text-sm text-slate-400 border border-dashed border-white/10 rounded-2xl py-6">
+              Be the first to start the conversation.
             </div>
           )}
         </div>

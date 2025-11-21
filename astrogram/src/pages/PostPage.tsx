@@ -7,7 +7,7 @@ import HomeFeedComments, {
   type HomeFeedCommentsHandle,
 } from "../components/Comments/HomeFeedComments";
 import { useAuth } from "../hooks/useAuth";
-import { MoreVertical, Reply, Flag, ArrowLeft, AlertTriangle } from "lucide-react";
+import { MoreVertical, ArrowLeft } from "lucide-react";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -42,29 +42,6 @@ const AuroraBorder: React.FC<React.PropsWithChildren<{ className?: string }>> = 
   </div>
 );
 
-/* ------------------------- Pill Button ------------------------- */
-const PillButton: React.FC<
-  React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    icon?: React.ReactNode;
-    variant?: "primary" | "outline" | "danger";
-  }
-> = ({ className = "", icon, children, variant = "primary", ...props }) => {
-  const base =
-    "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition focus:outline-none";
-  const styles =
-    variant === "primary"
-      ? "text-white border-0 bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:shadow-lg hover:brightness-[1.05]"
-      : variant === "danger"
-      ? "text-red-300 border border-red-500/30 hover:bg-red-500/10"
-      : "text-gray-200 border border-white/10 hover:bg-white/10";
-  return (
-    <button {...props} className={[base, styles, className].join(" ")}>
-      {icon}
-      {children}
-    </button>
-  );
-};
-
 /* ----------------------------- Page ---------------------------- */
 const PostPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -75,9 +52,6 @@ const PostPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reporting, setReporting] = useState(false);
-  const [reportSuccess, setReportSuccess] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const commentsRef = useRef<HomeFeedCommentsHandle>(null);
@@ -124,25 +98,6 @@ const PostPage: React.FC = () => {
     else navigate("/feed");
   };
 
-  /* ---------------------- Post actions ---------------------- */
-  const handleReplyToPost = () => {
-    commentsRef.current?.focusEditor();
-  };
-
-  const handleReportPost = async () => {
-    if (!post) return;
-    setReporting(true);
-    try {
-      await apiFetch(`/posts/report/${post.id}`, { method: "POST" });
-      setReportSuccess(true);
-      setTimeout(() => setShowReportModal(false), 1200);
-    } catch (err) {
-      console.error("Report error", err);
-    } finally {
-      setReporting(false);
-    }
-  };
-
   if (loading || error || !post) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-400">
@@ -164,11 +119,11 @@ const PostPage: React.FC = () => {
   return (
     <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
-      <div className="w-full max-w-6xl mx-auto px-1 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+      <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0">
           <AuroraBorder>
-            <div className="relative flex flex-col justify-between h-full min-w-0">
+            <div className="relative flex flex-col h-full min-w-0 bg-white/5 sm:bg-[#0E1626]/80 backdrop-blur-xl">
               <button
                 onClick={handleBack}
                 className="hidden sm:inline-flex absolute top-2 left-4 items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
@@ -178,7 +133,7 @@ const PostPage: React.FC = () => {
                 <ArrowLeft className="h-4 w-4" />
               </button>
 
-              <div className="p-4 sm:p-5 pt-8 sm:pt-14 space-y-5 overflow-hidden">
+              <div className="p-3 sm:p-5 pt-9 sm:pt-14 space-y-5 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
@@ -238,19 +193,6 @@ const PostPage: React.FC = () => {
                   </div>
                 )}
               </div>
-
-              <div className="border-t border-white/10 p-4 flex justify-center gap-2 bg-[#0E1626]/50 rounded-b-2xl">
-                <PillButton onClick={handleReplyToPost} icon={<Reply className="h-4 w-4" />}>
-                  Reply
-                </PillButton>
-                <PillButton
-                  variant="danger"
-                  onClick={() => setShowReportModal(true)}
-                  icon={<Flag className="h-4 w-4" />}
-                >
-                  Report
-                </PillButton>
-              </div>
             </div>
           </AuroraBorder>
 
@@ -291,40 +233,6 @@ const PostPage: React.FC = () => {
         </aside>
       </div>
 
-      {/* REPORT MODAL */}
-      {showReportModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-[130]">
-          <div className="bg-[#0E1626]/95 ring-1 ring-white/10 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-2xl">
-            {reportSuccess ? (
-              <div className="text-green-400 font-medium">✅ Reported successfully!</div>
-            ) : (
-              <>
-                <AlertTriangle className="mx-auto mb-3 text-yellow-400 h-8 w-8" />
-                <h3 className="text-gray-100 font-semibold mb-2">Report this post?</h3>
-                <p className="text-gray-400 text-sm mb-5">
-                  This will flag the post for moderator review.
-                </p>
-                <div className="flex justify-center gap-3">
-                  <button
-                    onClick={() => setShowReportModal(false)}
-                    disabled={reporting}
-                    className="px-4 py-2 rounded-lg text-gray-300 bg-white/10 hover:bg-white/20 transition text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleReportPost}
-                    disabled={reporting}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[linear-gradient(90deg,#f04bb3,#5aa2ff)] hover:brightness-[1.1]"
-                  >
-                    {reporting ? "Reporting..." : "Confirm"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
