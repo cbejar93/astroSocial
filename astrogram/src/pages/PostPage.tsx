@@ -152,6 +152,64 @@ const PostPage: React.FC = () => {
     } catch {}
   };
 
+  const buildSharePayload = async () => {
+    if (!post) return null;
+
+    const postUrl = `${window.location.origin}/posts/${post.id}`;
+    const candidateImage = post.images?.[0] ?? post.imageUrl;
+
+    const shareData: ShareData = {
+      title: `${post.username}'s post`,
+      text: post.caption,
+      url: postUrl,
+    };
+
+    if (candidateImage) {
+      try {
+        const response = await fetch(candidateImage);
+        if (response.ok) {
+          const blob = await response.blob();
+          const extension = blob.type.split("/")[1] || "png";
+          const filename = `post-${post.id}.${extension}`;
+          const file = new File([blob], filename, { type: blob.type });
+
+          if (navigator.canShare?.({ files: [file] })) {
+            shareData.files = [file];
+          }
+          shareData.text = `${post.caption}\n\n${postUrl}`;
+        }
+      } catch (err) {
+        console.error("Failed to fetch share image:", err);
+      }
+    }
+
+    return { shareData, postUrl, shareImageUrl: candidateImage };
+  };
+
+  const buildClipboardMarkup = (postUrl: string, shareImageUrl?: string) => {
+    const safeCaption = post?.caption.replace(/</g, "&lt;").replace(/>/g, "&gt;") ?? "";
+    return `
+      <article style="font-family: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; max-width: 480px; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 16px; background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(247,249,255,0.95)); box-shadow: 0 10px 40px rgba(0,0,0,0.08);">
+        <header style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #3b82f6);"></div>
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">${post?.username ?? "astro user"}</div>
+            <div style="color: #475569; font-size: 13px;">shared from Astrogram</div>
+          </div>
+        </header>
+        <p style="color: #0f172a; font-size: 15px; line-height: 1.6; margin: 0 0 12px 0;">${safeCaption}</p>
+        ${
+          shareImageUrl
+            ? `<a href="${postUrl}" style="display: block; text-decoration: none; margin-bottom: 12px;">
+                <img src="${shareImageUrl}" alt="Shared post image" style="width: 100%; border-radius: 14px; box-shadow: 0 10px 35px rgba(0,0,0,0.12);" />
+              </a>`
+            : ""
+        }
+        <a href="${postUrl}" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 12px; text-decoration: none; background: #0ea5e9; color: white; font-weight: 600; box-shadow: 0 6px 20px rgba(14,165,233,0.35);">Read on Astrogram</a>
+      </article>
+    `;
+  };
+
   const handleLike = async () => {
     if (!user || !post) return;
     try {
@@ -173,7 +231,9 @@ const PostPage: React.FC = () => {
 
   const handleShare = async () => {
     if (!post) return;
-    const postUrl = `${window.location.origin}/posts/${post.id}`;
+    const sharePayload = await buildSharePayload();
+    if (!sharePayload) return;
+
     try {
       const { count } = await sharePost(String(post.id));
       setShareCount(count);
@@ -189,18 +249,39 @@ const PostPage: React.FC = () => {
 
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: `${post.username}'s post`,
-          text: post.caption,
-          url: postUrl,
-        });
+        await navigator.share(sharePayload.shareData);
       } catch {}
     } else {
       try {
-        await navigator.clipboard.writeText(postUrl);
-        alert("Link copied to clipboard!");
+        const clipboardImageUrl =
+          sharePayload.shareData.files?.length
+            ? URL.createObjectURL(sharePayload.shareData.files[0])
+            : sharePayload.shareImageUrl;
+
+        const htmlPreview = buildClipboardMarkup(
+          sharePayload.postUrl,
+          clipboardImageUrl,
+        );
+        const plaintext = `${post.username}'s post:\n${post.caption}\n${sharePayload.postUrl}`;
+
+        if (navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "text/html": new Blob([htmlPreview], { type: "text/html" }),
+              "text/plain": new Blob([plaintext], { type: "text/plain" }),
+            }),
+          ]);
+          alert("Link copied with preview!");
+        } else {
+          await navigator.clipboard.writeText(sharePayload.postUrl);
+          alert("Link copied to clipboard!");
+        }
+
+        if (clipboardImageUrl?.startsWith("blob:")) {
+          URL.revokeObjectURL(clipboardImageUrl);
+        }
       } catch {
-        prompt("Copy this link to share:", postUrl);
+        prompt("Copy this link to share:", sharePayload.postUrl);
       }
     }
   };
