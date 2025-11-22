@@ -14,6 +14,7 @@ import {
   Delete,
   Param,
   HttpException,
+  UseFilters,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
@@ -21,6 +22,7 @@ import type { Request } from 'express';
 import { UserDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateTemperatureDto } from './dto/update-temperature.dto';
+import { MulterExceptionFilter } from '../common/filters/multer-exception.filter';
 
 @Controller('api/users')
 export class UsersController {
@@ -60,6 +62,7 @@ export class UsersController {
 
   @Put('me')
   @UseGuards(JwtAuthGuard)
+  @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
     FileInterceptor('avatar', {
       fileFilter: (_req, file, cb) => {
@@ -71,7 +74,7 @@ export class UsersController {
             false,
           );
       },
-      limits: { fileSize: 10 * 1024 * 1024 }, // optional 10MB limit
+      limits: { fileSize: 100 * 1024 * 1024 }, // optional 100MB limit
     }),
   )
   async updateProfile(

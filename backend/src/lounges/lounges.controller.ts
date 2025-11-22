@@ -14,6 +14,7 @@ import {
   Patch,
   NotFoundException,
   ForbiddenException,
+  UseFilters,
 } from '@nestjs/common';
 import {
   FileFieldsInterceptor,
@@ -27,6 +28,7 @@ import { PostsService } from '../posts/post.service';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalAuthGuard } from '../auth/jwt-optional.guard';
+import { MulterExceptionFilter } from '../common/filters/multer-exception.filter';
 
 @Controller('api/lounges')
 export class LoungesController {
@@ -38,6 +40,7 @@ export class LoungesController {
   ) {}
 
   @Post()
+  @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -54,7 +57,7 @@ export class LoungesController {
               false,
             );
         },
-        limits: { fileSize: 10 * 1024 * 1024 },
+        limits: { fileSize: 100 * 1024 * 1024 },
       },
     ),
   )
@@ -95,6 +98,7 @@ export class LoungesController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':name/posts')
+  @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
     FilesInterceptor('images', 4, {
       fileFilter: (_req, file, cb) => {
@@ -106,7 +110,7 @@ export class LoungesController {
             false,
           );
       },
-      limits: { fileSize: 10 * 1024 * 1024 },
+      limits: { fileSize: 100 * 1024 * 1024 },
     }),
   )
   async createLoungePost(
@@ -151,6 +155,7 @@ export class LoungesController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
+  @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -167,7 +172,7 @@ export class LoungesController {
             false,
           );
       },
-        limits: { fileSize: 10 * 1024 * 1024 },
+        limits: { fileSize: 100 * 1024 * 1024 },
       },
     ),
   )

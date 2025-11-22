@@ -13,6 +13,7 @@ import {
     Query,
     InternalServerErrorException,
     Delete,
+    UseFilters,
 } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { PostsService } from './post.service'
@@ -21,6 +22,7 @@ import { CreatePostDto } from './dto/create-post.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { OptionalAuthGuard } from '../auth/jwt-optional.guard'
 import { FeedResponseDto } from './dto/feed.dto'
+import { MulterExceptionFilter } from '../common/filters/multer-exception.filter'
 
 @Controller('api/posts')
 export class PostsController {
@@ -58,6 +60,7 @@ export class PostsController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @UseFilters(new MulterExceptionFilter())
     @UseInterceptors(
         FileInterceptor('image', {
             fileFilter: (_req, file, cb) => {
@@ -76,7 +79,7 @@ export class PostsController {
                         false,
                     )
             },
-            limits: { fileSize: 32 * 1024 * 1024 },
+            limits: { fileSize: 100 * 1024 * 1024 },
         }),
     )
     @Post()
