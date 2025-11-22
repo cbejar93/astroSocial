@@ -61,11 +61,22 @@ export class PostsController {
     @UseInterceptors(
         FileInterceptor('image', {
             fileFilter: (_req, file, cb) => {
-                const allowed = ['image/jpeg', 'image/png', 'image/gif']
+                const allowed = [
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'image/tiff',
+                ]
                 if (allowed.includes(file.mimetype)) cb(null, true)
-                else cb(new Error('Invalid file type'), false)
+                else
+                    cb(
+                        new Error(
+                            'Unsupported file type. Allowed: JPEG, PNG, GIF, TIFF.',
+                        ),
+                        false,
+                    )
             },
-            limits: { fileSize: 32 * 1024 * 1024 }, 
+            limits: { fileSize: 32 * 1024 * 1024 },
         }),
     )
     @Post()
