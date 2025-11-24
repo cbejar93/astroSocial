@@ -157,11 +157,13 @@ const PostPage: React.FC = () => {
 
     const postUrl = `${window.location.origin}/posts/${post.id}`;
     const candidateImage = post.images?.[0] ?? post.imageUrl;
+    const combinedText = post.caption
+      ? `${post.caption}\n\n${postUrl}`
+      : postUrl;
 
     const shareData: ShareData = {
       title: `${post.username}'s post`,
-      text: post.caption,
-      url: postUrl,
+      text: combinedText,
     };
 
     if (candidateImage) {
@@ -176,14 +178,15 @@ const PostPage: React.FC = () => {
           if (navigator.canShare?.({ files: [file] })) {
             shareData.files = [file];
           }
-          shareData.text = `${post.caption}\n\n${postUrl}`;
         }
       } catch (err) {
         console.error("Failed to fetch share image:", err);
       }
+    } else {
+      shareData.url = postUrl;
     }
 
-    return { shareData, postUrl, shareImageUrl: candidateImage };
+    return { shareData, postUrl, shareImageUrl: candidateImage, combinedText };
   };
 
   const buildClipboardMarkup = (postUrl: string, shareImageUrl?: string) => {
@@ -279,7 +282,7 @@ const PostPage: React.FC = () => {
           sharePayload.postUrl,
           clipboardImageUrl,
         );
-        const plaintext = `${post.username}'s post:\n${post.caption}\n${sharePayload.postUrl}`;
+        const plaintext = sharePayload.combinedText;
 
         if (navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
           await navigator.clipboard.write([
@@ -290,15 +293,15 @@ const PostPage: React.FC = () => {
           ]);
           alert("Link copied with preview!");
         } else {
-          await navigator.clipboard.writeText(sharePayload.postUrl);
-          alert("Link copied to clipboard!");
+          await navigator.clipboard.writeText(plaintext);
+          alert("Post copied to clipboard!");
         }
 
         if (clipboardImageUrl?.startsWith("blob:")) {
           URL.revokeObjectURL(clipboardImageUrl);
         }
       } catch {
-        prompt("Copy this link to share:", sharePayload.postUrl);
+        prompt("Copy this link to share:", sharePayload.combinedText);
       }
     }
   };
