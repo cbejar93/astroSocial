@@ -91,6 +91,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
   useEffect(() => {
     setSaveCount(saves ?? 0);
+    setShareCount(shares ?? 0);
     if (!user) {
       setLiked(false);
       setReposted(false);
@@ -100,7 +101,7 @@ const PostCard: React.FC<PostCardProps> = ({
     setLiked(Boolean(likedByMe));
     setReposted(Boolean(repostedByMe));
     setSaved(Boolean(savedByMe));
-  }, [user, likedByMe, repostedByMe, savedByMe, saves]);
+  }, [user, likedByMe, repostedByMe, savedByMe, saves, shares]);
 
   const safeTrack = (payload: Parameters<NonNullable<typeof trackEvent>>[0]) => {
     try {
@@ -136,12 +137,13 @@ const PostCard: React.FC<PostCardProps> = ({
     const postUrl = `${window.location.origin}/posts/${id}`;
     try {
       const { count } = await sharePost(String(id));
-      setShareCount(count);
+      const nextCount = typeof count === "number" ? count : shareCount + 1;
+      setShareCount(nextCount);
       safeTrack({
         type: "post_share",
         targetType: "post",
         targetId: String(id),
-        value: count,
+        value: nextCount,
       });
     } catch (err) {
       console.error("Failed to share:", err);

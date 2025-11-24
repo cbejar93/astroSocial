@@ -256,12 +256,13 @@ const PostPage: React.FC = () => {
 
     try {
       const { count } = await sharePost(String(post.id));
-      setShareCount(count);
+      const nextCount = typeof count === "number" ? count : shareCount + 1;
+      setShareCount(nextCount);
       safeTrack({
         type: "post_share",
         targetType: "post",
         targetId: String(post.id),
-        value: count,
+        value: nextCount,
       });
     } catch (err) {
       console.error("Failed to share:", err);
