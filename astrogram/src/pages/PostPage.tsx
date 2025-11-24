@@ -152,6 +152,80 @@ const PostPage: React.FC = () => {
     } catch {}
   };
 
+  const buildSharePayload = async () => {
+    if (!post) return null;
+
+    const postUrl = `${window.location.origin}/posts/${post.id}`;
+    const candidateImage = post.images?.[0] ?? post.imageUrl;
+
+    const shareData: ShareData = {
+      title: `${post.username}'s post`,
+      text: post.caption,
+      url: postUrl,
+    };
+
+    if (candidateImage) {
+      try {
+        const response = await fetch(candidateImage);
+        if (response.ok) {
+          const blob = await response.blob();
+          const extension = blob.type.split("/")[1] || "png";
+          const filename = `post-${post.id}.${extension}`;
+          const file = new File([blob], filename, { type: blob.type });
+
+          if (navigator.canShare?.({ files: [file] })) {
+            shareData.files = [file];
+          }
+          shareData.text = `${post.caption}\n\n${postUrl}`;
+        }
+      } catch (err) {
+        console.error("Failed to fetch share image:", err);
+      }
+    }
+
+    return { shareData, postUrl, shareImageUrl: candidateImage };
+  };
+
+  const buildClipboardMarkup = (postUrl: string, shareImageUrl?: string) => {
+    const safeCaption =
+      post?.caption.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br />") ??
+      "";
+    const brandColor = "#0ea5e9";
+    const logoUrl = `${window.location.origin}/logo.png`;
+
+    return `
+      <article style="font-family: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; max-width: 520px; border-radius: 20px; border: 1px solid rgba(14, 165, 233, 0.2); overflow: hidden; background: linear-gradient(150deg, #0b1220, #0f172a 45%, #0b1220); box-shadow: 0 14px 60px rgba(0,0,0,0.35);">
+        <header style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: ${brandColor}; color: #0b1220;">
+          <div style="width: 40px; height: 40px; border-radius: 12px; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.18);">
+            <img src="${logoUrl}" alt="Astrolounge" style="width: 26px; height: 26px; object-fit: contain;" />
+          </div>
+          <div>
+            <div style="font-weight: 800; letter-spacing: 0.1px;">Astrolounge</div>
+            <div style="font-size: 13px; opacity: 0.75;">Shared a post</div>
+          </div>
+        </header>
+        ${
+          shareImageUrl
+            ? `<a href="${postUrl}" style="display: block; position: relative; text-decoration: none; background: #0b1220;">
+                <img src="${shareImageUrl}" alt="Shared post image" style="width: 100%; height: 240px; object-fit: cover; display: block; border-radius: 0;" />
+                <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 100%);"></div>
+                <div style="position: absolute; bottom: 14px; left: 14px; display: flex; align-items: center; gap: 10px;">
+                  <span style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 999px; background: rgba(11,18,32,0.72); color: white; font-weight: 700; backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.35);">
+                    <img src="${logoUrl}" alt="Astrolounge" style="width: 18px; height: 18px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));" />
+                    Astrolounge
+                  </span>
+                </div>
+              </a>`
+            : ""
+        }
+        <div style="padding: 18px 18px 20px; background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%); color: #e2e8f0;">
+          <p style="color: #e2e8f0; font-size: 15px; line-height: 1.6; margin: 0 0 14px 0;">${safeCaption}</p>
+          <a href="${postUrl}" style="display: inline-flex; align-items: center; gap: 8px; padding: 11px 15px; border-radius: 12px; text-decoration: none; background: ${brandColor}; color: #0b1220; font-weight: 800; box-shadow: 0 10px 30px rgba(14,165,233,0.45); letter-spacing: 0.1px;">Read on Astrolounge</a>
+        </div>
+      </article>
+    `;
+  };
+
   const handleLike = async () => {
     if (!user || !post) return;
     try {
@@ -173,7 +247,9 @@ const PostPage: React.FC = () => {
 
   const handleShare = async () => {
     if (!post) return;
-    const postUrl = `${window.location.origin}/posts/${post.id}`;
+    const sharePayload = await buildSharePayload();
+    if (!sharePayload) return;
+
     try {
       const { count } = await sharePost(String(post.id));
       setShareCount(count);
@@ -189,18 +265,39 @@ const PostPage: React.FC = () => {
 
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: `${post.username}'s post`,
-          text: post.caption,
-          url: postUrl,
-        });
+        await navigator.share(sharePayload.shareData);
       } catch {}
     } else {
       try {
-        await navigator.clipboard.writeText(postUrl);
-        alert("Link copied to clipboard!");
+        const clipboardImageUrl =
+          sharePayload.shareData.files?.length
+            ? URL.createObjectURL(sharePayload.shareData.files[0])
+            : sharePayload.shareImageUrl;
+
+        const htmlPreview = buildClipboardMarkup(
+          sharePayload.postUrl,
+          clipboardImageUrl,
+        );
+        const plaintext = `${post.username}'s post:\n${post.caption}\n${sharePayload.postUrl}`;
+
+        if (navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "text/html": new Blob([htmlPreview], { type: "text/html" }),
+              "text/plain": new Blob([plaintext], { type: "text/plain" }),
+            }),
+          ]);
+          alert("Link copied with preview!");
+        } else {
+          await navigator.clipboard.writeText(sharePayload.postUrl);
+          alert("Link copied to clipboard!");
+        }
+
+        if (clipboardImageUrl?.startsWith("blob:")) {
+          URL.revokeObjectURL(clipboardImageUrl);
+        }
       } catch {
-        prompt("Copy this link to share:", postUrl);
+        prompt("Copy this link to share:", sharePayload.postUrl);
       }
     }
   };
