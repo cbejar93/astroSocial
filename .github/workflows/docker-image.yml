@@ -32,6 +32,19 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: flyctl auth docker
 
+      - name: Validate Supabase secrets
+        run: |
+          missing=0
+          for var in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY; do
+            if [ -z "${!var}" ]; then
+              echo "::error title=Missing secret::${var} is empty. Add it as a repository-level secret so CI builds bake the correct Supabase config."
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            exit 1
+          fi
+
       - name: Build image
         id: build-image
         uses: docker/build-push-action@v5
