@@ -68,7 +68,7 @@ docker build \
   -t astrolounge .
 ```
 
-In CI (e.g., GitHub Actions) store the values as repository secrets and forward them as build args so the frontend bundle can initialize Supabase during the build.
+In CI (e.g., GitHub Actions) store the values as **repository secrets** (not just environment-scoped secrets) and forward them as build args so the frontend bundle can initialize Supabase during the build. The Docker-image workflow runs the build job without an environment, so any Supabase secrets that only exist on an environment will resolve to empty strings and bake missing credentials into the bundle.
 
 ### Backend (runtime variables)
 
