@@ -8,6 +8,7 @@ import {
   isSupabaseConfigured,
 } from "../lib/supabaseClient";
 import { fireAccountCreationConversion } from "../lib/googleAds";
+import FormMessage from "../components/FormMessage";
 
 const SignupPage: React.FC = () => {
   const base = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -43,8 +44,21 @@ const SignupPage: React.FC = () => {
       emailProvided: Boolean(email.trim()),
       supabaseConfigured: isSupabaseConfigured(),
     });
-    if (!email.trim() || !password.trim()) {
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
       setMessage({ tone: "error", text: "Email and password are required." });
+      return;
+    }
+
+    const hasAtSymbol = trimmedEmail.includes("@");
+    const hasDomainTld = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmedEmail);
+    if (!hasAtSymbol || !hasDomainTld) {
+      setMessage({
+        tone: "error",
+        text: "Please enter a valid email address with an @ and a domain (e.g., name@example.com).",
+      });
       return;
     }
 
@@ -70,10 +84,13 @@ const SignupPage: React.FC = () => {
       console.log('[SignupPage] Using email redirect', { emailRedirectTo });
 
       const result = isLoginRoute
-        ? await supabase.auth.signInWithPassword({ email, password })
+        ? await supabase.auth.signInWithPassword({
+            email: trimmedEmail,
+            password: trimmedPassword,
+          })
         : await supabase.auth.signUp({
-            email,
-            password,
+            email: trimmedEmail,
+            password: trimmedPassword,
             options: { emailRedirectTo },
           });
       console.log('[SignupPage] Supabase response received', {
@@ -166,7 +183,6 @@ const SignupPage: React.FC = () => {
               placeholder="you@example.com"
               autoComplete="email"
               disabled={submitting}
-              required
             />
           </div>
           <div>
@@ -183,20 +199,10 @@ const SignupPage: React.FC = () => {
               autoComplete={isLoginRoute ? "current-password" : "new-password"}
               disabled={submitting}
               minLength={6}
-              required
             />
           </div>
 
-          {message && (
-            <p
-              className={`text-sm ${
-                message.tone === "error" ? "text-red-600" : "text-amber-600"
-              }`}
-              aria-live="polite"
-            >
-              {message.text}
-            </p>
-          )}
+          {message && <FormMessage tone={message.tone} text={message.text} />}
 
           <button
             type="submit"
