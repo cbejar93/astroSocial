@@ -48,6 +48,8 @@ const AuthModal: React.FC<{
   const { login } = useAuth();
 
   const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -72,6 +74,27 @@ const AuthModal: React.FC<{
   const isSignupDisabled =
     isSignupMode &&
     (!password.trim() || !confirmPassword.trim() || confirmPassword !== password || !isPasswordValid);
+  const isSubmitDisabled = submitting || isSignupDisabled || (emailTouched && Boolean(emailError));
+
+  const validateEmail = (value: string, shouldShowError = false) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      if (shouldShowError) {
+        setEmailError("Email is required.");
+      } else {
+        setEmailError(null);
+      }
+      return false;
+    }
+
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+    if (shouldShowError) {
+      setEmailError(isValid ? null : "Please enter a valid email address.");
+    } else if (isValid) {
+      setEmailError(null);
+    }
+    return isValid;
+  };
 
   const handleGoogle = () => (window.location.href = `${base}/auth/google`);
 
@@ -92,6 +115,8 @@ const AuthModal: React.FC<{
   useEffect(() => {
     if (!open) {
       setEmail("");
+      setEmailError(null);
+      setEmailTouched(false);
       setPassword("");
       setMessage(null);
       setConfirmPassword("");
@@ -101,18 +126,25 @@ const AuthModal: React.FC<{
 
   useEffect(() => {
     setMessage(null);
+    setEmailError(null);
+    setEmailTouched(false);
     setConfirmPassword("");
   }, [mode]);
 
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setEmailTouched(true);
     console.log('[AuthModal] Email auth submit', {
       mode,
       emailProvided: Boolean(email.trim()),
       supabaseConfigured: isSupabaseConfigured(),
     });
-    if (!email.trim() || !password.trim()) {
-      setMessage({ tone: "error", text: "Email and password are required." });
+    if (!validateEmail(email, true)) {
+      return;
+    }
+
+    if (!password.trim()) {
+      setMessage({ tone: "error", text: "Password is required." });
       return;
     }
 
@@ -273,13 +305,31 @@ const AuthModal: React.FC<{
               id={emailInputId}
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setEmail(value);
+                validateEmail(value, emailTouched);
+              }}
+              onBlur={(e) => {
+                setEmailTouched(true);
+                validateEmail(e.target.value, true);
+              }}
+              onInvalid={(e) => {
+                e.preventDefault();
+                setEmailTouched(true);
+                validateEmail(e.currentTarget.value, true);
+              }}
               className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-400/60 focus:border-transparent disabled:opacity-60"
               placeholder="you@example.com"
               autoComplete="email"
               disabled={submitting}
               required
             />
+            {emailError && emailTouched && (
+              <p className="mt-1 text-sm text-red-300" aria-live="polite">
+                {emailError}
+              </p>
+            )}
           </div>
           <div>
             <label
@@ -356,7 +406,7 @@ const AuthModal: React.FC<{
           <button
             ref={firstButtonRef}
             type="submit"
-            disabled={submitting || isSignupDisabled}
+            disabled={isSubmitDisabled}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition-all duration-200 disabled:opacity-60"
           >
             {submitting ? (
