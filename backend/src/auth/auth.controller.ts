@@ -168,6 +168,23 @@ export class AuthController {
     return { accessToken };
   }
 
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) res: ExpressResponse) {
+    const isProd = process.env.NODE_ENV === 'production';
+
+    res.cookie('jid', '', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'lax' : 'none',
+      domain: this.getRefreshCookieDomain(isProd),
+      path: '/',
+      expires: new Date(0),
+    });
+
+    return { success: true };
+  }
+
   @Post('supabase')
   @HttpCode(HttpStatus.OK)
   async supabaseAuth(

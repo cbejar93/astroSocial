@@ -21,6 +21,25 @@ export async function handleLogin(token: string) {
   storage?.setItem('ACCESS_TOKEN', token);
 }
 
+export async function logout(): Promise<void> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      throw new Error(`Logout failed (${res.status})`);
+    }
+  } finally {
+    setAccessToken('');
+    storage?.removeItem('ACCESS_TOKEN');
+    storage?.removeItem('jwt');
+    storage?.removeItem('USER_SNAPSHOT');
+    window.dispatchEvent(new Event('auth-logout'));
+  }
+}
+
 let refreshPromise: Promise<string> | null = null;
 
 async function refreshToken(): Promise<string> {

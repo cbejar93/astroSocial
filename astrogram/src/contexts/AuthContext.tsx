@@ -16,6 +16,7 @@ import {
   followUser,
   unfollowUser,
   updateTemperaturePreference as updateTemperaturePreferenceApi,
+  logout as apiLogout,
 } from "../lib/api";
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || "/api";
@@ -37,7 +38,7 @@ export interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (accessToken: string) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<User>;
   updateFollowedLounge: (
     loungeId: string,
@@ -141,13 +142,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = useCallback(() => {
-    // drop everything
-    setUser(null);
-    setAccessToken("");
-    storage?.removeItem("ACCESS_TOKEN");
-    storage?.removeItem("USER_SNAPSHOT");
-    // optionally call your backend /logout endpoint to clear the refresh cookie
+  const logout = useCallback(async () => {
+    try {
+      await apiLogout();
+    } finally {
+      // drop everything
+      setUser(null);
+      setAccessToken("");
+      storage?.removeItem("ACCESS_TOKEN");
+      storage?.removeItem("USER_SNAPSHOT");
+    }
   }, []);
 
   const updateFollowedLounge = async (

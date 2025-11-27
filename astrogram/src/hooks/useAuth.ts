@@ -11,7 +11,7 @@ export function useAuth() {
       login: async () => {
         throw new Error('AuthProvider is missing');
       },
-      logout: () => {
+      logout: async () => {
         throw new Error('AuthProvider is missing');
       },
       refreshUser: async () => {
