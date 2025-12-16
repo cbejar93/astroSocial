@@ -24,6 +24,13 @@ enum TemperatureUnit {
   F
 }
 
+enum SocialPlatform {
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  YOUTUBE
+}
+
 model User {
   id                String            @id @default(uuid())
   emailEncrypted    String
@@ -37,6 +44,7 @@ model User {
   username          String?           @unique
   role              String            @default("USER")
   temperature       TemperatureUnit   @default(F)
+  bio               String?           @db.VarChar(500)
   comments          Comment[]         @relation("UserComments")
   posts             Post[]            @relation("UserPosts")
   originalPosts     Post[]            @relation("OriginalAuthor")
@@ -48,6 +56,7 @@ model User {
   followers         User[]            @relation("UserFollows")
   following         User[]            @relation("UserFollows")
   savedPosts        SavedPost[]
+  socialAccounts    UserSocialAccount[]
   analyticsSessions AnalyticsSession[]
   analyticsEvents   AnalyticsEvent[]
 
@@ -182,5 +191,17 @@ model AnalyticsEvent {
 
   @@index([type])
   @@index([createdAt])
+  @@index([userId])
+}
+
+model UserSocialAccount {
+  id        String          @id @default(uuid())
+  userId    String
+  platform  SocialPlatform
+  url       String
+  createdAt DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
   @@index([userId])
 }
