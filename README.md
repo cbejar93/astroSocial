@@ -1,8 +1,8 @@
 # AstroLounge
 
-ColliMate is a full-stack social app for sharing and discovering cosmic photography and musings. Users can sign up via Google or Facebook, complete their profile, post images with captions, interact (like, share, repost), and browse a weighted feed.
+AstroLounge is a full-stack social app for sharing and discovering cosmic photography and musings. Users can sign up via Google or native, complete their profile, post images with captions, interact (like, share, repost), and browse a weighted feed.
 
-Posts are limited to **314** characters, while comments have no character limit.
+Posts are limited to **314** characters
 
 ---
 
@@ -10,7 +10,7 @@ Posts are limited to **314** characters, while comments have no character limit.
 
 * **Backend**: NestJS, TypeScript, Prisma (PostgreSQL), Passport (JWT, OAuth), Supabase Storage, Fly.io
 * **Frontend**: React, TypeScript, Vite, Tailwind CSS, React Router, `date-fns`, `lucide-react`
-* **Auth**: Google & Facebook OAuth, JWT access tokens & secure refresh cookies
+* **Auth**: Google & OAuth, JWT access tokens & secure refresh cookies
 
 ---
 
@@ -18,7 +18,7 @@ Posts are limited to **314** characters, while comments have no character limit.
 
 * Node.js v18+ & npm
 * A Supabase project (for storage)
-* Google & Facebook OAuth credentials
+* Google & OAuth credentials
 * Fly.io CLI (for deployment)
 
 ---
