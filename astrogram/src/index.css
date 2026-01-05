@@ -24,6 +24,23 @@
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #121212;
+
+  --desktop-nav-collapsed: 4.25rem;
+  --desktop-nav-expanded: 16rem;
+  --desktop-nav-offset: 1rem;
+  --desktop-nav-current-width: var(--desktop-nav-expanded);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --desktop-nav-offset: 2rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  :root {
+    --desktop-nav-offset: calc((100vw - 1536px) / 2 + 2rem);
+  }
 }
 
 /* Default link styles scoped to content areas */
