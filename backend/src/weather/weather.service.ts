@@ -66,13 +66,11 @@ export class WeatherService {
       );
 
       const hourly = response.data.hourly;
-      const timeBlocks = new Set([0, 3, 6, 12, 18, 21]);
       const resultMap: Record<string, any> = {};
 
       for (let i = 0; i < hourly.time.length; i++) {
         const dt = new Date(hourly.time[i]);
         const hr = dt.getHours();
-        if (!timeBlocks.has(hr)) continue;
         const dateKey = dt.toISOString().split('T')[0];
 
         if (!resultMap[dateKey]) {
