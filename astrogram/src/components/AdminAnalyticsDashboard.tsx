@@ -35,6 +35,20 @@ function formatDuration(ms: number): string {
   return parts.join(' ');
 }
 
+function formatLatency(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) {
+    return '0 ms';
+  }
+  if (ms < 1000) {
+    return `${Math.round(ms)} ms`;
+  }
+  const seconds = ms / 1000;
+  if (seconds < 60) {
+    return `${seconds.toFixed(seconds < 10 ? 1 : 0)} s`;
+  }
+  return formatDuration(ms);
+}
+
 function formatDateLabel(date: string): string {
   const parsed = new Date(`${date}T00:00:00Z`);
   return parsed.toLocaleDateString(undefined, {
@@ -134,6 +148,10 @@ const AdminAnalyticsDashboard: React.FC = () => {
       0,
     );
   }, [summary]);
+
+  const operationalMetrics = summary?.operationalMetrics;
+  const totalServerErrors = operationalMetrics?.totalServerErrors ?? 0;
+  const averageLatencyMs = operationalMetrics?.averageLatencyMs ?? 0;
 
   const totalUniqueVisits = useMemo(() => {
     if (!summary?.visitsByLocation?.length) {
@@ -239,7 +257,7 @@ const AdminAnalyticsDashboard: React.FC = () => {
         </header>
 
         {summary ? (
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-md bg-gray-800/70 p-4">
               <div className="text-xs uppercase tracking-wide text-gray-400">Total events</div>
               <div className="mt-2 text-2xl font-semibold text-white">
@@ -266,6 +284,26 @@ const AdminAnalyticsDashboard: React.FC = () => {
               <p className="mt-1 text-xs text-gray-400">
                 {formatNumber(postInteractionTotal)} post interactions ·{' '}
                 {formatNumber(summary.platformActivity?.commentLikes ?? 0)} comment likes
+              </p>
+            </div>
+            <div className="rounded-md bg-gray-800/70 p-4">
+              <div className="text-xs uppercase tracking-wide text-gray-400">Server errors</div>
+              <div className="mt-2 text-2xl font-semibold text-white">
+                {formatNumber(totalServerErrors)}
+              </div>
+              <p className="mt-1 text-xs text-gray-400">
+                5xx responses in the last {summary.rangeDays} days
+              </p>
+            </div>
+            <div className="rounded-md bg-gray-800/70 p-4">
+              <div className="text-xs uppercase tracking-wide text-gray-400">Avg request latency</div>
+              <div className="mt-2 text-2xl font-semibold text-white">
+                {formatLatency(averageLatencyMs)}
+              </div>
+              <p className="mt-1 text-xs text-gray-400">
+                Includes all recorded API requests{summary.operationalMetrics?.p95LatencyMs != null
+                  ? ` · P95 ${formatLatency(summary.operationalMetrics.p95LatencyMs)}`
+                  : ''}
               </p>
             </div>
           </div>

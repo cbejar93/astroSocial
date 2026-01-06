@@ -287,6 +287,12 @@ export interface AnalyticsSummary {
     events: number;
     uniqueUsers: number;
   };
+  operationalMetrics: {
+    totalServerErrors: number;
+    averageLatencyMs: number;
+    p95LatencyMs: number | null;
+    totalRequests: number;
+  };
   interactionCounts: { type: string; count: number }[];
   sessions: {
     count: number;
@@ -305,7 +311,19 @@ export async function fetchAnalyticsSummary(
   rangeDays: number,
 ): Promise<AnalyticsSummary> {
   const res = await apiFetch(`/analytics/summary?rangeDays=${rangeDays}`);
-  return res.json();
+  const data = await res.json();
+
+  return {
+    ...data,
+    operationalMetrics: {
+      totalServerErrors: data.operationalMetrics?.totalServerErrors ?? 0,
+      averageLatencyMs: data.operationalMetrics?.averageLatencyMs ?? 0,
+      p95LatencyMs:
+        data.operationalMetrics?.p95LatencyMs ??
+        (data.operationalMetrics?.p95LatencyMs === 0 ? 0 : null),
+      totalRequests: data.operationalMetrics?.totalRequests ?? 0,
+    },
+  };
 }
 
 export async function unsavePost(postId: string) {

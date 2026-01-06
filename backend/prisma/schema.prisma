@@ -184,3 +184,35 @@ model AnalyticsEvent {
   @@index([createdAt])
   @@index([userId])
 }
+
+model RequestMetric {
+  id         String   @id @default(uuid())
+  route      String?
+  method     String?
+  statusCode Int
+  durationMs Int
+  occurredAt DateTime @default(now())
+  requestId  String?
+  userId     String?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([occurredAt])
+  @@index([statusCode])
+}
+
+model RequestMetric {
+  id          String   @id @default(uuid())
+  route       String?
+  method      String?
+  statusCode  Int
+  durationMs  Int
+  occurredAt  DateTime @default(now())
+  requestId   String?
+  userId      String?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([occurredAt])
+  @@index([statusCode])
+}

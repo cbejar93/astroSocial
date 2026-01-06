@@ -33,7 +33,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     AnalyticsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, RequestLoggingMiddleware],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

@@ -42,6 +42,12 @@ export interface AnalyticsSummary {
     events: number;
     uniqueUsers: number;
   };
+  operationalMetrics: {
+    totalServerErrors: number;
+    averageLatencyMs: number;
+    p95LatencyMs: number | null;
+    totalRequests: number;
+  };
   interactionCounts: { type: string; count: number }[];
   sessions: {
     count: number;
@@ -111,7 +117,7 @@ export class AnalyticsService implements OnModuleDestroy {
     if (this.pendingEvents.length) {
       try {
         await this.flushPendingEventsInternal();
-        this.clearSummaryCache();
+          this.invalidateSummaryCache();
       } catch (error) {
         this.logger.error(
           `Failed to persist buffered analytics events on shutdown: ${(error as Error).message}`,
@@ -315,7 +321,7 @@ export class AnalyticsService implements OnModuleDestroy {
     }
   }
 
-  private clearSummaryCache(): void {
+  invalidateSummaryCache(): void {
     this.summaryCache.clear();
   }
 
@@ -328,7 +334,7 @@ export class AnalyticsService implements OnModuleDestroy {
       .then((count) => {
         if (count > 0) {
           this.logger.debug(`Flushed ${count} analytics events from buffer`);
-          this.clearSummaryCache();
+          this.invalidateSummaryCache();
         }
       })
       .finally(() => {
@@ -356,6 +362,8 @@ export class AnalyticsService implements OnModuleDestroy {
       eventsForDaily,
       postInteractions,
       commentLikes,
+      requestErrorCount,
+      requestLatencyAggregate,
     ] = await Promise.all([
       this.prisma.analyticsEvent.count({
         where: { createdAt: { gte: since } },
@@ -393,7 +401,35 @@ export class AnalyticsService implements OnModuleDestroy {
       this.prisma.commentLike.count({
         where: { createdAt: { gte: since } },
       }),
+      this.prisma.requestMetric.count({
+        where: {
+          occurredAt: { gte: since },
+          statusCode: { gte: 500, lt: 600 },
+        },
+      }),
+      this.prisma.requestMetric.aggregate({
+        _avg: { durationMs: true },
+        _count: { _all: true },
+        where: { occurredAt: { gte: since } },
+      }),
     ]);
+
+    let p95LatencyMs: number | null = null;
+    if (requestLatencyAggregate._count._all > 0) {
+      const skip = Math.max(
+        Math.floor(requestLatencyAggregate._count._all * 0.95) - 1,
+        0,
+      );
+      const percentileResult = await this.prisma.requestMetric.findMany({
+        where: { occurredAt: { gte: since } },
+        orderBy: { durationMs: 'asc' },
+        skip,
+        take: 1,
+        select: { durationMs: true },
+      });
+
+      p95LatencyMs = percentileResult[0]?.durationMs ?? null;
+    }
 
     const sessionDurations = sessions
       .map((session) => {
@@ -452,6 +488,12 @@ export class AnalyticsService implements OnModuleDestroy {
         type: entry.type,
         count: entry._count._all,
       })),
+      operationalMetrics: {
+        totalServerErrors: requestErrorCount,
+        averageLatencyMs: Math.round(requestLatencyAggregate._avg.durationMs ?? 0),
+        p95LatencyMs,
+        totalRequests: requestLatencyAggregate._count._all,
+      },
       sessions: {
         count: sessions.length,
         totalDurationMs: totalSessionDurationMs,
@@ -655,7 +697,7 @@ export class AnalyticsService implements OnModuleDestroy {
       );
     }
 
-    this.clearSummaryCache();
+    this.invalidateSummaryCache();
   }
 
   @Cron('15 1 * * *')
