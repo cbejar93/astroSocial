@@ -68,8 +68,10 @@ const App: React.FC = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-1">
-        <div className="mx-auto w-full max-w-7xl px-6 lg:px-8 pt-6 pb-20 md:grid md:grid-cols-[18rem,minmax(0,1fr),16rem] md:gap-8">
+      <main className="flex-1 md:pl-[calc(var(--desktop-nav-current-width)+var(--desktop-nav-offset))]">
+        <div
+          className="mx-auto w-full max-w-7xl md:max-w-[calc(80rem+var(--desktop-nav-current-width)+var(--desktop-nav-offset))] px-6 lg:px-8 pt-6 pb-20 md:grid md:grid-cols-[var(--desktop-nav-current-width)_minmax(0,1fr)_16rem] md:gap-8"
+        >
           <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
             <DesktopNav />
           </aside>

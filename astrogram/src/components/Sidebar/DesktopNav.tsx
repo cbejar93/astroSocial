@@ -81,6 +81,18 @@ const DesktopNav: React.FC = () => {
     );
   }, [user]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--desktop-nav-current-width",
+      collapsed ? "var(--desktop-nav-collapsed)" : "var(--desktop-nav-expanded)"
+    );
+
+    return () => {
+      root.style.setProperty("--desktop-nav-current-width", "var(--desktop-nav-expanded)");
+    };
+  }, [collapsed]);
+
   return (
     <nav
       className={[
@@ -89,7 +101,7 @@ const DesktopNav: React.FC = () => {
         "fixed left-4 md:left-8 2xl:left-[calc((100vw-1536px)/2+2rem)]",
       ].join(" ")}
       style={{
-        width: collapsed ? "4.25rem" : "16rem",
+        width: collapsed ? "var(--desktop-nav-collapsed)" : "var(--desktop-nav-expanded)",
         height: "92vh",
         transition: "width .25s ease",
         zIndex: 100,
