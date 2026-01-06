@@ -78,8 +78,13 @@ type HourlyNumberMap = Record<string, number>;
 const EMPTY_NUM_MAP: HourlyNumberMap = {};
 
 const SLOTS_24 = [0, 3, 6, 12, 18, 21] as const;
-const circularDiff = (a: number, b: number) =>
-  Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
+
+export const selectActiveSlot = (slots: readonly number[], currentHour: number) => {
+  for (const slot of slots) {
+    if (slot >= currentHour) return slot;
+  }
+  return slots[slots.length - 1] ?? 0;
+};
 
 /* --------------------------------- Page ---------------------------------- */
 const WeatherPage: React.FC<WeatherPageProps> = ({
@@ -208,14 +213,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
 
   // Decide the active slot once (timezone-aware)
   const activeSlot24 = useMemo(
-    () =>
-      SLOTS_24.reduce(
-        (best, cur) =>
-          circularDiff(cur, zonedNow.hour) < circularDiff(best, zonedNow.hour)
-            ? cur
-            : best,
-        SLOTS_24[0],
-      ),
+    () => selectActiveSlot(SLOTS_24, zonedNow.hour),
     [zonedNow.hour],
   );
 
