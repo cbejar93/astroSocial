@@ -91,9 +91,12 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
               {bars.map((bar) => {
                 const heightStyle =
                   bar.value <= 0
-                    ? "6px"
-                    : `calc(${bar.value}% + 4px)`; // always visible even for small values
-                const opacity = 0.3 + (bar.value / 100) * 0.7;
+                    ? "2px"
+                    : `max(calc(${bar.value}% + 4px), 10px)`; // always visible and taller than zero bars
+                const opacity =
+                  bar.value <= 0
+                    ? 0.2
+                    : 0.35 + (bar.value / 100) * 0.65;
 
                 return (
                   <div
