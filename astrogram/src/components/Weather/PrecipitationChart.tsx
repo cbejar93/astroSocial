@@ -85,10 +85,14 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
             <div
               role="img"
               aria-label="Bar chart showing precipitation probability by hour"
-              className="min-h-[10rem] md:min-h-[178px] h-full flex items-end gap-2.5 min-w-max pr-2"
+              className="relative min-h-[10rem] md:min-h-[178px] h-full flex items-end gap-2.5 min-w-max pr-2 rounded-xl bg-slate-900/40 dark:bg-slate-900/50"
             >
+              <div className="pointer-events-none absolute inset-x-3 bottom-[12%] h-px bg-slate-300/20 dark:bg-white/10" />
               {bars.map((bar) => {
-                const heightPercent = bar.value === 0 ? 4 : bar.value;
+                const heightStyle =
+                  bar.value <= 0
+                    ? "6px"
+                    : `calc(${bar.value}% + 4px)`; // always visible even for small values
                 const opacity = 0.3 + (bar.value / 100) * 0.7;
 
                 return (
@@ -101,8 +105,8 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
                     </span>
                     <div className="w-full flex-1 flex items-end justify-center h-[120px] sm:h-[150px]">
                       <div
-                        className="w-full max-w-[1.75rem] rounded-t-lg bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 transition-all duration-500"
-                        style={{ height: `${heightPercent}%`, opacity }}
+                        className="w-full max-w-[1.75rem] rounded-t-lg bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 shadow-[0_0_6px_rgba(56,189,248,0.35)] transition-all duration-500"
+                        style={{ height: heightStyle, opacity }}
                         aria-hidden="true"
                         title={`${bar.label}: ${bar.value}% chance of precipitation`}
                       />
