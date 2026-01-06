@@ -63,13 +63,20 @@ function ConditionIcon({ name }: { name: string }) {
 }
 
 /* ---------------------------- Time Block Helper --------------------------- */
-function getClosestTimeBlock(): TimeBlock {
-  const now = new Date().getHours();
-  const blocks = timeBlocks.map((tb) => parseInt(tb, 10)).sort((a, b) => a - b);
-  let best = blocks[0];
-  const circ = (a: number, b: number) => Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
-  for (const b of blocks) if (circ(b, now) < circ(best, now)) best = b;
-  return String(best) as TimeBlock;
+export function selectClosestTimeBlockForward(
+  blocks: TimeBlock[],
+  currentHour: number,
+): TimeBlock {
+  const sorted = blocks.map((tb) => Number.parseInt(tb, 10)).sort((a, b) => a - b);
+  for (const block of sorted) {
+    if (block >= currentHour) return String(block) as TimeBlock;
+  }
+  const last = sorted[sorted.length - 1] ?? 0;
+  return String(last) as TimeBlock;
+}
+
+function getClosestTimeBlock(nowHour: number = new Date().getHours()): TimeBlock {
+  return selectClosestTimeBlockForward(timeBlocks, nowHour);
 }
 
 /* --------------------------------- Card ----------------------------------- */

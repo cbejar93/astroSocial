@@ -4,7 +4,9 @@ import {
   getZonedDateInfo,
   isWithinDaylight,
   parseTimeParts,
+  selectActiveSlot,
 } from '../../../pages/WeatherPage';
+import { selectClosestTimeBlockForward } from '../WeatherCard';
 import { formatHourLabel, formatTimeForUnit } from '../../../lib/time';
 
 test('getZonedDateInfo resolves non-local timezone offsets', () => {
@@ -46,4 +48,23 @@ test('formatHourLabel respects selected unit', () => {
   assert.equal(formatHourLabel(15, 'metric'), '15H');
   assert.equal(formatHourLabel(0, 'us'), '12 AM');
   assert.equal(formatHourLabel(15, 'us'), '3 PM');
+});
+
+test('selectActiveSlot chooses current or next slot without wrapping to the past', () => {
+  const slots = [0, 3, 6, 12, 18, 21];
+  assert.equal(selectActiveSlot(slots, 0), 0);
+  assert.equal(selectActiveSlot(slots, 2), 3);
+  assert.equal(selectActiveSlot(slots, 18), 18);
+  assert.equal(selectActiveSlot(slots, 20), 21);
+  assert.equal(selectActiveSlot(slots, 22), 21); // stays at latest instead of wrapping to 0
+  assert.equal(selectActiveSlot(slots, 23), 21);
+});
+
+test('selectClosestTimeBlockForward mirrors forward-looking highlight', () => {
+  const blocks = ['0', '3', '6', '12', '18', '21'];
+  assert.equal(selectClosestTimeBlockForward(blocks, 0), '0');
+  assert.equal(selectClosestTimeBlockForward(blocks, 5), '6');
+  assert.equal(selectClosestTimeBlockForward(blocks, 12), '12');
+  assert.equal(selectClosestTimeBlockForward(blocks, 19), '21');
+  assert.equal(selectClosestTimeBlockForward(blocks, 22), '21'); // does not wrap to '0'
 });
