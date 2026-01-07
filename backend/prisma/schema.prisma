@@ -50,6 +50,7 @@ model User {
   savedPosts        SavedPost[]
   analyticsSessions AnalyticsSession[]
   analyticsEvents   AnalyticsEvent[]
+  requestMetrics    RequestMetric[]
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -194,22 +195,6 @@ model RequestMetric {
   occurredAt DateTime @default(now())
   requestId  String?
   userId     String?
-
-  user User? @relation(fields: [userId], references: [id])
-
-  @@index([occurredAt])
-  @@index([statusCode])
-}
-
-model RequestMetric {
-  id          String   @id @default(uuid())
-  route       String?
-  method      String?
-  statusCode  Int
-  durationMs  Int
-  occurredAt  DateTime @default(now())
-  requestId   String?
-  userId      String?
 
   user User? @relation(fields: [userId], references: [id])
 
