@@ -245,6 +245,17 @@ export class UsersService {
     return this.listSocialAccountsForUser(user.id);
   }
 
+  async deleteSocialAccount(userId: string, accountId: string): Promise<void> {
+    const account = await this.prisma.userSocialAccount.findUnique({
+      where: { id: accountId },
+      select: { id: true, userId: true },
+    });
+    if (!account || account.userId !== userId) {
+      throw new NotFoundException('Social account not found');
+    }
+    await this.prisma.userSocialAccount.delete({ where: { id: accountId } });
+  }
+
   async uploadAvatar(userId: string, file: Express.Multer.File) {
     const currentUser = await this.prisma.user.findUnique({
       where: { id: userId },

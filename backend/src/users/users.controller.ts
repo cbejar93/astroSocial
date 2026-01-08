@@ -143,6 +143,16 @@ export class UsersController {
     return this.usersService.listSocialAccountsForUser(req.user.sub);
   }
 
+  @Delete('me/social-accounts/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteSocialAccount(
+    @Req() req: Request & { user: { sub: string } },
+    @Param('id') id: string,
+  ): Promise<{ success: true }> {
+    await this.usersService.deleteSocialAccount(req.user.sub, id);
+    return { success: true };
+  }
+
   @Get('me/posts')
   @UseGuards(JwtAuthGuard)
   getMyPosts(@Req() req: Request & { user: { sub: string } }) {

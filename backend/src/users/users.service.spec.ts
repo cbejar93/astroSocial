@@ -9,7 +9,12 @@ describe('UsersService', () => {
   let service: UsersService;
   let prisma: {
     user: { findUnique: jest.Mock; update: jest.Mock };
-    userSocialAccount: { create: jest.Mock; findMany: jest.Mock };
+    userSocialAccount: {
+      create: jest.Mock;
+      findMany: jest.Mock;
+      findUnique: jest.Mock;
+      delete: jest.Mock;
+    };
   };
   let storage: { uploadFile: jest.Mock; deleteFile: jest.Mock };
 
@@ -29,6 +34,8 @@ describe('UsersService', () => {
       userSocialAccount: {
         create: jest.fn(),
         findMany: jest.fn(),
+        findUnique: jest.fn(),
+        delete: jest.fn(),
       },
     };
 
@@ -247,6 +254,40 @@ describe('UsersService', () => {
           platform: SocialPlatform.GITHUB,
           url: 'https://github.com/example',
         }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('deleteSocialAccount', () => {
+    it('deletes a social account owned by the user', async () => {
+      prisma.userSocialAccount.findUnique.mockResolvedValue({
+        id: 'social-1',
+        userId: 'user-123',
+      });
+
+      await service.deleteSocialAccount('user-123', 'social-1');
+
+      expect(prisma.userSocialAccount.delete).toHaveBeenCalledWith({
+        where: { id: 'social-1' },
+      });
+    });
+
+    it('throws not found when the social account does not exist', async () => {
+      prisma.userSocialAccount.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.deleteSocialAccount('user-123', 'social-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('throws not found when the social account belongs to another user', async () => {
+      prisma.userSocialAccount.findUnique.mockResolvedValue({
+        id: 'social-1',
+        userId: 'user-999',
+      });
+
+      await expect(
+        service.deleteSocialAccount('user-123', 'social-1'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });

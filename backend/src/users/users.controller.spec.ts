@@ -8,6 +8,7 @@ describe('UsersController', () => {
     addSocialAccount: jest.Mock;
     listSocialAccountsForUser: jest.Mock;
     listSocialAccountsByUsername: jest.Mock;
+    deleteSocialAccount: jest.Mock;
   };
 
   beforeEach(() => {
@@ -15,6 +16,7 @@ describe('UsersController', () => {
       addSocialAccount: jest.fn(),
       listSocialAccountsForUser: jest.fn(),
       listSocialAccountsByUsername: jest.fn(),
+      deleteSocialAccount: jest.fn(),
     };
 
     controller = new UsersController(service as unknown as UsersService);
@@ -82,5 +84,18 @@ describe('UsersController', () => {
       controller.getUserSocialAccounts('someone'),
     ).resolves.toBe(response);
     expect(service.listSocialAccountsByUsername).toHaveBeenCalledWith('someone');
+  });
+
+  it('deletes a social account for the current user', async () => {
+    const req = { user: { sub: 'user-123', email: 'test@example.com' } };
+    service.deleteSocialAccount.mockResolvedValue(undefined);
+
+    await expect(
+      controller.deleteSocialAccount(req as any, 'social-1'),
+    ).resolves.toEqual({ success: true });
+    expect(service.deleteSocialAccount).toHaveBeenCalledWith(
+      'user-123',
+      'social-1',
+    );
   });
 });
