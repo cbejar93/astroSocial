@@ -10,6 +10,7 @@ import {
   X,
   Image as ImageIcon,
   Star,
+  Link2,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -20,6 +21,10 @@ import {
   fetchMyComments,
   fetchSavedPosts,
   toggleCommentLike,
+  addUserSocialAccount,
+  fetchMySocialAccounts,
+  type SocialPlatform,
+  type UserSocialAccount,
 } from "../lib/api";
 import ConfirmModal from "../components/Modal/ConfirmModal";
 import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
@@ -123,16 +128,6 @@ const InstagramLogo: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const FacebookLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-    <rect x="2" y="2" width="20" height="20" rx="5" fill="#1877F2" />
-    <path
-      fill="#fff"
-      d="M13.5 8.5h1.9V6h-1.9c-2.2 0-3.7 1.3-3.7 3.6v1.5H8v2.5h1.8V18h2.6v-4.4h2l.4-2.5h-2.4V9.8c0-.9.3-1.3 1.1-1.3Z"
-    />
-  </svg>
-);
-
 const TikTokLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
     <rect x="2" y="2" width="20" height="20" rx="5" fill="#000" />
@@ -140,6 +135,28 @@ const TikTokLogo: React.FC<{ className?: string }> = ({ className }) => (
     <path d="M14.8 7.3c.8 1.4 2.1 2.2 3.5 2.4v1.6c-1.6-.1-3-.8-4.3-2V7.3Z" fill="#fff" />
   </svg>
 );
+
+const SOCIAL_PLATFORMS: SocialPlatform[] = [
+  "TWITTER",
+  "INSTAGRAM",
+  "TIKTOK",
+  "YOUTUBE",
+  "LINKEDIN",
+  "GITHUB",
+  "WEBSITE",
+  "OTHER",
+];
+
+const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
+  TWITTER: "X / Twitter",
+  INSTAGRAM: "Instagram",
+  TIKTOK: "TikTok",
+  YOUTUBE: "YouTube",
+  LINKEDIN: "LinkedIn",
+  GITHUB: "GitHub",
+  WEBSITE: "Website",
+  OTHER: "Other",
+};
 
 /* =============================== Shared Card =============================== */
 const Card: React.FC<
@@ -916,6 +933,12 @@ const ProfileOverviewPage: React.FC = () => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [avatarBust, setAvatarBust] = useState<number>(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState<UserSocialAccount[]>([]);
+  const [socialLoading, setSocialLoading] = useState(false);
+  const [socialSaving, setSocialSaving] = useState(false);
+  const [socialError, setSocialError] = useState<string | null>(null);
+  const [socialPlatform, setSocialPlatform] = useState<SocialPlatform>("INSTAGRAM");
+  const [socialUrl, setSocialUrl] = useState("");
 
   // small avatar menu (portaled)
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -966,6 +989,16 @@ const ProfileOverviewPage: React.FC = () => {
       window.removeEventListener("scroll", onAnyScroll, true);
     };
   }, [avatarMenuOpen]);
+
+  useEffect(() => {
+    if (!user) return;
+    setSocialLoading(true);
+    setSocialError(null);
+    fetchMySocialAccounts()
+      .then((accounts) => setSocialAccounts(accounts))
+      .catch(() => setSocialError("Unable to load social links."))
+      .finally(() => setSocialLoading(false));
+  }, [user]);
 
   if (!user) {
     return (
@@ -1039,6 +1072,42 @@ const ProfileOverviewPage: React.FC = () => {
     } catch (e) {
       console.error(e);
       alert("Failed to delete account.");
+    }
+  };
+
+  const handleAddSocialAccount = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmedUrl = socialUrl.trim();
+    if (!trimmedUrl) {
+      setSocialError("Please enter a URL.");
+      return;
+    }
+    setSocialSaving(true);
+    setSocialError(null);
+    try {
+      const created = await addUserSocialAccount({
+        platform: socialPlatform,
+        url: trimmedUrl,
+      });
+      setSocialAccounts((prev) => [created, ...prev]);
+      setSocialUrl("");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to add social link.";
+      setSocialError(message);
+    } finally {
+      setSocialSaving(false);
+    }
+  };
+
+  const renderSocialIcon = (platform: SocialPlatform) => {
+    switch (platform) {
+      case "INSTAGRAM":
+        return <InstagramLogo className="w-5 h-5" />;
+      case "TIKTOK":
+        return <TikTokLogo className="w-5 h-5" />;
+      default:
+        return <Link2 className="w-5 h-5 text-gray-200" />;
     }
   };
 
@@ -1167,41 +1236,82 @@ const ProfileOverviewPage: React.FC = () => {
 
                 <Card title="Social Links">
                   <div className="p-5">
-                    <div className="flex items-center gap-4">
-                      <a
-                        href="#"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                        title="Instagram"
-                        aria-label="Instagram"
+                    <div className="space-y-4">
+                      {socialLoading ? (
+                        <p className="text-xs text-gray-400">Loading social links...</p>
+                      ) : socialAccounts.length > 0 ? (
+                        <ul className="space-y-2">
+                          {socialAccounts.map((account) => (
+                            <li
+                              key={account.id}
+                              className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                            >
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full ring-1 ring-white/15">
+                                {renderSocialIcon(account.platform)}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-xs text-gray-400">
+                                  {SOCIAL_PLATFORM_LABELS[account.platform]}
+                                </p>
+                                <a
+                                  href={account.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="truncate text-sm text-sky-300 hover:text-sky-200"
+                                >
+                                  {account.url}
+                                </a>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-gray-400">
+                          Add social links so people can find you elsewhere.
+                        </p>
+                      )}
+
+                      <form
+                        onSubmit={handleAddSocialAccount}
+                        className="flex flex-col gap-3 rounded-lg border border-white/10 bg-gray-900/40 p-3"
                       >
-                        <InstagramLogo className="w-6 h-6" />
-                      </a>
-                      <a
-                        href="#"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                        title="Facebook"
-                        aria-label="Facebook"
-                      >
-                        <FacebookLogo className="w-6 h-6" />
-                      </a>
-                      <a
-                        href="#"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                        title="TikTok"
-                        aria-label="TikTok"
-                      >
-                        <TikTokLogo className="w-6 h-6" />
-                      </a>
-                      <div className="ml-auto">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs text-gray-400">Platform</label>
+                          <select
+                            value={socialPlatform}
+                            onChange={(event) =>
+                              setSocialPlatform(event.target.value as SocialPlatform)
+                            }
+                            className="rounded-md border border-white/10 bg-gray-900/80 px-3 py-2 text-sm text-white"
+                          >
+                            {SOCIAL_PLATFORMS.map((platform) => (
+                              <option key={platform} value={platform}>
+                                {SOCIAL_PLATFORM_LABELS[platform]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs text-gray-400">URL</label>
+                          <input
+                            type="url"
+                            value={socialUrl}
+                            onChange={(event) => setSocialUrl(event.target.value)}
+                            placeholder="https://"
+                            className="rounded-md border border-white/10 bg-gray-900/80 px-3 py-2 text-sm text-white placeholder-gray-500"
+                          />
+                        </div>
+                        {socialError && (
+                          <p className="text-xs text-rose-300">{socialError}</p>
+                        )}
                         <button
-                          type="button"
-                          className="inline-flex items-center gap-1 text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
-                          onClick={() => alert("Hook up fields to save social links if you have them")}
+                          type="submit"
+                          disabled={socialSaving}
+                          className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
                         >
-                          Manage Links
-                          <ChevronDown className="w-3.5 h-3.5" />
+                          {socialSaving ? "Saving..." : "Add social link"}
                         </button>
-                      </div>
+                      </form>
                     </div>
                   </div>
                 </Card>

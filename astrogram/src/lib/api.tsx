@@ -494,6 +494,54 @@ export async function fetchMyComments<T = unknown>(): Promise<T[]> {
   return res.json();
 }
 
+export type SocialPlatform =
+  | 'TWITTER'
+  | 'INSTAGRAM'
+  | 'TIKTOK'
+  | 'YOUTUBE'
+  | 'LINKEDIN'
+  | 'GITHUB'
+  | 'WEBSITE'
+  | 'OTHER';
+
+export interface UserSocialAccount {
+  id: string;
+  platform: SocialPlatform;
+  url: string;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function fetchMySocialAccounts(): Promise<UserSocialAccount[]> {
+  const res = await apiFetch('/users/me/social-accounts');
+  return res.json();
+}
+
+export async function fetchUserSocialAccounts(
+  username: string,
+): Promise<UserSocialAccount[]> {
+  const encoded = encodeURIComponent(username);
+  const res = await apiFetch(`/users/${encoded}/social-accounts`);
+  return res.json();
+}
+
+export async function addUserSocialAccount(payload: {
+  platform: SocialPlatform;
+  url: string;
+  metadata?: Record<string, unknown>;
+}): Promise<UserSocialAccount> {
+  const res = await apiFetch('/users/me/social-accounts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to add social link (${res.status})`);
+  }
+  return res.json();
+}
+
 export async function fetchUser<T = unknown>(username: string): Promise<T> {
   const encoded = encodeURIComponent(username);
   const res = await apiFetch(`/users/${encoded}`);

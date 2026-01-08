@@ -4,12 +4,15 @@ import {
   NotFoundException,
   Inject,
   Logger,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from '../storage/storage.service';
-import { TemperatureUnit } from '@prisma/client';
+import { SocialPlatform, TemperatureUnit, UserSocialAccount } from '@prisma/client';
+import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
+import { UserSocialAccountDto } from './dto/user-social-account.dto';
 
 @Injectable()
 export class UsersService {
@@ -143,6 +146,98 @@ export class UsersService {
       'code' in error &&
       (error as { code?: string }).code === 'P2002'
     );
+  }
+
+  private normalizePlatform(platform: SocialPlatform | string): SocialPlatform {
+    const normalized = platform?.toString().toUpperCase().trim() as SocialPlatform;
+    if (!Object.values(SocialPlatform).includes(normalized)) {
+      throw new BadRequestException('Platform must be a supported social platform');
+    }
+    return normalized;
+  }
+
+  private normalizeUrl(url: string): string {
+    const trimmed = url?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('URL is required');
+    }
+    let parsed: URL;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      throw new BadRequestException('URL must be a valid link');
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new BadRequestException('URL must start with http or https');
+    }
+    return trimmed;
+  }
+
+  private toSocialAccountDto(account: UserSocialAccount): UserSocialAccountDto {
+    return {
+      id: account.id,
+      platform: account.platform,
+      url: account.url,
+      metadata: (account.metadata as Record<string, unknown> | null) ?? null,
+      createdAt: account.createdAt.toISOString(),
+      updatedAt: account.updatedAt.toISOString(),
+    };
+  }
+
+  async addSocialAccount(
+    userId: string,
+    payload: CreateUserSocialAccountDto,
+  ): Promise<UserSocialAccountDto> {
+    const platform = this.normalizePlatform(payload.platform);
+    const url = this.normalizeUrl(payload.url);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    try {
+      const account = await this.prisma.userSocialAccount.create({
+        data: {
+          userId: user.id,
+          platform,
+          url,
+          metadata: payload.metadata,
+        },
+      });
+      return this.toSocialAccountDto(account);
+    } catch (error: unknown) {
+      if (this.isUniqueConstraintViolation(error)) {
+        throw new ConflictException(
+          'This social account is already linked to your profile',
+        );
+      }
+      throw error;
+    }
+  }
+
+  async listSocialAccountsForUser(userId: string): Promise<UserSocialAccountDto[]> {
+    const accounts = await this.prisma.userSocialAccount.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return accounts.map((account) => this.toSocialAccountDto(account));
+  }
+
+  async listSocialAccountsByUsername(
+    username: string,
+  ): Promise<UserSocialAccountDto[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return this.listSocialAccountsForUser(user.id);
   }
 
   async uploadAvatar(userId: string, file: Express.Multer.File) {

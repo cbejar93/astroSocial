@@ -1,13 +1,16 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UsersService } from './users.service';
-import { TemperatureUnit } from '@prisma/client';
+import { SocialPlatform, TemperatureUnit } from '@prisma/client';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let prisma: { user: { findUnique: jest.Mock; update: jest.Mock } };
+  let prisma: {
+    user: { findUnique: jest.Mock; update: jest.Mock };
+    userSocialAccount: { create: jest.Mock; findMany: jest.Mock };
+  };
   let storage: { uploadFile: jest.Mock; deleteFile: jest.Mock };
 
   const supabase = {} as SupabaseClient;
@@ -22,6 +25,10 @@ describe('UsersService', () => {
       user: {
         findUnique: jest.fn(),
         update: jest.fn(),
+      },
+      userSocialAccount: {
+        create: jest.fn(),
+        findMany: jest.fn(),
       },
     };
 
@@ -164,6 +171,83 @@ describe('UsersService', () => {
         service.updateProfile('user-123', 'duplicate'),
       ).rejects.toThrow("username's must be unique");
       expect(prisma.user.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('addSocialAccount', () => {
+    const baseAccount = {
+      id: 'social-1',
+      userId: 'user-123',
+      platform: SocialPlatform.INSTAGRAM,
+      url: 'https://instagram.com/example',
+      metadata: null,
+      createdAt: new Date('2024-01-01T00:00:00Z'),
+      updatedAt: new Date('2024-01-01T00:00:00Z'),
+    };
+
+    it('creates a social account for a valid platform and url', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-123' });
+      prisma.userSocialAccount.create.mockResolvedValue(baseAccount);
+
+      const result = await service.addSocialAccount('user-123', {
+        platform: SocialPlatform.INSTAGRAM,
+        url: 'https://instagram.com/example',
+      });
+
+      expect(prisma.userSocialAccount.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'user-123',
+          platform: SocialPlatform.INSTAGRAM,
+          url: 'https://instagram.com/example',
+          metadata: undefined,
+        },
+      });
+      expect(result.platform).toBe(SocialPlatform.INSTAGRAM);
+    });
+
+    it('rejects unsupported platforms', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-123' });
+
+      await expect(
+        service.addSocialAccount('user-123', {
+          platform: 'invalid',
+          url: 'https://example.com',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejects invalid URLs', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-123' });
+
+      await expect(
+        service.addSocialAccount('user-123', {
+          platform: SocialPlatform.GITHUB,
+          url: 'not-a-url',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('throws conflict when a social account is duplicated', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-123' });
+      prisma.userSocialAccount.create.mockRejectedValue({ code: 'P2002' });
+
+      await expect(
+        service.addSocialAccount('user-123', {
+          platform: SocialPlatform.GITHUB,
+          url: 'https://github.com/example',
+        }),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('throws not found when the user is missing', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.addSocialAccount('user-123', {
+          platform: SocialPlatform.GITHUB,
+          url: 'https://github.com/example',
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });
