@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   Star,
   Link2,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -21,6 +22,7 @@ import {
   fetchMyComments,
   fetchSavedPosts,
   toggleCommentLike,
+  deleteUserSocialAccount,
   addUserSocialAccount,
   fetchMySocialAccounts,
   type SocialPlatform,
@@ -1100,6 +1102,20 @@ const ProfileOverviewPage: React.FC = () => {
     }
   };
 
+  const handleDeleteSocialAccount = async (accountId: string) => {
+    setSocialError(null);
+    const previousAccounts = socialAccounts;
+    setSocialAccounts((prev) => prev.filter((account) => account.id !== accountId));
+    try {
+      await deleteUserSocialAccount(accountId);
+    } catch (error) {
+      setSocialAccounts(previousAccounts);
+      const message =
+        error instanceof Error ? error.message : "Failed to delete social link.";
+      setSocialError(message);
+    }
+  };
+
   const renderSocialIcon = (platform: SocialPlatform) => {
     switch (platform) {
       case "INSTAGRAM":
@@ -1253,15 +1269,26 @@ const ProfileOverviewPage: React.FC = () => {
                                 <p className="text-xs text-gray-400">
                                   {SOCIAL_PLATFORM_LABELS[account.platform]}
                                 </p>
-                                <a
-                                  href={account.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1 text-sm font-semibold text-sky-300 hover:text-sky-200"
-                                >
-                                  {SOCIAL_PLATFORM_LABELS[account.platform]}
-                                  <Link2 className="w-3.5 h-3.5" />
-                                </a>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSocialAccount(account.id)}
+                                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-gray-900/70 p-1 text-rose-200 hover:text-rose-100 hover:bg-gray-800"
+                                    title={`Remove ${SOCIAL_PLATFORM_LABELS[account.platform]}`}
+                                    aria-label={`Remove ${SOCIAL_PLATFORM_LABELS[account.platform]}`}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                  <a
+                                    href={account.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm font-semibold text-sky-300 hover:text-sky-200"
+                                  >
+                                    {SOCIAL_PLATFORM_LABELS[account.platform]}
+                                    <Link2 className="w-3.5 h-3.5" />
+                                  </a>
+                                </div>
                               </div>
                             </li>
                           ))}

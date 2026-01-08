@@ -542,6 +542,15 @@ export async function addUserSocialAccount(payload: {
   return res.json();
 }
 
+export async function deleteUserSocialAccount(id: string): Promise<void> {
+  const res = await apiFetch(`/users/me/social-accounts/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete social link (${res.status})`);
+  }
+}
+
 export async function fetchUser<T = unknown>(username: string): Promise<T> {
   const encoded = encodeURIComponent(username);
   const res = await apiFetch(`/users/${encoded}`);
