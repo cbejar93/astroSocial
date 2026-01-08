@@ -1,10 +1,10 @@
-import { SocialPlatform } from '@prisma/client';
+import { Prisma, SocialPlatform } from '@prisma/client';
 
 export interface UserSocialAccountDto {
   id: string;
   platform: SocialPlatform;
   url: string;
-  metadata?: Record<string, unknown> | null;
+  metadata?: Prisma.JsonValue | null;
   createdAt: string;
   updatedAt: string;
 }

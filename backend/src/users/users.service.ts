@@ -10,7 +10,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from '../storage/storage.service';
-import { SocialPlatform, TemperatureUnit, UserSocialAccount } from '@prisma/client';
+import {
+  Prisma,
+  SocialPlatform,
+  TemperatureUnit,
+  UserSocialAccount,
+} from '@prisma/client';
 import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
 import { UserSocialAccountDto } from './dto/user-social-account.dto';
 
@@ -178,7 +183,7 @@ export class UsersService {
       id: account.id,
       platform: account.platform,
       url: account.url,
-      metadata: (account.metadata as Record<string, unknown> | null) ?? null,
+      metadata: (account.metadata as Prisma.JsonValue | null) ?? null,
       createdAt: account.createdAt.toISOString(),
       updatedAt: account.updatedAt.toISOString(),
     };
@@ -205,7 +210,7 @@ export class UsersService {
           userId: user.id,
           platform,
           url,
-          metadata: payload.metadata,
+          metadata: payload.metadata ?? undefined,
         },
       });
       return this.toSocialAccountDto(account);
