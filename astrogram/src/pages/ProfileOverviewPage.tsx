@@ -1257,9 +1257,10 @@ const ProfileOverviewPage: React.FC = () => {
                                   href={account.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="truncate text-sm text-sky-300 hover:text-sky-200"
+                                  className="inline-flex items-center gap-1 text-sm font-semibold text-sky-300 hover:text-sky-200"
                                 >
-                                  {account.url}
+                                  {SOCIAL_PLATFORM_LABELS[account.platform]}
+                                  <Link2 className="w-3.5 h-3.5" />
                                 </a>
                               </div>
                             </li>
