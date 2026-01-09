@@ -1,5 +1,5 @@
 // src/pages/SettingsPage.tsx
-import React, { useEffect, useId, useState } from "react";
+import React, { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Moon,
@@ -12,27 +12,10 @@ import {
   HelpCircle,
   ChevronRight,
 } from "lucide-react";
-import { useAuth } from "../hooks/useAuth";
+import { useTheme, type AccentKey } from "../contexts/ThemeContext";
 
 /* ----------------------- Accent (brand) palette ------------------------ */
 
-type AccentKey = "brand" | "ocean" | "mint";
-type AccentValue = "BRAND" | "OCEAN" | "MINT";
-const ACCENTS: Record<AccentKey, { from: string; to: string }> = {
-  brand: { from: "#f04bb3", to: "#5aa2ff" },
-  ocean: { from: "#06b6d4", to: "#8b5cf6" },
-  mint: { from: "#22c55e", to: "#06b6d4" },
-};
-const ACCENT_TO_SERVER: Record<AccentKey, AccentValue> = {
-  brand: "BRAND",
-  ocean: "OCEAN",
-  mint: "MINT",
-};
-const ACCENT_FROM_SERVER: Record<AccentValue, AccentKey> = {
-  BRAND: "brand",
-  OCEAN: "ocean",
-  MINT: "mint",
-};
 
 /* --------------------------- UI Primitives ----------------------------- */
 /** Uses the same frosted/blur gradient style as PostCard */
@@ -83,12 +66,14 @@ const Row: React.FC<
   </div>
 );
 
-const Switch: React.FC<
-  React.InputHTMLAttributes<HTMLInputElement> & { label?: string; accent?: AccentKey }
-> = ({ label, id, className = "", accent = "brand", ...props }) => {
+const Switch: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({
+  label,
+  id,
+  className = "",
+  ...props
+}) => {
   const autoId = useId();
   const switchId = id ?? autoId;
-  const grad = ACCENTS[accent];
 
   return (
     <div className="inline-flex items-center gap-3">
@@ -101,7 +86,7 @@ const Switch: React.FC<
           className,
         ].join(" ")}
         style={{
-          backgroundImage: `linear-gradient(90deg, ${grad.from}, ${grad.to})`,
+          backgroundImage: "linear-gradient(90deg, var(--accent-from), var(--accent-to))",
         }}
       >
         <input id={switchId} type="checkbox" className="sr-only peer" {...props} />
@@ -164,30 +149,12 @@ const TileLink: React.FC<
 /* ------------------------------- Page ---------------------------------- */
 
 const SettingsPage: React.FC = () => {
-  const { user, updateAccentPreference } = useAuth();
+  const { accent, setAccent, gradients } = useTheme();
   const [darkMode, setDarkMode] = useState(true);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [compactUI, setCompactUI] = useState(false);
-  const [accent, setAccent] = useState<AccentKey>(
-    user?.accent ? ACCENT_FROM_SERVER[user.accent] : "brand",
-  );
 
-  useEffect(() => {
-    if (user?.accent) {
-      setAccent(ACCENT_FROM_SERVER[user.accent]);
-    }
-  }, [user?.accent]);
-
-  const grad = ACCENTS[accent];
-
-  const handleAccentChange = async (key: AccentKey) => {
-    setAccent(key);
-    try {
-      await updateAccentPreference(ACCENT_TO_SERVER[key]);
-    } catch {
-      // Ignore persistence errors; UI remains updated.
-    }
-  };
+  const grad = gradients[accent];
 
   return (
     <div className="w-full">
@@ -208,7 +175,7 @@ const SettingsPage: React.FC = () => {
                     setDarkMode(true);
                     setReduceMotion(false);
                     setCompactUI(false);
-                    void handleAccentChange("brand");
+                    void setAccent("brand");
                   }}
                   className="text-xs rounded-md px-3 py-1.5 bg-white/10 hover:bg-white/20 ring-1 ring-white/10"
                 >
@@ -239,7 +206,6 @@ const SettingsPage: React.FC = () => {
                   checked={darkMode}
                   onChange={(e) => setDarkMode(e.currentTarget.checked)}
                   aria-label="Enable dark mode"
-                  accent={accent}
                 />
               </Row>
 
@@ -252,7 +218,6 @@ const SettingsPage: React.FC = () => {
                   checked={reduceMotion}
                   onChange={(e) => setReduceMotion(e.currentTarget.checked)}
                   aria-label="Reduce motion"
-                  accent={accent}
                 />
               </Row>
 
@@ -265,7 +230,6 @@ const SettingsPage: React.FC = () => {
                   checked={compactUI}
                   onChange={(e) => setCompactUI(e.currentTarget.checked)}
                   aria-label="Enable compact UI"
-                  accent={accent}
                 />
               </Row>
 
@@ -275,14 +239,14 @@ const SettingsPage: React.FC = () => {
                 icon={<Palette className="w-4 h-4" />}
               >
                 <div className="flex items-center gap-2">
-                  {(Object.keys(ACCENTS) as AccentKey[]).map((key) => {
-                    const a = ACCENTS[key];
+                  {(Object.keys(gradients) as AccentKey[]).map((key) => {
+                    const a = gradients[key];
                     const active = accent === key;
                     return (
                       <button
                         key={key}
                         type="button"
-                        onClick={() => handleAccentChange(key)}
+                        onClick={() => setAccent(key)}
                         className={[
                           "h-7 w-7 rounded-full ring-2 transition",
                           active ? "ring-white" : "ring-white/10 hover:ring-white/30",

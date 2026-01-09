@@ -29,6 +29,8 @@
   --desktop-nav-expanded: 16rem;
   --desktop-nav-offset: 1rem;
   --desktop-nav-current-width: var(--desktop-nav-expanded);
+  --accent-from: #f04bb3;
+  --accent-to: #5aa2ff;
 }
 
 @media (min-width: 768px) {
@@ -405,4 +407,3 @@ html::-webkit-scrollbar-corner,
 body::-webkit-scrollbar-corner {
   background: transparent;
 }
-

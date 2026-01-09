@@ -6,17 +6,20 @@ import App                from './App'
 import { AuthProvider }   from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { AnalyticsProvider } from './contexts/AnalyticsContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <NotificationProvider>
-        <BrowserRouter>
-          <AnalyticsProvider>
-            <App />
-          </AnalyticsProvider>
-        </BrowserRouter>
-      </NotificationProvider>
+      <ThemeProvider>
+        <NotificationProvider>
+          <BrowserRouter>
+            <AnalyticsProvider>
+              <App />
+            </AnalyticsProvider>
+          </BrowserRouter>
+        </NotificationProvider>
+      </ThemeProvider>
     </AuthProvider>
   </StrictMode>
 )
