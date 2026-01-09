@@ -1,8 +1,9 @@
 // src/components/BottomNavbar.tsx
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, CloudSun, User, Settings } from "lucide-react";
+import { Home, CloudSun, User, Settings, ChartArea } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
+import { useAuth } from "../../hooks/useAuth";
 
 type IconComponent = React.ComponentType<{ className?: string }>;
 
@@ -13,7 +14,7 @@ interface Tab {
 }
 
 // Match DesktopNav order and icons 1:1
-const TABS: Tab[] = [
+const BASE_TABS: Tab[] = [
   { name: "Home",     path: "/",         icon: Home },
   { name: "Weather",  path: "/weather",  icon: CloudSun },
   { name: "Lounges",  path: "/lounge",   icon: LavaLampIcon },
@@ -29,6 +30,10 @@ const SEGMENT_HEIGHT = "h-12";
 
 const BottomNavbar: React.FC = () => {
   const { pathname } = useLocation();
+  const { user } = useAuth();
+  const tabs = user?.role === "ADMIN"
+    ? [...BASE_TABS, { name: "Admin", path: "/admin/lounge", icon: ChartArea }]
+    : BASE_TABS;
 
   return (
     <nav
@@ -66,7 +71,7 @@ const BottomNavbar: React.FC = () => {
           {/* faint top hairline */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
 
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <Segment key={tab.name} tab={tab} pathname={pathname} />
           ))}
         </div>
