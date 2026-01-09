@@ -44,6 +44,7 @@ model User {
   providerId        String
   createdAt         DateTime          @default(now())
   avatarUrl         String?
+  bio               String?           @db.Text
   profileComplete   Boolean           @default(false)
   username          String?           @unique
   role              String            @default("USER")

@@ -613,6 +613,15 @@ export async function updateTemperaturePreference(temperature: 'C' | 'F') {
   return res.json();
 }
 
+export async function updateBio(bio: string) {
+  const res = await apiFetch('/users/me/bio', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bio }),
+  });
+  return res.json();
+}
+
 // --------------------------------------------------
 // Search API helpers
 

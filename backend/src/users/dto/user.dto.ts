@@ -4,6 +4,7 @@ export interface UserDto {
   id: string;
   username?: string;
   avatarUrl?: string;
+  bio?: string;
   profileComplete: boolean;
   role: string;
   temperature: 'C' | 'F';

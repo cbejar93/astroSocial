@@ -26,6 +26,7 @@ export interface User {
   id: string;
   username?: string;
   avatarUrl?: string;
+  bio?: string;
   profileComplete: boolean;
   role: string;
   temperature: 'C' | 'F';
@@ -227,4 +228,3 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     </AuthContext.Provider>
   );
 };
-

@@ -25,6 +25,7 @@ import { UpdateTemperatureDto } from './dto/update-temperature.dto';
 import { MulterExceptionFilter } from '../common/filters/multer-exception.filter';
 import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
 import { UserSocialAccountDto } from './dto/user-social-account.dto';
+import { UpdateBioDto } from './dto/update-bio.dto';
 
 @Controller('api/users')
 export class UsersController {
@@ -124,6 +125,15 @@ export class UsersController {
       req.user.sub,
       body.temperature,
     );
+  }
+
+  @Put('me/bio')
+  @UseGuards(JwtAuthGuard)
+  async updateBio(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() body: UpdateBioDto,
+  ): Promise<UserDto> {
+    return this.usersService.updateBio(req.user.sub, body.bio);
   }
 
   @Post('me/social-accounts')

@@ -34,6 +34,7 @@ import {
   deleteUserSocialAccount,
   addUserSocialAccount,
   fetchMySocialAccounts,
+  updateBio,
   type SocialPlatform,
   type UserSocialAccount,
 } from "../lib/api";
@@ -127,10 +128,6 @@ const SOCIAL_PLATFORMS: SocialPlatform[] = [
   "INSTAGRAM",
   "TIKTOK",
   "YOUTUBE",
-  "LINKEDIN",
-  "GITHUB",
-  "WEBSITE",
-  "OTHER",
 ];
 
 const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
@@ -947,6 +944,10 @@ const ProfileOverviewPage: React.FC = () => {
   const [socialError, setSocialError] = useState<string | null>(null);
   const [socialPlatform, setSocialPlatform] = useState<SocialPlatform>("INSTAGRAM");
   const [socialUrl, setSocialUrl] = useState("");
+  const [bioOpen, setBioOpen] = useState(false);
+  const [bioText, setBioText] = useState("");
+  const [bioSaving, setBioSaving] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
 
   // small avatar menu (portaled)
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1080,6 +1081,36 @@ const ProfileOverviewPage: React.FC = () => {
     } catch (e) {
       console.error(e);
       alert("Failed to delete account.");
+    }
+  };
+
+  const countWords = (value: string) =>
+    value.trim() ? value.trim().split(/\s+/).filter(Boolean).length : 0;
+
+  const openBioModal = () => {
+    setBioText(user?.bio ?? "");
+    setBioError(null);
+    setBioOpen(true);
+  };
+
+  const handleBioSave = async () => {
+    const words = countWords(bioText);
+    if (words > 400) {
+      setBioError("Bio must be 400 words or fewer.");
+      return;
+    }
+    setBioSaving(true);
+    setBioError(null);
+    try {
+      await updateBio(bioText);
+      await refreshUser();
+      setBioOpen(false);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update bio.";
+      setBioError(message);
+    } finally {
+      setBioSaving(false);
     }
   };
 
@@ -1312,16 +1343,22 @@ const ProfileOverviewPage: React.FC = () => {
               <div className="space-y-6 lg:col-span-1">
                 <Card title="About you">
                   <div className="p-5">
-                    <p className="text-sm text-gray-300">
-                      Add a short bio or tagline about yourself. Keep it fun and simple.
-                    </p>
+                    {user.bio ? (
+                      <p className="text-sm text-gray-200 whitespace-pre-wrap">
+                        {user.bio}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-300">
+                        Add a short bio or tagline about yourself. Keep it fun and simple.
+                      </p>
+                    )}
                     <div className="mt-3">
                       <button
                         type="button"
-                        onClick={() => setEditOpen(true)}
+                        onClick={openBioModal}
                         className="text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
                       >
-                        Add bio
+                        {user.bio ? "Edit bio" : "Add bio"}
                       </button>
                     </div>
                   </div>
@@ -1520,6 +1557,61 @@ const ProfileOverviewPage: React.FC = () => {
           onCancel={() => setShowConfirm(false)}
           onConfirm={confirmDelete}
         />
+      )}
+
+      {bioOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0E1626] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.55)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Your bio</h3>
+                <p className="mt-1 text-xs text-gray-400">
+                  Share a short description (up to 400 words).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBioOpen(false)}
+                className="rounded-full p-1 text-gray-400 hover:text-gray-200"
+                aria-label="Close bio editor"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <textarea
+                value={bioText}
+                onChange={(event) => setBioText(event.target.value)}
+                rows={6}
+                className="w-full rounded-lg border border-white/10 bg-gray-900/70 p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400/50"
+                placeholder="Tell people about yourself..."
+              />
+              <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+                <span>{countWords(bioText)} / 400 words</span>
+                {bioError && <span className="text-rose-300">{bioError}</span>}
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setBioOpen(false)}
+                className="rounded-md border border-white/10 px-3 py-1.5 text-xs text-gray-300 hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBioSave}
+                disabled={bioSaving}
+                className="rounded-md bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {bioSaving ? "Saving..." : "Save bio"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Edit sheet */}
