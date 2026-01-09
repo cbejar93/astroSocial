@@ -520,6 +520,7 @@ export interface AdminUserSummary {
   role: string;
   profileComplete: boolean;
   createdAt: string;
+  lastLoginAt: string | null;
 }
 
 export interface AdminUsersResponse {

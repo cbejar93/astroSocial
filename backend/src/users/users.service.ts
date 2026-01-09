@@ -589,6 +589,7 @@ export class UsersService {
       role: string;
       profileComplete: boolean;
       createdAt: string;
+      lastLoginAt: string | null;
     }[];
     total: number;
     page: number;
@@ -608,6 +609,7 @@ export class UsersService {
           role: true,
           profileComplete: true,
           createdAt: true,
+          lastLoginAt: true,
         },
         skip,
         take: safeLimit,
@@ -623,6 +625,7 @@ export class UsersService {
         role: u.role,
         profileComplete: u.profileComplete,
         createdAt: u.createdAt.toISOString(),
+        lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toISOString() : null,
       })),
       total,
       page: safePage,

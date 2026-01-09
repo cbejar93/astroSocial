@@ -267,19 +267,20 @@ const AdminPage: React.FC = () => {
                     <th className="px-4 py-3 font-semibold">Role</th>
                     <th className="px-4 py-3 font-semibold">Profile</th>
                     <th className="px-4 py-3 font-semibold">Created</th>
+                    <th className="px-4 py-3 font-semibold">Last Login</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800 bg-gray-900/40">
                   {usersLoading && (
                     <tr>
-                      <td className="px-4 py-6 text-gray-400" colSpan={4}>
+                      <td className="px-4 py-6 text-gray-400" colSpan={5}>
                         Loading users...
                       </td>
                     </tr>
                   )}
                   {!usersLoading && adminUsers.length === 0 && (
                     <tr>
-                      <td className="px-4 py-6 text-gray-400" colSpan={4}>
+                      <td className="px-4 py-6 text-gray-400" colSpan={5}>
                         No users to display.
                       </td>
                     </tr>
@@ -310,6 +311,11 @@ const AdminPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-3 text-gray-400">
                           {new Date(adminUser.createdAt).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-gray-400">
+                          {adminUser.lastLoginAt
+                            ? new Date(adminUser.lastLoginAt).toLocaleString()
+                            : '—'}
                         </td>
                       </tr>
                     ))}
