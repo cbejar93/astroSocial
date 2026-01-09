@@ -265,7 +265,7 @@ const LoungePostModal: React.FC<Props> = ({ open, onClose, loungeName, onPosted 
             form="lounge-post-form"
             disabled={loading}
             className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] transition hover:brightness-110 active:translate-y-px disabled:opacity-60"
-            style={{ background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" }}
+            style={{ background: "linear-gradient(90deg, var(--accent-from), var(--accent-to))" }}
           >
             {loading ? "Posting…" : "Publish Post"}
           </button>

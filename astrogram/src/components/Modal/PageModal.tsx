@@ -56,11 +56,14 @@ const PageModal: React.FC<PageModalProps> = ({ title, children, maxWidthClass })
           "relative w-[92%]",
           maxWidthClass ?? "max-w-3xl",
           "p-[1px] rounded-2xl",
-          "bg-[conic-gradient(at_20%_-10%,rgba(240,75,179,.35),rgba(90,162,255,.35),rgba(34,197,94,.2),rgba(240,75,179,.35))]",
           "shadow-[0_20px_80px_rgba(0,0,0,.55)]",
           "transition-all duration-200",
           open ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-[0.98]",
         ].join(" ")}
+        style={{
+          background:
+            "conic-gradient(at 20% -10%, color-mix(in srgb, var(--accent-from) 35%, transparent), color-mix(in srgb, var(--accent-to) 35%, transparent), rgba(34,197,94,0.2), color-mix(in srgb, var(--accent-from) 35%, transparent))",
+        }}
       >
         {/* Panel */}
         <div className="rounded-2xl ring-1 ring-white/10 bg-[#0E1626]/95 text-white overflow-hidden">
@@ -79,7 +82,13 @@ const PageModal: React.FC<PageModalProps> = ({ title, children, maxWidthClass })
               </button>
             </div>
             {/* Accent hairline */}
-            <div className="h-[2px] bg-gradient-to-r from-[#f04bb3]/50 via-white/10 to-[#5aa2ff]/50" />
+            <div
+              className="h-[2px]"
+              style={{
+                background:
+                  "linear-gradient(90deg, color-mix(in srgb, var(--accent-from) 50%, transparent), rgba(255,255,255,0.1), color-mix(in srgb, var(--accent-to) 50%, transparent))",
+              }}
+            />
           </div>
 
           {/* Content */}
