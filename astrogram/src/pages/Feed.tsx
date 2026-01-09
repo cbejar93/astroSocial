@@ -867,7 +867,7 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-1 text-xs sm:text-sm font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
+              className="inline-flex items-center justify-center rounded-full bg-accent-gradient px-4 py-1 text-xs sm:text-sm font-semibold text-white whitespace-nowrap shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/70"
             >
               {loading ? (
                 <span className="inline-flex items-center">

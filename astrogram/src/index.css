@@ -167,6 +167,10 @@ main a:hover,
   box-shadow: none !important;
 }
 
+.bg-accent-gradient {
+  background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+}
+
 
 
 /* Dropdown animation */

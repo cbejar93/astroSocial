@@ -346,7 +346,7 @@ const EditAccountSheet: React.FC<EditSheetProps> = ({
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-1.5 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-lg bg-accent-gradient px-4 py-1.5 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px disabled:opacity-60"
             >
               {saving ? "Saving…" : "Save changes"}
             </button>
@@ -1402,7 +1402,7 @@ const ProfileOverviewPage: React.FC = () => {
                         <button
                           type="submit"
                           disabled={socialSaving}
-                          className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+                          className="inline-flex items-center justify-center rounded-md bg-accent-gradient px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           {socialSaving ? "Saving..." : "Add social link"}
                         </button>
@@ -1533,7 +1533,7 @@ const ProfileOverviewPage: React.FC = () => {
                 type="button"
                 onClick={handleBioSave}
                 disabled={bioSaving}
-                className="rounded-md bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-md bg-accent-gradient px-4 py-1.5 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {bioSaving ? "Saving..." : "Save bio"}
               </button>

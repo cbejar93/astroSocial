@@ -123,8 +123,7 @@ const ConfirmDialog: React.FC<{
             type="button"
             onClick={onConfirm}
             disabled={busy}
-            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] hover:brightness-110 active:translate-y-px disabled:opacity-60"
-            style={{ background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" }}
+            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] hover:brightness-110 active:translate-y-px disabled:opacity-60 bg-accent-gradient"
           >
             {busy ? "Deleting…" : confirmText}
           </button>
@@ -380,7 +379,10 @@ const LoungePage: React.FC = () => {
                 <div className="relative">
                   <span
                     className="absolute -inset-1 rounded-full blur-lg opacity-60"
-                    style={{ background: "linear-gradient(135deg,#f04bb3,#5aa2ff)" }}
+                    style={{
+                      background:
+                        "linear-gradient(135deg, var(--accent-from), var(--accent-to))",
+                    }}
                   />
                   <img
                     src={lounge.profileUrl}
@@ -439,8 +441,7 @@ const LoungePage: React.FC = () => {
                         setMenuAnchor(null);
                         setPostModalOpen(true);
                       }}
-                      className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] transition hover:brightness-110 active:translate-y-px"
-                      style={{ background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" }}
+                      className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] transition hover:brightness-110 active:translate-y-px bg-accent-gradient"
                     >
                       <PencilLine className="h-4 w-4" />
                       Post
@@ -507,10 +508,9 @@ const LoungePage: React.FC = () => {
                           className={[
                             "text-xs px-2 py-1 rounded-md ring-1 transition",
                             active
-                              ? "text-white ring-white/30"
+                              ? "text-white ring-white/30 bg-accent-gradient"
                               : "text-gray-300 ring-white/10 hover:ring-white/30 hover:text-white",
                           ].join(" ")}
-                          style={active ? { background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" } : {}}
                         >
                           {label}
                         </button>
@@ -542,8 +542,7 @@ const LoungePage: React.FC = () => {
                 <p className="text-sm text-slate-200/90">No posts yet.</p>
                 {user && (
                   <button
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] hover:brightness-110"
-                    style={{ background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" }}
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 shadow-[0_12px_28px_rgba(15,23,42,0.45)] hover:brightness-110 bg-accent-gradient"
                     onClick={() => setPostModalOpen(true)}
                   >
                     <PencilLine className="w-4 h-4" />

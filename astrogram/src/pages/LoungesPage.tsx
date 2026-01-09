@@ -135,7 +135,13 @@ const LoungesPage: React.FC = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
                       {/* Avatar */}
                       <div className="absolute -bottom-6 left-4">
-                        <div className="p-[3px] rounded-full bg-gradient-to-br from-[#f04bb3] to-[#5aa2ff]">
+                        <div
+                          className="p-[3px] rounded-full"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, var(--accent-from), var(--accent-to))",
+                          }}
+                        >
                           <img
                             src={l.profileUrl}
                             alt={`${l.name} icon`}
@@ -168,13 +174,8 @@ const LoungesPage: React.FC = () => {
                               "shrink-0 inline-flex items-center justify-center rounded-full px-3 py-1 text-[12px] font-medium ring-1 transition",
                               isFollowed
                                 ? "bg-white/5 text-gray-200 ring-white/15 hover:bg-white/10"
-                                : "text-white ring-white/20 shadow-[0_8px_28px_rgba(15,23,42,0.45)]",
+                                : "bg-accent-gradient text-white ring-white/20 shadow-[0_8px_28px_rgba(15,23,42,0.45)]",
                             ].join(" ")}
-                            style={
-                              isFollowed
-                                ? undefined
-                                : { background: "linear-gradient(90deg,#f04bb3,#5aa2ff)" }
-                            }
                           >
                             {isFollowed ? "Following" : "Follow"}
                           </button>
