@@ -425,7 +425,7 @@ const PostPage: React.FC = () => {
   return (
     <div className="relative w-full overflow-x-hidden pt-3 sm:pt-8">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
-      <div className="w-full px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+      <div className="w-full max-w-6xl mx-auto px-0 sm:px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:min-w-0">
           <AuroraBorder>
