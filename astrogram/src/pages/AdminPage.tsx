@@ -124,7 +124,7 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full py-8 lg:pl-64 flex justify-center">
+    <div className="w-full py-8 lg:pl-64">
       <div className="w-full max-w-none px-0 sm:px-6 text-gray-200">
         <div className="border-b border-gray-700 mb-4 pt-4">
           <nav className="-mb-px flex justify-center space-x-8" aria-label="Admin tabs">
