@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Edit2,
   UploadCloud,
   LogOut,
   ChevronDown,
@@ -164,9 +163,11 @@ const SOCIAL_PLATFORM_DOMAINS: Record<SocialPlatform, string[]> = {
 };
 
 /* =============================== Shared Card =============================== */
-const Card: React.FC<
-  React.PropsWithChildren<{ className?: string; title?: string; onEdit?: () => void }>
-> = ({ className = "", title, onEdit, children }) => (
+const Card: React.FC<React.PropsWithChildren<{ className?: string; title?: string }>> = ({
+  className = "",
+  title,
+  children,
+}) => (
   <div
     className={[
       "rounded-2xl border border-white/10 bg-[#0E1626]/90 text-white",
@@ -174,19 +175,9 @@ const Card: React.FC<
       className,
     ].join(" ")}
   >
-    {(title || onEdit) && (
+    {title && (
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-        {title ? <h3 className="text-sm font-semibold tracking-wide">{title}</h3> : <div />}
-        {onEdit && (
-          <button
-            type="button"
-            onClick={onEdit}
-            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-            Edit
-          </button>
-        )}
+        <h3 className="text-sm font-semibold tracking-wide">{title}</h3>
       </div>
     )}
     {children}
@@ -1264,20 +1255,6 @@ const ProfileOverviewPage: React.FC = () => {
                       className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-2 ring-white/20"
                     />
                   </div>
-                  <button
-                    ref={menuBtnRef}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAvatarMenuOpen((s) => !s);
-                    }}
-                    onMouseDown={(e) => e.preventDefault()}
-                    className="absolute -bottom-1 -right-1 inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] shadow-lg ring-2 ring-white/20"
-                    title="Avatar options"
-                  >
-                    <Edit2 className="w-4.5 h-4.5 text-white" />
-                  </button>
-
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1293,19 +1270,6 @@ const ProfileOverviewPage: React.FC = () => {
                     <span className="text-xs sm:text-sm text-sky-300 bg-sky-500/10 ring-1 ring-sky-400/30 px-2 py-0.5 rounded-md">
                       @{username}
                     </span>
-                    {email ? (
-                      <span className="text-xs sm:text-sm text-fuchsia-200 bg-fuchsia-500/10 ring-1 ring-fuchsia-400/30 px-2 py-0.5 rounded-md truncate max-w-[14rem]">
-                        {email}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="text-xs sm:text-sm text-gray-200 bg-gray-700/50 ring-1 ring-white/15 px-2 py-0.5 rounded-md"
-                        onClick={() => setEditOpen(true)}
-                      >
-                        Add email
-                      </button>
-                    )}
                   </div>
 
                   <div className="mt-3 flex items-center gap-3">
@@ -1316,17 +1280,6 @@ const ProfileOverviewPage: React.FC = () => {
                     <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-center">
                       <div className="text-[11px] text-gray-400">Tracking</div>
                       <div className="text-base font-bold">{tracking.toLocaleString()}</div>
-                    </div>
-
-                    <div className="ml-auto">
-                      <button
-                        type="button"
-                        onClick={() => setEditOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-3 py-1.5 text-xs sm:text-sm font-semibold text-white shadow-[0_12px_28px_rgba(15,23,42,0.45)] ring-1 ring-white/20 transition hover:brightness-110 active:translate-y-px"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        Edit profile
-                      </button>
                     </div>
 
                     {uploading && <p className="ml-2 text-xs text-gray-300">Updating avatar…</p>}
@@ -1461,39 +1414,14 @@ const ProfileOverviewPage: React.FC = () => {
 
               {/* Account + Actions */}
               <div className="space-y-6 lg:col-span-2">
-                <Card title="Account info" onEdit={() => setEditOpen(true)}>
+                <Card title="Account info">
                   <div className="p-5 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="text-sm text-gray-400">Name</div>
-                      <div className="sm:col-span-2 text-sm text-gray-100">{displayName}</div>
-                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="text-sm text-gray-400">Username</div>
                       <div className="sm:col-span-2 text-sm">
                         <span className="text-sky-300">@{username}</span>
                       </div>
                     </div>
-
-                    {email ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="text-sm text-gray-400">Email</div>
-                        <div className="sm:col-span-2 text-sm text-gray-100 break-all">{email}</div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="text-sm text-gray-400">Email</div>
-                        <div className="sm:col-span-2 text-sm text-gray-400 flex items-center gap-3">
-                          Not set
-                          <button
-                            type="button"
-                            onClick={() => setEditOpen(true)}
-                            className="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     <div className="pt-3 border-t border-white/10" />
 
