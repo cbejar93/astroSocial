@@ -8,6 +8,7 @@ export interface UserDto {
   profileComplete: boolean;
   role: string;
   temperature: 'C' | 'F';
+  accent?: 'BRAND' | 'OCEAN' | 'MINT';
   name?: string;
   followedLounges?: string[];
   followers?: string[];

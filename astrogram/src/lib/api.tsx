@@ -622,6 +622,17 @@ export async function updateBio(bio: string) {
   return res.json();
 }
 
+export async function updateAccentPreference(
+  accent: 'BRAND' | 'OCEAN' | 'MINT',
+) {
+  const res = await apiFetch('/users/me/accent', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accent }),
+  });
+  return res.json();
+}
+
 // --------------------------------------------------
 // Search API helpers
 
