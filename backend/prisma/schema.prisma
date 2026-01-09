@@ -24,6 +24,12 @@ enum TemperatureUnit {
   F
 }
 
+enum AccentColor {
+  BRAND
+  OCEAN
+  MINT
+}
+
 enum SocialPlatform {
   TWITTER
   INSTAGRAM
@@ -49,6 +55,7 @@ model User {
   username          String?           @unique
   role              String            @default("USER")
   temperature       TemperatureUnit   @default(F)
+  accent            AccentColor       @default(BRAND)
   comments          Comment[]         @relation("UserComments")
   posts             Post[]            @relation("UserPosts")
   originalPosts     Post[]            @relation("OriginalAuthor")

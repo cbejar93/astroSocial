@@ -26,6 +26,7 @@ import { MulterExceptionFilter } from '../common/filters/multer-exception.filter
 import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
 import { UserSocialAccountDto } from './dto/user-social-account.dto';
 import { UpdateBioDto } from './dto/update-bio.dto';
+import { UpdateAccentDto } from './dto/update-accent.dto';
 
 @Controller('api/users')
 export class UsersController {
@@ -134,6 +135,15 @@ export class UsersController {
     @Body() body: UpdateBioDto,
   ): Promise<UserDto> {
     return this.usersService.updateBio(req.user.sub, body.bio);
+  }
+
+  @Put('me/accent')
+  @UseGuards(JwtAuthGuard)
+  async updateAccent(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() body: UpdateAccentDto,
+  ): Promise<UserDto> {
+    return this.usersService.updateAccentPreference(req.user.sub, body.accent);
   }
 
   @Post('me/social-accounts')

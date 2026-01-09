@@ -1,5 +1,5 @@
 // src/pages/SettingsPage.tsx
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Moon,
@@ -12,14 +12,26 @@ import {
   HelpCircle,
   ChevronRight,
 } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 /* ----------------------- Accent (brand) palette ------------------------ */
 
 type AccentKey = "brand" | "ocean" | "mint";
+type AccentValue = "BRAND" | "OCEAN" | "MINT";
 const ACCENTS: Record<AccentKey, { from: string; to: string }> = {
   brand: { from: "#f04bb3", to: "#5aa2ff" },
   ocean: { from: "#06b6d4", to: "#8b5cf6" },
   mint: { from: "#22c55e", to: "#06b6d4" },
+};
+const ACCENT_TO_SERVER: Record<AccentKey, AccentValue> = {
+  brand: "BRAND",
+  ocean: "OCEAN",
+  mint: "MINT",
+};
+const ACCENT_FROM_SERVER: Record<AccentValue, AccentKey> = {
+  BRAND: "brand",
+  OCEAN: "ocean",
+  MINT: "mint",
 };
 
 /* --------------------------- UI Primitives ----------------------------- */
@@ -152,12 +164,30 @@ const TileLink: React.FC<
 /* ------------------------------- Page ---------------------------------- */
 
 const SettingsPage: React.FC = () => {
+  const { user, updateAccentPreference } = useAuth();
   const [darkMode, setDarkMode] = useState(true);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [compactUI, setCompactUI] = useState(false);
-  const [accent, setAccent] = useState<AccentKey>("brand");
+  const [accent, setAccent] = useState<AccentKey>(
+    user?.accent ? ACCENT_FROM_SERVER[user.accent] : "brand",
+  );
+
+  useEffect(() => {
+    if (user?.accent) {
+      setAccent(ACCENT_FROM_SERVER[user.accent]);
+    }
+  }, [user?.accent]);
 
   const grad = ACCENTS[accent];
+
+  const handleAccentChange = async (key: AccentKey) => {
+    setAccent(key);
+    try {
+      await updateAccentPreference(ACCENT_TO_SERVER[key]);
+    } catch {
+      // Ignore persistence errors; UI remains updated.
+    }
+  };
 
   return (
     <div className="w-full">
@@ -178,7 +208,7 @@ const SettingsPage: React.FC = () => {
                     setDarkMode(true);
                     setReduceMotion(false);
                     setCompactUI(false);
-                    setAccent("brand");
+                    void handleAccentChange("brand");
                   }}
                   className="text-xs rounded-md px-3 py-1.5 bg-white/10 hover:bg-white/20 ring-1 ring-white/10"
                 >
@@ -252,7 +282,7 @@ const SettingsPage: React.FC = () => {
                       <button
                         key={key}
                         type="button"
-                        onClick={() => setAccent(key)}
+                        onClick={() => handleAccentChange(key)}
                         className={[
                           "h-7 w-7 rounded-full ring-2 transition",
                           active ? "ring-white" : "ring-white/10 hover:ring-white/30",

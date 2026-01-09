@@ -14,6 +14,7 @@ import {
   Prisma,
   SocialPlatform,
   TemperatureUnit,
+  AccentColor,
   UserSocialAccount,
 } from '@prisma/client';
 import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
@@ -46,6 +47,7 @@ export class UsersService {
         profileComplete: true, // ← add this
         role: true,
         temperature: true,
+        accent: true,
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
@@ -138,6 +140,7 @@ export class UsersService {
         profileComplete: true,
         role: true,
         temperature: true,
+        accent: true,
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
@@ -168,6 +171,42 @@ export class UsersService {
         profileComplete: true,
         role: true,
         temperature: true,
+        accent: true,
+        followedLounges: { select: { id: true } },
+        followers: { select: { id: true } },
+        following: { select: { id: true } },
+      },
+    });
+
+    return this.toDto(user);
+  }
+
+  async updateAccentPreference(
+    userId: string,
+    accent: string,
+  ): Promise<UserDto> {
+    const normalized = accent
+      ?.toUpperCase()
+      .trim() as AccentColor | undefined;
+
+    const allowedAccents = Object.values(AccentColor) as AccentColor[];
+
+    if (!normalized || !allowedAccents.includes(normalized)) {
+      throw new BadRequestException('Accent must be BRAND, OCEAN, or MINT');
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { accent: normalized },
+      select: {
+        id: true,
+        username: true,
+        avatarUrl: true,
+        bio: true,
+        profileComplete: true,
+        role: true,
+        temperature: true,
+        accent: true,
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
@@ -403,6 +442,7 @@ export class UsersService {
         profileComplete: true,
         role: true,
         temperature: true,
+        accent: true,
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
@@ -550,6 +590,7 @@ export class UsersService {
             profileComplete: true,
             role: true,
             temperature: true,
+            accent: true,
             followedLounges: { select: { id: true } },
           },
         },
@@ -571,6 +612,7 @@ export class UsersService {
             profileComplete: true,
             role: true,
             temperature: true,
+            accent: true,
             followedLounges: { select: { id: true } },
           },
         },
@@ -605,6 +647,7 @@ export class UsersService {
     profileComplete: boolean;
     role: string;
     temperature: TemperatureUnit;
+    accent?: AccentColor;
     followedLounges?: { id: string }[];
     followers?: { id: string }[];
     following?: { id: string }[];
@@ -617,6 +660,7 @@ export class UsersService {
       profileComplete: user.profileComplete,
       role: user.role,
       temperature: user.temperature,
+      accent: user.accent,
       followedLounges: user.followedLounges?.map((l) => l.id),
       followers: user.followers?.map((u) => u.id),
       following: user.following?.map((u) => u.id),

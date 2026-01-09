@@ -26,6 +26,9 @@ export function useAuth() {
       updateTemperaturePreference: async () => {
         throw new Error('AuthProvider is missing');
       },
+      updateAccentPreference: async () => {
+        throw new Error('AuthProvider is missing');
+      },
     };
   }
   return ctx;
