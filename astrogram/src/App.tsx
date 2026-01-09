@@ -41,6 +41,7 @@ import SettingsPage from "./pages/SettingsPage";
 
 import PageModal from "./components/Modal/PageModal";
 import AuroraBackground from "./components/Layout/AuroraBackground";
+import PageShell from "./components/Layout/PageShell";
 
 const App: React.FC = () => {
   const { weather, loading, error, unit, setUnit } = useWeatherService();
@@ -69,113 +70,101 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 md:pl-[calc(var(--desktop-nav-current-width)+var(--desktop-nav-offset))]">
-        <div
-          className="mx-auto w-full max-w-7xl md:max-w-[calc(80rem+var(--desktop-nav-current-width)+var(--desktop-nav-offset))] px-6 lg:px-8 pt-6 pb-20 md:grid md:grid-cols-[var(--desktop-nav-current-width)_minmax(0,1fr)_16rem] md:gap-8"
-        >
-          <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
-            <DesktopNav />
-          </aside>
+        <PageShell left={<DesktopNav />}>
+          {/* Base routes (render behind modal if one is open via route state) */}
+          <Routes
+            location={state?.modal && state.backgroundLocation ? state.backgroundLocation : location}
+          >
+            {/* Public legal pages for direct linking */}
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelinesPage />} />
 
-          <section className="w-full min-w-0">
-            {/* Base routes (render behind modal if one is open via route state) */}
-            <Routes
-              location={
-                state?.modal && state.backgroundLocation ? state.backgroundLocation : location
-              }
-            >
-              {/* Public legal pages for direct linking */}
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPolicyPage />} />
-              <Route path="/community-guidelines" element={<CommunityGuidelinesPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/login" element={<SignupPage />} />
+            <Route path="/auth/success" element={<AuthSuccessPage />} />
+            <Route path="/auth/supabase" element={<SupabaseAuthCallbackPage />} />
 
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/login" element={<SignupPage />} />
-              <Route path="/auth/success" element={<AuthSuccessPage />} />
-              <Route path="/auth/supabase" element={<SupabaseAuthCallbackPage />} />
+            <Route element={<RequireProfileCompletion />}>
+              <Route path="/" element={<Feed />} />
+              {/* single-post detail view */}
+              <Route path="/posts/:id" element={<PostPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/saved" element={<SavedPage />} />
+              <Route path="/users/:username" element={<UserPage />} />
+              <Route path="/users/:username/:tab" element={<UserPage />} />
+              <Route path="/lounge" element={<LoungesPage />} />
+              <Route path="/lounge/:loungeName" element={<LoungePage />} />
+              <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              {/* <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} /> */}
+              <Route path="/upload" element={<UploadForm />} />
+              <Route
+                path="/completeProfile"
+                element={
+                  <CompleteProfileGuard>
+                    <CompleteProfilePage />
+                  </CompleteProfileGuard>
+                }
+              />
+              <Route path="/profile" element={<ProfileOverviewPage />} />
+              <Route path="/profile/:tab" element={<ProfilePage />} />
 
-              <Route element={<RequireProfileCompletion />}>
-                <Route path="/" element={<Feed />} />
-                {/* single-post detail view */}
-                <Route path="/posts/:id" element={<PostPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/saved" element={<SavedPage />} />
-                <Route path="/users/:username" element={<UserPage />} />
-                <Route path="/users/:username/:tab" element={<UserPage />} />
-                <Route path="/lounge" element={<LoungesPage />} />
-                <Route path="/lounge/:loungeName" element={<LoungePage />} />
-                <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                {/* <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} /> */}
-                <Route path="/upload" element={<UploadForm />} />
-                <Route
-                  path="/completeProfile"
-                  element={
-                    <CompleteProfileGuard>
-                      <CompleteProfilePage />
-                    </CompleteProfileGuard>
-                  }
-                />
-                <Route path="/profile" element={<ProfileOverviewPage />} />
-                <Route path="/profile/:tab" element={<ProfilePage />} />
+              {/* Settings (plus slug so /settings/terms shows the page behind the modal) */}
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings/:slug" element={<SettingsPage />} />
 
-                {/* Settings (plus slug so /settings/terms shows the page behind the modal) */}
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/settings/:slug" element={<SettingsPage />} />
-
-                <Route element={<RequireAdmin />}>
-                  <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
-                  <Route path="/admin/:tab" element={<AdminPage />} />
-                </Route>
-
-                <Route
-                  path="/weather"
-                  element={
-                    <WeatherPage
-                      weather={weather}
-                      loading={loading}
-                      error={error}
-                      unit={unit}
-                      setUnit={setUnit}
-                    />
-                  }
-                />
-                <Route path="*" element={<NotFoundPage />} />
+              <Route element={<RequireAdmin />}>
+                <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
+                <Route path="/admin/:tab" element={<AdminPage />} />
               </Route>
+
+              <Route
+                path="/weather"
+                element={
+                  <WeatherPage
+                    weather={weather}
+                    loading={loading}
+                    error={error}
+                    unit={unit}
+                    setUnit={setUnit}
+                  />
+                }
+              />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+
+          {/* Modal overlays for settings legal pages (protected paths) */}
+          {isSettingsModal && (
+            <Routes>
+              <Route
+                path="/settings/terms"
+                element={
+                  <PageModal title="Terms of Service" maxWidthClass="max-w-4xl">
+                    <TermsPage />
+                  </PageModal>
+                }
+              />
+              <Route
+                path="/settings/privacy"
+                element={
+                  <PageModal title="Privacy Policy" maxWidthClass="max-w-4xl">
+                    <PrivacyPolicyPage />
+                  </PageModal>
+                }
+              />
+              <Route
+                path="/settings/community-guidelines"
+                element={
+                  <PageModal title="Community Guidelines" maxWidthClass="max-w-4xl">
+                    <CommunityGuidelinesPage />
+                  </PageModal>
+                }
+              />
             </Routes>
-
-            {/* Modal overlays for settings legal pages (protected paths) */}
-            {isSettingsModal && (
-              <Routes>
-                <Route
-                  path="/settings/terms"
-                  element={
-                    <PageModal title="Terms of Service" maxWidthClass="max-w-4xl">
-                      <TermsPage />
-                    </PageModal>
-                  }
-                />
-                <Route
-                  path="/settings/privacy"
-                  element={
-                    <PageModal title="Privacy Policy" maxWidthClass="max-w-4xl">
-                      <PrivacyPolicyPage />
-                    </PageModal>
-                  }
-                />
-                <Route
-                  path="/settings/community-guidelines"
-                  element={
-                    <PageModal title="Community Guidelines" maxWidthClass="max-w-4xl">
-                      <CommunityGuidelinesPage />
-                    </PageModal>
-                  }
-                />
-              </Routes>
-            )}
-          </section>
-
-          <aside className="hidden lg:block lg:w-64" aria-hidden="true" />
-        </div>
+          )}
+        </PageShell>
       </main>
 
       {/* Bottom Navbar */}

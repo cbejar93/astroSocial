@@ -294,7 +294,7 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
 
       {/* fixed shell */}
       <div className="w-full flex justify-center pt-2 pb-8 lg:py-0 lg:fixed lg:inset-0 lg:overflow-hidden">
-        <div className="w-full max-w-7xl mx-auto px-0 sm:px-4 lg:px-6 lg:h-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
+        <div className="w-full lg:h-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
           {/* LEFT column (scrollable on lg+) */}
           <div className="lg:h-full lg:min-h-0 lg:flex lg:flex-col lg:justify-center">
             <div
@@ -325,12 +325,12 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
                 <section aria-label="Upcoming forecast (mobile)" className="lg:hidden">
                   <div
                     className="
-                      -mx-4 overflow-x-auto snap-x snap-mandatory
+                      -mx-6 overflow-x-auto snap-x snap-mandatory
                       [scrollbar-gutter:stable]
                       scrollbar-cute
                     "
                   >
-                    <div className="flex gap-3 pr-4">
+                    <div className="flex gap-3 pr-6">
                       {futureWeatherData.map((day, index) => (
                         <div
                           key={day.date}
