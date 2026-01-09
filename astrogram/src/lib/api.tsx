@@ -513,6 +513,22 @@ export interface UserSocialAccount {
   updatedAt: string;
 }
 
+export interface AdminUserSummary {
+  id: string;
+  username: string | null;
+  avatarUrl: string | null;
+  role: string;
+  profileComplete: boolean;
+  createdAt: string;
+}
+
+export interface AdminUsersResponse {
+  results: AdminUserSummary[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export async function fetchMySocialAccounts(): Promise<UserSocialAccount[]> {
   const res = await apiFetch('/users/me/social-accounts');
   return res.json();
@@ -549,6 +565,17 @@ export async function deleteUserSocialAccount(id: string): Promise<void> {
   if (!res.ok) {
     throw new Error(`Failed to delete social link (${res.status})`);
   }
+}
+
+export async function fetchAdminUsers(
+  page: number = 1,
+  limit: number = 20,
+): Promise<AdminUsersResponse> {
+  const res = await apiFetch(`/users/admin?page=${page}&limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch admin users (${res.status})`);
+  }
+  return res.json();
 }
 
 export async function fetchUser<T = unknown>(username: string): Promise<T> {

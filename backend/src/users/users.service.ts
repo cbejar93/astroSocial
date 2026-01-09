@@ -578,6 +578,58 @@ export class UsersService {
     };
   }
 
+  async listUsers(
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    results: {
+      id: string;
+      username: string | null;
+      avatarUrl: string | null;
+      role: string;
+      profileComplete: boolean;
+      createdAt: string;
+    }[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+    const safeLimit =
+      Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 100) : 20;
+    const skip = (safePage - 1) * safeLimit;
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          role: true,
+          profileComplete: true,
+          createdAt: true,
+        },
+        skip,
+        take: safeLimit,
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      results: items.map((u) => ({
+        id: u.id,
+        username: u.username,
+        avatarUrl: u.avatarUrl,
+        role: u.role,
+        profileComplete: u.profileComplete,
+        createdAt: u.createdAt.toISOString(),
+      })),
+      total,
+      page: safePage,
+      limit: safeLimit,
+    };
+  }
+
   async getFollowers(userId: string): Promise<UserDto[]> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
