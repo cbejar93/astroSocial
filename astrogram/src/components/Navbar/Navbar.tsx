@@ -824,7 +824,8 @@ const Navbar: React.FC = () => {
                 setAuthMode("login");
                 setAuthOpen(true);
               }}
-              className="rounded-lg bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-2 text-sm font-semibold text-white shadow ring-1 ring-white/20 hover:brightness-110"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow ring-1 ring-white/20 hover:brightness-110"
+              style={{ background: "linear-gradient(90deg, var(--accent-from), var(--accent-to))" }}
             >
               Sign up / Login
             </button>

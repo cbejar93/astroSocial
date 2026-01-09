@@ -10,7 +10,7 @@
 .desktop-nav__scroll{flex:1;display:flex;flex-direction:column;gap:.5rem;overflow:auto;padding-right:.25rem}
 .desktop-nav__link{display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.625rem 1rem;font-size:1.125rem;font-weight:700;color:#e6edff;text-decoration:none;transition:background-color .2s ease,color .2s ease,box-shadow .2s ease,transform .2s ease}
 .desktop-nav__link:hover,.desktop-nav__link:focus-visible{background-color:rgba(30,41,59,.6);color:#f8fbff;text-decoration:none}
-.desktop-nav__link--active{background:linear-gradient(90deg,#f04bb3 0%,#5aa2ff 100%);color:#fff;box-shadow:0 12px 28px rgba(15,23,42,.45),inset 0 0 0 1px rgba(255,255,255,.2)}
+.desktop-nav__link--active{background:linear-gradient(90deg,var(--accent-from),var(--accent-to));color:#fff;box-shadow:0 12px 28px rgba(15,23,42,.45),inset 0 0 0 1px rgba(255,255,255,.2)}
 .desktop-nav__icon{width:1.75rem;height:1.75rem;color:#7fd2ff;transition:transform .2s ease,color .2s ease}
 .desktop-nav__link:hover .desktop-nav__icon,.desktop-nav__link:focus-visible .desktop-nav__icon{transform:scale(1.05);color:#b3e5ff}
 .desktop-nav__link--active .desktop-nav__icon{color:#fff}
@@ -110,4 +110,3 @@
 .desktop-nav__collapse-inline {
   z-index: 10 !important;
 }
-

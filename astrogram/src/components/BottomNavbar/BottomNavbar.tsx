@@ -21,9 +21,6 @@ const TABS: Tab[] = [
   { name: "Settings", path: "/settings", icon: Settings },
 ];
 
-// Same gradient accent family used elsewhere
-const ACTIVE_GRADIENT = "bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff]";
-
 // Compact sizing to keep things tidy
 const ICON_CLASS = "h-5 w-5 text-white";
 const LABEL_CLASS = "text-[10px]";
@@ -49,7 +46,7 @@ const BottomNavbar: React.FC = () => {
           className="mx-auto h-full max-w-3xl opacity-20 blur-3xl"
           style={{
             background:
-              "radial-gradient(70% 80% at 50% 0%, rgba(240,75,179,.24), rgba(90,162,255,.24), transparent 70%)",
+              "radial-gradient(70% 80% at 50% 0%, color-mix(in srgb, var(--accent-from) 24%, transparent), color-mix(in srgb, var(--accent-to) 24%, transparent), transparent 70%)",
           }}
         />
       </div>
@@ -103,9 +100,11 @@ const Segment: React.FC<{ tab: Tab; pathname: string }> = ({ tab, pathname }) =>
               className={[
                 "absolute inset-0 rounded-xl transition-all duration-300",
                 active ? "opacity-100 scale-[1.02]" : "opacity-0 scale-100",
-                ACTIVE_GRADIENT,
                 "ring-1 ring-white/25 shadow-[0_8px_20px_rgba(15,23,42,0.45)]",
               ].join(" ")}
+              style={{
+                background: "linear-gradient(90deg, var(--accent-from), var(--accent-to))",
+              }}
             />
             {/* Inner gloss when active */}
             <div

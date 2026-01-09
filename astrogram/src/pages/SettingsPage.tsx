@@ -1,5 +1,5 @@
 // src/pages/SettingsPage.tsx
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Moon,
@@ -158,6 +158,12 @@ const SettingsPage: React.FC = () => {
   const [accent, setAccent] = useState<AccentKey>("brand");
 
   const grad = ACCENTS[accent];
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--accent-from", grad.from);
+    root.style.setProperty("--accent-to", grad.to);
+  }, [grad.from, grad.to]);
 
   return (
     <div className="w-full">
