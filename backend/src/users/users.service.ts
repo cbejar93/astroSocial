@@ -4,18 +4,27 @@ import {
   NotFoundException,
   Inject,
   Logger,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from '../storage/storage.service';
-import { TemperatureUnit } from '@prisma/client';
+import {
+  Prisma,
+  SocialPlatform,
+  TemperatureUnit,
+  UserSocialAccount,
+} from '@prisma/client';
+import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
+import { UserSocialAccountDto } from './dto/user-social-account.dto';
 
 @Injectable()
 export class UsersService {
   private static readonly USERNAME_PATTERN = /^[a-z0-9._]+$/i;
   private static readonly USERNAME_MIN_LENGTH = 3;
   private static readonly USERNAME_MAX_LENGTH = 20;
+  private static readonly BIO_MAX_WORDS = 400;
 
   constructor(
     @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,
@@ -33,6 +42,7 @@ export class UsersService {
         id: true,
         username: true,
         avatarUrl: true,
+        bio: true,
         profileComplete: true, // ← add this
         role: true,
         temperature: true,
@@ -124,6 +134,37 @@ export class UsersService {
         id: true,
         username: true,
         avatarUrl: true,
+        bio: true,
+        profileComplete: true,
+        role: true,
+        temperature: true,
+        followedLounges: { select: { id: true } },
+        followers: { select: { id: true } },
+        following: { select: { id: true } },
+      },
+    });
+
+    return this.toDto(user);
+  }
+
+  async updateBio(userId: string, bio: string): Promise<UserDto> {
+    const trimmed = bio?.trim() ?? '';
+    const words = trimmed ? trimmed.split(/\s+/).filter(Boolean) : [];
+
+    if (words.length > UsersService.BIO_MAX_WORDS) {
+      throw new BadRequestException(
+        `Bio must be ${UsersService.BIO_MAX_WORDS} words or fewer`,
+      );
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { bio: trimmed || null },
+      select: {
+        id: true,
+        username: true,
+        avatarUrl: true,
+        bio: true,
         profileComplete: true,
         role: true,
         temperature: true,
@@ -143,6 +184,109 @@ export class UsersService {
       'code' in error &&
       (error as { code?: string }).code === 'P2002'
     );
+  }
+
+  private normalizePlatform(platform: SocialPlatform | string): SocialPlatform {
+    const normalized = platform?.toString().toUpperCase().trim() as SocialPlatform;
+    if (!Object.values(SocialPlatform).includes(normalized)) {
+      throw new BadRequestException('Platform must be a supported social platform');
+    }
+    return normalized;
+  }
+
+  private normalizeUrl(url: string): string {
+    const trimmed = url?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('URL is required');
+    }
+    let parsed: URL;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      throw new BadRequestException('URL must be a valid link');
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new BadRequestException('URL must start with http or https');
+    }
+    return trimmed;
+  }
+
+  private toSocialAccountDto(account: UserSocialAccount): UserSocialAccountDto {
+    return {
+      id: account.id,
+      platform: account.platform,
+      url: account.url,
+      metadata: (account.metadata as Prisma.JsonValue | null) ?? null,
+      createdAt: account.createdAt.toISOString(),
+      updatedAt: account.updatedAt.toISOString(),
+    };
+  }
+
+  async addSocialAccount(
+    userId: string,
+    payload: CreateUserSocialAccountDto,
+  ): Promise<UserSocialAccountDto> {
+    const platform = this.normalizePlatform(payload.platform);
+    const url = this.normalizeUrl(payload.url);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    try {
+      const account = await this.prisma.userSocialAccount.create({
+        data: {
+          userId: user.id,
+          platform,
+          url,
+          metadata: payload.metadata ?? undefined,
+        },
+      });
+      return this.toSocialAccountDto(account);
+    } catch (error: unknown) {
+      if (this.isUniqueConstraintViolation(error)) {
+        throw new ConflictException(
+          'This social account is already linked to your profile',
+        );
+      }
+      throw error;
+    }
+  }
+
+  async listSocialAccountsForUser(userId: string): Promise<UserSocialAccountDto[]> {
+    const accounts = await this.prisma.userSocialAccount.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return accounts.map((account) => this.toSocialAccountDto(account));
+  }
+
+  async listSocialAccountsByUsername(
+    username: string,
+  ): Promise<UserSocialAccountDto[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return this.listSocialAccountsForUser(user.id);
+  }
+
+  async deleteSocialAccount(userId: string, accountId: string): Promise<void> {
+    const account = await this.prisma.userSocialAccount.findUnique({
+      where: { id: accountId },
+      select: { id: true, userId: true },
+    });
+    if (!account || account.userId !== userId) {
+      throw new NotFoundException('Social account not found');
+    }
+    await this.prisma.userSocialAccount.delete({ where: { id: accountId } });
   }
 
   async uploadAvatar(userId: string, file: Express.Multer.File) {
@@ -255,6 +399,7 @@ export class UsersService {
         id: true,
         username: true,
         avatarUrl: true,
+        bio: true,
         profileComplete: true,
         role: true,
         temperature: true,
@@ -456,6 +601,7 @@ export class UsersService {
     id: string;
     username?: string | null;
     avatarUrl?: string | null;
+    bio?: string | null;
     profileComplete: boolean;
     role: string;
     temperature: TemperatureUnit;
@@ -467,6 +613,7 @@ export class UsersService {
       id: user.id,
       username: user.username ?? undefined,
       avatarUrl: user.avatarUrl ?? undefined,
+      bio: user.bio ?? undefined,
       profileComplete: user.profileComplete,
       role: user.role,
       temperature: user.temperature,

@@ -24,6 +24,17 @@ enum TemperatureUnit {
   F
 }
 
+enum SocialPlatform {
+  TWITTER
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  LINKEDIN
+  GITHUB
+  WEBSITE
+  OTHER
+}
+
 model User {
   id                String            @id @default(uuid())
   emailEncrypted    String
@@ -33,6 +44,7 @@ model User {
   providerId        String
   createdAt         DateTime          @default(now())
   avatarUrl         String?
+  bio               String?           @db.Text
   profileComplete   Boolean           @default(false)
   username          String?           @unique
   role              String            @default("USER")
@@ -51,6 +63,7 @@ model User {
   analyticsSessions AnalyticsSession[]
   analyticsEvents   AnalyticsEvent[]
   requestMetrics    RequestMetric[]
+  socialAccounts    UserSocialAccount[]
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -200,4 +213,20 @@ model RequestMetric {
 
   @@index([occurredAt])
   @@index([statusCode])
+}
+
+model UserSocialAccount {
+  id        String         @id @default(uuid())
+  userId    String
+  platform  SocialPlatform
+  url       String
+  metadata  Json?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, url], name: "unique_user_social_url")
+  @@index([userId])
+  @@index([platform])
 }

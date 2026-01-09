@@ -10,7 +10,18 @@ import {
   X,
   Image as ImageIcon,
   Star,
+  Link2,
+  Trash2,
 } from "lucide-react";
+import {
+  FaGithub,
+  FaGlobe,
+  FaInstagram,
+  FaLinkedin,
+  FaTiktok,
+  FaXTwitter,
+  FaYoutube,
+} from "react-icons/fa6";
 import { useAuth } from "../hooks/useAuth";
 import {
   updateAvatar,
@@ -20,6 +31,12 @@ import {
   fetchMyComments,
   fetchSavedPosts,
   toggleCommentLike,
+  deleteUserSocialAccount,
+  addUserSocialAccount,
+  fetchMySocialAccounts,
+  updateBio,
+  type SocialPlatform,
+  type UserSocialAccount,
 } from "../lib/api";
 import ConfirmModal from "../components/Modal/ConfirmModal";
 import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
@@ -106,40 +123,45 @@ function sanitizeHtml(value: string): string {
 }
 const toSafeHtml = (value: string) => sanitizeHtml(decodeHtmlEntitiesDeep(value));
 
-/* =========================== Brand Logos (SVG) =========================== */
-const InstagramLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-    <defs>
-      <linearGradient id="igGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#F58529" />
-        <stop offset="30%" stopColor="#DD2A7B" />
-        <stop offset="60%" stopColor="#8134AF" />
-        <stop offset="100%" stopColor="#515BD4" />
-      </linearGradient>
-    </defs>
-    <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#igGrad)" />
-    <circle cx="12" cy="12" r="4.5" fill="none" stroke="#fff" strokeWidth="2" />
-    <circle cx="16.5" cy="7.5" r="1.2" fill="#fff" />
-  </svg>
-);
+const SOCIAL_PLATFORMS: SocialPlatform[] = [
+  "TWITTER",
+  "INSTAGRAM",
+  "TIKTOK",
+  "YOUTUBE",
+];
 
-const FacebookLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-    <rect x="2" y="2" width="20" height="20" rx="5" fill="#1877F2" />
-    <path
-      fill="#fff"
-      d="M13.5 8.5h1.9V6h-1.9c-2.2 0-3.7 1.3-3.7 3.6v1.5H8v2.5h1.8V18h2.6v-4.4h2l.4-2.5h-2.4V9.8c0-.9.3-1.3 1.1-1.3Z"
-    />
-  </svg>
-);
+const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
+  TWITTER: "X / Twitter",
+  INSTAGRAM: "Instagram",
+  TIKTOK: "TikTok",
+  YOUTUBE: "YouTube",
+  LINKEDIN: "LinkedIn",
+  GITHUB: "GitHub",
+  WEBSITE: "Website",
+  OTHER: "Other",
+};
 
-const TikTokLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-    <rect x="2" y="2" width="20" height="20" rx="5" fill="#000" />
-    <path d="M12.5 6v7.2a3.2 3.2 0 1 1-2.6-3.1v2.1a1.2 1.2 0 1 0 1.3 1.2V6h1.3Z" fill="#fff" />
-    <path d="M14.8 7.3c.8 1.4 2.1 2.2 3.5 2.4v1.6c-1.6-.1-3-.8-4.3-2V7.3Z" fill="#fff" />
-  </svg>
-);
+const SOCIAL_PLATFORM_BASE_URLS: Record<SocialPlatform, string | null> = {
+  TWITTER: "https://x.com/",
+  INSTAGRAM: "https://instagram.com/",
+  TIKTOK: "https://www.tiktok.com/",
+  YOUTUBE: "https://www.youtube.com/",
+  LINKEDIN: "https://www.linkedin.com/in/",
+  GITHUB: "https://github.com/",
+  WEBSITE: null,
+  OTHER: null,
+};
+
+const SOCIAL_PLATFORM_DOMAINS: Record<SocialPlatform, string[]> = {
+  TWITTER: ["x.com", "twitter.com"],
+  INSTAGRAM: ["instagram.com"],
+  TIKTOK: ["tiktok.com"],
+  YOUTUBE: ["youtube.com", "youtu.be"],
+  LINKEDIN: ["linkedin.com"],
+  GITHUB: ["github.com"],
+  WEBSITE: [],
+  OTHER: [],
+};
 
 /* =============================== Shared Card =============================== */
 const Card: React.FC<
@@ -916,6 +938,16 @@ const ProfileOverviewPage: React.FC = () => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [avatarBust, setAvatarBust] = useState<number>(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState<UserSocialAccount[]>([]);
+  const [socialLoading, setSocialLoading] = useState(false);
+  const [socialSaving, setSocialSaving] = useState(false);
+  const [socialError, setSocialError] = useState<string | null>(null);
+  const [socialPlatform, setSocialPlatform] = useState<SocialPlatform>("INSTAGRAM");
+  const [socialUrl, setSocialUrl] = useState("");
+  const [bioOpen, setBioOpen] = useState(false);
+  const [bioText, setBioText] = useState("");
+  const [bioSaving, setBioSaving] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
 
   // small avatar menu (portaled)
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -966,6 +998,16 @@ const ProfileOverviewPage: React.FC = () => {
       window.removeEventListener("scroll", onAnyScroll, true);
     };
   }, [avatarMenuOpen]);
+
+  useEffect(() => {
+    if (!user) return;
+    setSocialLoading(true);
+    setSocialError(null);
+    fetchMySocialAccounts()
+      .then((accounts) => setSocialAccounts(accounts))
+      .catch(() => setSocialError("Unable to load social links."))
+      .finally(() => setSocialLoading(false));
+  }, [user]);
 
   if (!user) {
     return (
@@ -1039,6 +1081,157 @@ const ProfileOverviewPage: React.FC = () => {
     } catch (e) {
       console.error(e);
       alert("Failed to delete account.");
+    }
+  };
+
+  const countWords = (value: string) =>
+    value.trim() ? value.trim().split(/\s+/).filter(Boolean).length : 0;
+
+  const openBioModal = () => {
+    setBioText(user?.bio ?? "");
+    setBioError(null);
+    setBioOpen(true);
+  };
+
+  const handleBioSave = async () => {
+    const words = countWords(bioText);
+    if (words > 400) {
+      setBioError("Bio must be 400 words or fewer.");
+      return;
+    }
+    setBioSaving(true);
+    setBioError(null);
+    try {
+      await updateBio(bioText);
+      await refreshUser();
+      setBioOpen(false);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update bio.";
+      setBioError(message);
+    } finally {
+      setBioSaving(false);
+    }
+  };
+
+  const normalizeSocialUrl = (
+    platform: SocialPlatform,
+    value: string,
+  ): string | null => {
+    const trimmed = value.trim();
+    const base = SOCIAL_PLATFORM_BASE_URLS[platform];
+    const ensureProtocol = (url: string) =>
+      url.startsWith("http://") || url.startsWith("https://")
+        ? url
+        : `https://${url}`;
+    const cleanHandle = trimmed.replace(/^@/, "").replace(/^\/+/, "");
+
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      try {
+        const parsed = new URL(trimmed);
+        const allowedDomains = SOCIAL_PLATFORM_DOMAINS[platform];
+        if (allowedDomains.length > 0) {
+          const matches = allowedDomains.some((domain) =>
+            parsed.hostname.endsWith(domain),
+          );
+          if (!matches) {
+            setSocialError(
+              `Please use a ${SOCIAL_PLATFORM_LABELS[platform]} link.`,
+            );
+            return null;
+          }
+        }
+        return trimmed;
+      } catch {
+        setSocialError("Please enter a valid URL.");
+        return null;
+      }
+    }
+
+    if (!base) {
+      return ensureProtocol(cleanHandle);
+    }
+
+    if (platform === "TIKTOK") {
+      const handle = cleanHandle.startsWith("@")
+        ? cleanHandle
+        : `@${cleanHandle}`;
+      return `${base}${handle}`;
+    }
+
+    if (platform === "YOUTUBE") {
+      const handle = cleanHandle.startsWith("@")
+        ? cleanHandle
+        : `@${cleanHandle}`;
+      return `${base}${handle}`;
+    }
+
+    return `${base}${cleanHandle}`;
+  };
+
+  const handleAddSocialAccount = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmedUrl = socialUrl.trim();
+    if (!trimmedUrl) {
+      setSocialError("Please enter a URL.");
+      return;
+    }
+    const normalizedUrl = normalizeSocialUrl(socialPlatform, trimmedUrl);
+    if (!normalizedUrl) {
+      return;
+    }
+    setSocialSaving(true);
+    setSocialError(null);
+    try {
+      const created = await addUserSocialAccount({
+        platform: socialPlatform,
+        url: normalizedUrl,
+      });
+      setSocialAccounts((prev) => [created, ...prev]);
+      setSocialUrl("");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to add social link.";
+      setSocialError(message);
+    } finally {
+      setSocialSaving(false);
+    }
+  };
+
+  const handleDeleteSocialAccount = async (accountId: string) => {
+    setSocialError(null);
+    const previousAccounts = socialAccounts;
+    setSocialAccounts((prev) => prev.filter((account) => account.id !== accountId));
+    try {
+      await deleteUserSocialAccount(accountId);
+    } catch (error) {
+      setSocialAccounts(previousAccounts);
+      const message =
+        error instanceof Error ? error.message : "Failed to delete social link.";
+      setSocialError(message);
+    }
+  };
+
+  const renderSocialIcon = (platform: SocialPlatform) => {
+    switch (platform) {
+      case "TWITTER":
+        return <FaXTwitter className="w-5 h-5 text-white" />;
+      case "INSTAGRAM":
+        return <FaInstagram className="w-5 h-5 text-white" />;
+      case "TIKTOK":
+        return <FaTiktok className="w-5 h-5 text-white" />;
+      case "YOUTUBE":
+        return <FaYoutube className="w-5 h-5 text-white" />;
+      case "LINKEDIN":
+        return <FaLinkedin className="w-5 h-5 text-white" />;
+      case "GITHUB":
+        return <FaGithub className="w-5 h-5 text-white" />;
+      case "WEBSITE":
+        return <FaGlobe className="w-5 h-5 text-white" />;
+      case "OTHER":
+        return <FaGlobe className="w-5 h-5 text-white" />;
+      default:
+        return <Link2 className="w-5 h-5 text-gray-200" />;
     }
   };
 
@@ -1150,16 +1343,22 @@ const ProfileOverviewPage: React.FC = () => {
               <div className="space-y-6 lg:col-span-1">
                 <Card title="About you">
                   <div className="p-5">
-                    <p className="text-sm text-gray-300">
-                      Add a short bio or tagline about yourself. Keep it fun and simple.
-                    </p>
+                    {user.bio ? (
+                      <p className="text-sm text-gray-200 whitespace-pre-wrap">
+                        {user.bio}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-300">
+                        Add a short bio or tagline about yourself. Keep it fun and simple.
+                      </p>
+                    )}
                     <div className="mt-3">
                       <button
                         type="button"
-                        onClick={() => setEditOpen(true)}
+                        onClick={openBioModal}
                         className="text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
                       >
-                        Add bio
+                        {user.bio ? "Edit bio" : "Add bio"}
                       </button>
                     </div>
                   </div>
@@ -1167,41 +1366,94 @@ const ProfileOverviewPage: React.FC = () => {
 
                 <Card title="Social Links">
                   <div className="p-5">
-                    <div className="flex items-center gap-4">
-                      <a
-                        href="#"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                        title="Instagram"
-                        aria-label="Instagram"
+                    <div className="space-y-4">
+                      {socialLoading ? (
+                        <p className="text-xs text-gray-400">Loading social links...</p>
+                      ) : socialAccounts.length > 0 ? (
+                        <ul className="space-y-2">
+                          {socialAccounts.map((account) => (
+                            <li
+                              key={account.id}
+                              className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                            >
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full ring-1 ring-white/15">
+                                {renderSocialIcon(account.platform)}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-xs text-gray-400">
+                                  {SOCIAL_PLATFORM_LABELS[account.platform]}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSocialAccount(account.id)}
+                                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-gray-900/70 p-1 text-rose-200 hover:text-rose-100 hover:bg-gray-800"
+                                    title={`Remove ${SOCIAL_PLATFORM_LABELS[account.platform]}`}
+                                    aria-label={`Remove ${SOCIAL_PLATFORM_LABELS[account.platform]}`}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                  <a
+                                    href={account.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm font-semibold text-sky-300 hover:text-sky-200"
+                                  >
+                                    {SOCIAL_PLATFORM_LABELS[account.platform]}
+                                    <Link2 className="w-3.5 h-3.5" />
+                                  </a>
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-gray-400">
+                          Add social links so people can find you elsewhere.
+                        </p>
+                      )}
+
+                      <form
+                        onSubmit={handleAddSocialAccount}
+                        className="flex flex-col gap-3 rounded-lg border border-white/10 bg-gray-900/40 p-3"
                       >
-                        <InstagramLogo className="w-6 h-6" />
-                      </a>
-                      <a
-                        href="#"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                        title="Facebook"
-                        aria-label="Facebook"
-                      >
-                        <FacebookLogo className="w-6 h-6" />
-                      </a>
-                      <a
-                        href="#"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/20 overflow-hidden"
-                        title="TikTok"
-                        aria-label="TikTok"
-                      >
-                        <TikTokLogo className="w-6 h-6" />
-                      </a>
-                      <div className="ml-auto">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs text-gray-400">Platform</label>
+                          <select
+                            value={socialPlatform}
+                            onChange={(event) =>
+                              setSocialPlatform(event.target.value as SocialPlatform)
+                            }
+                            className="rounded-md border border-white/10 bg-gray-900/80 px-3 py-2 text-sm text-white"
+                          >
+                            {SOCIAL_PLATFORMS.map((platform) => (
+                              <option key={platform} value={platform}>
+                                {SOCIAL_PLATFORM_LABELS[platform]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs text-gray-400">URL</label>
+                          <input
+                            type="url"
+                            value={socialUrl}
+                            onChange={(event) => setSocialUrl(event.target.value)}
+                            placeholder="https://"
+                            className="rounded-md border border-white/10 bg-gray-900/80 px-3 py-2 text-sm text-white placeholder-gray-500"
+                          />
+                        </div>
+                        {socialError && (
+                          <p className="text-xs text-rose-300">{socialError}</p>
+                        )}
                         <button
-                          type="button"
-                          className="inline-flex items-center gap-1 text-xs rounded-md px-2.5 py-1.5 bg-gray-800/70 hover:bg-gray-700 ring-1 ring-white/10"
-                          onClick={() => alert("Hook up fields to save social links if you have them")}
+                          type="submit"
+                          disabled={socialSaving}
+                          className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
                         >
-                          Manage Links
-                          <ChevronDown className="w-3.5 h-3.5" />
+                          {socialSaving ? "Saving..." : "Add social link"}
                         </button>
-                      </div>
+                      </form>
                     </div>
                   </div>
                 </Card>
@@ -1305,6 +1557,61 @@ const ProfileOverviewPage: React.FC = () => {
           onCancel={() => setShowConfirm(false)}
           onConfirm={confirmDelete}
         />
+      )}
+
+      {bioOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0E1626] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.55)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Your bio</h3>
+                <p className="mt-1 text-xs text-gray-400">
+                  Share a short description (up to 400 words).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBioOpen(false)}
+                className="rounded-full p-1 text-gray-400 hover:text-gray-200"
+                aria-label="Close bio editor"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <textarea
+                value={bioText}
+                onChange={(event) => setBioText(event.target.value)}
+                rows={6}
+                className="w-full rounded-lg border border-white/10 bg-gray-900/70 p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400/50"
+                placeholder="Tell people about yourself..."
+              />
+              <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+                <span>{countWords(bioText)} / 400 words</span>
+                {bioError && <span className="text-rose-300">{bioError}</span>}
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setBioOpen(false)}
+                className="rounded-md border border-white/10 px-3 py-1.5 text-xs text-gray-300 hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBioSave}
+                disabled={bioSaving}
+                className="rounded-md bg-gradient-to-r from-[#f04bb3] to-[#5aa2ff] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_8px_18px_rgba(15,23,42,0.35)] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {bioSaving ? "Saving..." : "Save bio"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Edit sheet */}

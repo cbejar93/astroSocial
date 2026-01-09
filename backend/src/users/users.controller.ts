@@ -23,6 +23,9 @@ import { UserDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateTemperatureDto } from './dto/update-temperature.dto';
 import { MulterExceptionFilter } from '../common/filters/multer-exception.filter';
+import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
+import { UserSocialAccountDto } from './dto/user-social-account.dto';
+import { UpdateBioDto } from './dto/update-bio.dto';
 
 @Controller('api/users')
 export class UsersController {
@@ -124,6 +127,42 @@ export class UsersController {
     );
   }
 
+  @Put('me/bio')
+  @UseGuards(JwtAuthGuard)
+  async updateBio(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() body: UpdateBioDto,
+  ): Promise<UserDto> {
+    return this.usersService.updateBio(req.user.sub, body.bio);
+  }
+
+  @Post('me/social-accounts')
+  @UseGuards(JwtAuthGuard)
+  async addSocialAccount(
+    @Req() req: Request & { user: { sub: string } },
+    @Body() body: CreateUserSocialAccountDto,
+  ): Promise<UserSocialAccountDto> {
+    return this.usersService.addSocialAccount(req.user.sub, body);
+  }
+
+  @Get('me/social-accounts')
+  @UseGuards(JwtAuthGuard)
+  async getMySocialAccounts(
+    @Req() req: Request & { user: { sub: string } },
+  ): Promise<UserSocialAccountDto[]> {
+    return this.usersService.listSocialAccountsForUser(req.user.sub);
+  }
+
+  @Delete('me/social-accounts/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteSocialAccount(
+    @Req() req: Request & { user: { sub: string } },
+    @Param('id') id: string,
+  ): Promise<{ success: true }> {
+    await this.usersService.deleteSocialAccount(req.user.sub, id);
+    return { success: true };
+  }
+
   @Get('me/posts')
   @UseGuards(JwtAuthGuard)
   getMyPosts(@Req() req: Request & { user: { sub: string } }) {
@@ -151,6 +190,11 @@ export class UsersController {
   @Get(':username/comments')
   getUserComments(@Param('username') username: string) {
     return this.usersService.getCommentsByUsername(username);
+  }
+
+  @Get(':username/social-accounts')
+  getUserSocialAccounts(@Param('username') username: string) {
+    return this.usersService.listSocialAccountsByUsername(username);
   }
 
   @UseGuards(JwtAuthGuard)
