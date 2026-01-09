@@ -13,6 +13,15 @@ import {
   Link2,
   Trash2,
 } from "lucide-react";
+import {
+  FaGithub,
+  FaGlobe,
+  FaInstagram,
+  FaLinkedin,
+  FaTiktok,
+  FaXTwitter,
+  FaYoutube,
+} from "react-icons/fa6";
 import { useAuth } from "../hooks/useAuth";
 import {
   updateAvatar,
@@ -113,31 +122,6 @@ function sanitizeHtml(value: string): string {
 }
 const toSafeHtml = (value: string) => sanitizeHtml(decodeHtmlEntitiesDeep(value));
 
-/* =========================== Brand Logos (SVG) =========================== */
-const InstagramLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-    <defs>
-      <linearGradient id="igGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#F58529" />
-        <stop offset="30%" stopColor="#DD2A7B" />
-        <stop offset="60%" stopColor="#8134AF" />
-        <stop offset="100%" stopColor="#515BD4" />
-      </linearGradient>
-    </defs>
-    <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#igGrad)" />
-    <circle cx="12" cy="12" r="4.5" fill="none" stroke="#fff" strokeWidth="2" />
-    <circle cx="16.5" cy="7.5" r="1.2" fill="#fff" />
-  </svg>
-);
-
-const TikTokLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-    <rect x="2" y="2" width="20" height="20" rx="5" fill="#000" />
-    <path d="M12.5 6v7.2a3.2 3.2 0 1 1-2.6-3.1v2.1a1.2 1.2 0 1 0 1.3 1.2V6h1.3Z" fill="#fff" />
-    <path d="M14.8 7.3c.8 1.4 2.1 2.2 3.5 2.4v1.6c-1.6-.1-3-.8-4.3-2V7.3Z" fill="#fff" />
-  </svg>
-);
-
 const SOCIAL_PLATFORMS: SocialPlatform[] = [
   "TWITTER",
   "INSTAGRAM",
@@ -158,6 +142,28 @@ const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
   GITHUB: "GitHub",
   WEBSITE: "Website",
   OTHER: "Other",
+};
+
+const SOCIAL_PLATFORM_BASE_URLS: Record<SocialPlatform, string | null> = {
+  TWITTER: "https://x.com/",
+  INSTAGRAM: "https://instagram.com/",
+  TIKTOK: "https://www.tiktok.com/",
+  YOUTUBE: "https://www.youtube.com/",
+  LINKEDIN: "https://www.linkedin.com/in/",
+  GITHUB: "https://github.com/",
+  WEBSITE: null,
+  OTHER: null,
+};
+
+const SOCIAL_PLATFORM_DOMAINS: Record<SocialPlatform, string[]> = {
+  TWITTER: ["x.com", "twitter.com"],
+  INSTAGRAM: ["instagram.com"],
+  TIKTOK: ["tiktok.com"],
+  YOUTUBE: ["youtube.com", "youtu.be"],
+  LINKEDIN: ["linkedin.com"],
+  GITHUB: ["github.com"],
+  WEBSITE: [],
+  OTHER: [],
 };
 
 /* =============================== Shared Card =============================== */
@@ -1077,6 +1083,61 @@ const ProfileOverviewPage: React.FC = () => {
     }
   };
 
+  const normalizeSocialUrl = (
+    platform: SocialPlatform,
+    value: string,
+  ): string | null => {
+    const trimmed = value.trim();
+    const base = SOCIAL_PLATFORM_BASE_URLS[platform];
+    const ensureProtocol = (url: string) =>
+      url.startsWith("http://") || url.startsWith("https://")
+        ? url
+        : `https://${url}`;
+    const cleanHandle = trimmed.replace(/^@/, "").replace(/^\/+/, "");
+
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      try {
+        const parsed = new URL(trimmed);
+        const allowedDomains = SOCIAL_PLATFORM_DOMAINS[platform];
+        if (allowedDomains.length > 0) {
+          const matches = allowedDomains.some((domain) =>
+            parsed.hostname.endsWith(domain),
+          );
+          if (!matches) {
+            setSocialError(
+              `Please use a ${SOCIAL_PLATFORM_LABELS[platform]} link.`,
+            );
+            return null;
+          }
+        }
+        return trimmed;
+      } catch {
+        setSocialError("Please enter a valid URL.");
+        return null;
+      }
+    }
+
+    if (!base) {
+      return ensureProtocol(cleanHandle);
+    }
+
+    if (platform === "TIKTOK") {
+      const handle = cleanHandle.startsWith("@")
+        ? cleanHandle
+        : `@${cleanHandle}`;
+      return `${base}${handle}`;
+    }
+
+    if (platform === "YOUTUBE") {
+      const handle = cleanHandle.startsWith("@")
+        ? cleanHandle
+        : `@${cleanHandle}`;
+      return `${base}${handle}`;
+    }
+
+    return `${base}${cleanHandle}`;
+  };
+
   const handleAddSocialAccount = async (event: React.FormEvent) => {
     event.preventDefault();
     const trimmedUrl = socialUrl.trim();
@@ -1084,12 +1145,16 @@ const ProfileOverviewPage: React.FC = () => {
       setSocialError("Please enter a URL.");
       return;
     }
+    const normalizedUrl = normalizeSocialUrl(socialPlatform, trimmedUrl);
+    if (!normalizedUrl) {
+      return;
+    }
     setSocialSaving(true);
     setSocialError(null);
     try {
       const created = await addUserSocialAccount({
         platform: socialPlatform,
-        url: trimmedUrl,
+        url: normalizedUrl,
       });
       setSocialAccounts((prev) => [created, ...prev]);
       setSocialUrl("");
@@ -1118,10 +1183,22 @@ const ProfileOverviewPage: React.FC = () => {
 
   const renderSocialIcon = (platform: SocialPlatform) => {
     switch (platform) {
+      case "TWITTER":
+        return <FaXTwitter className="w-5 h-5 text-white" />;
       case "INSTAGRAM":
-        return <InstagramLogo className="w-5 h-5" />;
+        return <FaInstagram className="w-5 h-5 text-white" />;
       case "TIKTOK":
-        return <TikTokLogo className="w-5 h-5" />;
+        return <FaTiktok className="w-5 h-5 text-white" />;
+      case "YOUTUBE":
+        return <FaYoutube className="w-5 h-5 text-white" />;
+      case "LINKEDIN":
+        return <FaLinkedin className="w-5 h-5 text-white" />;
+      case "GITHUB":
+        return <FaGithub className="w-5 h-5 text-white" />;
+      case "WEBSITE":
+        return <FaGlobe className="w-5 h-5 text-white" />;
+      case "OTHER":
+        return <FaGlobe className="w-5 h-5 text-white" />;
       default:
         return <Link2 className="w-5 h-5 text-gray-200" />;
     }
