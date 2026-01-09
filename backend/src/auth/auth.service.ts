@@ -78,8 +78,14 @@ export class AuthService {
           name:           cleanName,
           provider,
           providerId:     cleanProviderId,
+          lastLoginAt:    new Date(),
         },
-        update: { name: cleanName, emailEncrypted: emailEncrypted, emailHash: emailHash },
+        update: {
+          name: cleanName,
+          emailEncrypted: emailEncrypted,
+          emailHash: emailHash,
+          lastLoginAt: new Date(),
+        },
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && this.isEmailHashConstraint(error)) {

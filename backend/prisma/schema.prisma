@@ -49,6 +49,7 @@ model User {
   provider          String
   providerId        String
   createdAt         DateTime          @default(now())
+  lastLoginAt       DateTime?
   avatarUrl         String?
   bio               String?           @db.Text
   profileComplete   Boolean           @default(false)
