@@ -165,7 +165,7 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="w-full">
       {/* Center horizontally (uplift kept) */}
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 pt-2 pb-8">
+      <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:56rem] px-4 sm:px-6 pt-2 pb-8">
         <div className="text-gray-200 space-y-6">
           {/* Header (now frosted like PostCard) */}
           <AuroraBorder>
