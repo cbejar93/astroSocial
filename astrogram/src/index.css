@@ -34,6 +34,17 @@
   --accent-to: #5aa2ff;
 }
 
+.content-shell {
+  width: 100%;
+  transition: padding-left 0.25s ease;
+}
+
+@media (min-width: 768px) {
+  .content-shell {
+    padding-left: calc(var(--desktop-nav-current-width) + var(--desktop-nav-offset));
+  }
+}
+
 @media (min-width: 768px) {
   :root {
     --desktop-nav-offset: 2rem;

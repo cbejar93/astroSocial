@@ -77,7 +77,7 @@ const SavedPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto w-full max-w-3xl py-8">
+      <div className="mx-auto w-full max-w-3xl">
         {/* Header */}
         <div className="mb-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm">

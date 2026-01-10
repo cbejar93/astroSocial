@@ -292,9 +292,9 @@ const WeatherPage: React.FC<WeatherPageProps> = ({
         <div className="absolute right-0 bottom-[-20%] translate-x-1/4 sm:translate-x-0 h-[36vh] w-[80vw] rounded-[999px] bg-gradient-to-tr from-emerald-500/10 via-sky-500/10 to-transparent blur-3xl" />
       </div>
 
-      {/* fixed shell */}
-      <div className="w-full flex justify-center pt-2 pb-8 lg:py-0 lg:fixed lg:inset-0 lg:overflow-hidden">
-        <div className="w-full lg:h-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
+      {/* content shell */}
+      <div className="w-full flex justify-center">
+        <div className="w-full lg:min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] lg:gap-8">
           {/* LEFT column (scrollable on lg+) */}
           <div className="lg:h-full lg:min-h-0 lg:flex lg:flex-col lg:justify-center">
             <div

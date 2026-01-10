@@ -322,7 +322,7 @@ const LoungePage: React.FC = () => {
 
   if (loadingLounge) {
     return (
-      <div className="w-full pt-3 pb-8 sm:pt-8">
+      <div className="w-full">
         <div className="mx-auto w-full max-w-4xl">
           <HeroSkeleton />
           <div className="space-y-4">
@@ -337,7 +337,7 @@ const LoungePage: React.FC = () => {
 
   if (!lounge) {
     return (
-      <div className="w-full pt-3 pb-8 sm:pt-8">
+      <div className="w-full">
         <div className="mx-auto w-full max-w-3xl">
           <div className="rounded-2xl ring-1 ring-white/10 bg-white/5 backdrop-blur-md px-6 py-10 text-center">
             <p className="text-sm text-gray-300">Lounge not found.</p>
@@ -356,7 +356,7 @@ const LoungePage: React.FC = () => {
   return (
     <>
       {/* Mobile-only lift up: pt-3 on mobile, pt-8 on >= sm */}
-      <div className="w-full pt-3 pb-8 sm:pt-8">
+      <div className="w-full">
         <div className="mx-auto w-full max-w-5xl">
           {/* ====== Hero (kept translucent so banner stays visible) ====== */}
           <section className="relative mb-10 sm:mb-12 rounded-3xl overflow-hidden ring-1 ring-white/10 bg-[#0B1220]/60 backdrop-blur-md shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
