@@ -61,7 +61,7 @@ const Row: React.FC<
           {hint && <div className="text-[11px] text-gray-300 mt-0.5">{hint}</div>}
         </div>
       </div>
-      <div className="sm:min-w-[16rem]">{children}</div>
+      <div className="sm:min-w-[var(--desktop-nav-current-width)]">{children}</div>
     </div>
   </div>
 );
