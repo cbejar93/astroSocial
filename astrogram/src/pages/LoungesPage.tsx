@@ -63,8 +63,8 @@ const LoungesPage: React.FC = () => {
   }, [lounges]);
 
   return (
-    <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
-      <div className="w-full max-w-5xl px-4">
+    <div className="w-full">
+      <div className="mx-auto w-full max-w-5xl">
         {/* Header */}
         <div className="mb-4 sm:mb-6 rounded-2xl p-[1px] bg-[conic-gradient(at_20%_0%,rgba(240,75,179,.25),rgba(90,162,255,.25),rgba(34,197,94,.18),rgba(240,75,179,.25))]">
           <div className="rounded-2xl bg-[#0E1626]/70 backdrop-blur-md ring-1 ring-white/10 px-5 py-5 shadow-[0_8px_28px_rgba(2,6,23,.45)]">

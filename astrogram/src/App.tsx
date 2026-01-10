@@ -41,6 +41,7 @@ import SettingsPage from "./pages/SettingsPage";
 
 import PageModal from "./components/Modal/PageModal";
 import AuroraBackground from "./components/Layout/AuroraBackground";
+import PageShell from "./components/Layout/PageShell";
 
 const App: React.FC = () => {
   const { weather, loading, error, unit, setUnit } = useWeatherService();
@@ -68,15 +69,9 @@ const App: React.FC = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex-1 md:pl-[calc(var(--desktop-nav-current-width)+var(--desktop-nav-offset))]">
-        <div
-          className="mx-auto w-full max-w-7xl md:max-w-[calc(80rem+var(--desktop-nav-current-width)+var(--desktop-nav-offset))] px-6 lg:px-8 pt-6 pb-20 md:grid md:grid-cols-[var(--desktop-nav-current-width)_minmax(0,1fr)_16rem] md:gap-8"
-        >
-          <aside className="hidden md:flex md:w-64 md:flex-col" aria-label="Primary navigation">
-            <DesktopNav />
-          </aside>
-
-          <section className="w-full min-w-0">
+      <main className="flex-1">
+        <div className="content-shell">
+          <PageShell left={<DesktopNav />}>
             {/* Base routes (render behind modal if one is open via route state) */}
             <Routes
               location={
@@ -103,7 +98,10 @@ const App: React.FC = () => {
                 <Route path="/users/:username/:tab" element={<UserPage />} />
                 <Route path="/lounge" element={<LoungesPage />} />
                 <Route path="/lounge/:loungeName" element={<LoungePage />} />
-                <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
+                <Route
+                  path="/lounge/:loungeName/posts/:postId"
+                  element={<LoungePostDetailPage />}
+                />
                 <Route path="/search" element={<SearchPage />} />
                 {/* <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} /> */}
                 <Route path="/upload" element={<UploadForm />} />
@@ -172,9 +170,7 @@ const App: React.FC = () => {
                 />
               </Routes>
             )}
-          </section>
-
-          <aside className="hidden lg:block lg:w-64" aria-hidden="true" />
+          </PageShell>
         </div>
       </main>
 

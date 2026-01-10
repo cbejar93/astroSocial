@@ -29,8 +29,20 @@
   --desktop-nav-expanded: 16rem;
   --desktop-nav-offset: 1rem;
   --desktop-nav-current-width: var(--desktop-nav-expanded);
+  --content-max-width: 80rem;
   --accent-from: #f04bb3;
   --accent-to: #5aa2ff;
+}
+
+.content-shell {
+  width: 100%;
+  transition: padding-left 0.25s ease;
+}
+
+@media (min-width: 768px) {
+  .content-shell {
+    padding-left: calc(var(--desktop-nav-current-width) + var(--desktop-nav-offset));
+  }
 }
 
 @media (min-width: 768px) {
@@ -39,9 +51,9 @@
   }
 }
 
-@media (min-width: 1536px) {
+@media (min-width: 1280px) {
   :root {
-    --desktop-nav-offset: calc((100vw - 1536px) / 2 + 2rem);
+    --desktop-nav-offset: calc((100vw - var(--content-max-width)) / 2 + 2rem);
   }
 }
 

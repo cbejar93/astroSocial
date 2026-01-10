@@ -322,8 +322,8 @@ const LoungePage: React.FC = () => {
 
   if (loadingLounge) {
     return (
-      <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
-        <div className="w-full max-w-4xl px-4">
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-4xl">
           <HeroSkeleton />
           <div className="space-y-4">
             <PostSkeleton />
@@ -337,8 +337,8 @@ const LoungePage: React.FC = () => {
 
   if (!lounge) {
     return (
-      <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
-        <div className="w-full max-w-3xl px-4">
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-3xl">
           <div className="rounded-2xl ring-1 ring-white/10 bg-white/5 backdrop-blur-md px-6 py-10 text-center">
             <p className="text-sm text-gray-300">Lounge not found.</p>
             <button
@@ -356,8 +356,8 @@ const LoungePage: React.FC = () => {
   return (
     <>
       {/* Mobile-only lift up: pt-3 on mobile, pt-8 on >= sm */}
-      <div className="w-full pt-3 pb-8 sm:pt-8 flex justify-center">
-        <div className="w-full max-w-5xl px-0 sm:px-4">
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-5xl">
           {/* ====== Hero (kept translucent so banner stays visible) ====== */}
           <section className="relative mb-10 sm:mb-12 rounded-3xl overflow-hidden ring-1 ring-white/10 bg-[#0B1220]/60 backdrop-blur-md shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
             <div className="absolute inset-0 -z-10">
@@ -487,7 +487,7 @@ const LoungePage: React.FC = () => {
             </div>
 
             {/* sticky action bar */}
-            <div className="sticky bottom-4 px-4 pb-4">
+            <div className="sticky bottom-4 pb-4">
               <div className="mx-auto max-w-5xl">
                 <div className="rounded-2xl bg-[#0B1220]/70 ring-1 ring-white/10 backdrop-blur-md px-3 py-2 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,.45)]">
                   <Filter className="w-4 h-4 text-gray-300" />
