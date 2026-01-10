@@ -1080,10 +1080,9 @@ function Feed() {
       </div>
 
       {/* Desktop: start the fixed shell below the (shorter) navbar */}
-      <div className="w-full flex justify-center lg:fixed lg:inset-x-0 lg:bottom-0 lg:top[48px] lg:overflow-hidden lg:top-[48px]">
+      <div className="w-full lg:fixed lg:inset-x-0 lg:bottom-0 lg:top[48px] lg:overflow-hidden lg:top-[48px]">
         <div
-          className={`w-full ${showRightPanel ? "max-w-6xl" : "max-w-3xl"} mx-auto
-                      px-0 sm:px-4 lg:px-6
+          className={`w-full px-0 sm:px-4 lg:px-6
                       lg:h-full lg:grid ${
                         showRightPanel
                           ? "lg:grid-cols-[minmax(0,1fr)_360px]"

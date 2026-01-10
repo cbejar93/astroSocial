@@ -76,61 +76,57 @@ const SavedPage: React.FC = () => {
   );
 
   return (
-    // Large screens: 3-column grid -> [LEFT gutter (sidebar width) | CENTER | RIGHT gutter (same width)]
-    // This keeps the center column truly centered relative to the viewport.
-    <div className="min-h-screen lg:grid lg:grid-cols-[16rem_minmax(0,1fr)_16rem]">
-      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-8 lg:col-start-2">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-400/90" />
-            <span className="text-xs font-medium text-slate-200">Saved</span>
-          </div>
-          <div className="mt-3 flex items-end justify-between">
-            <h1 className="text-2xl font-semibold text-slate-100">Saved posts</h1>
-            {typeof total === "number" && (
-              <span className="text-sm text-slate-400">{total} total</span>
-            )}
-          </div>
-          <div className="mt-2 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm">
+          <span className="h-2 w-2 rounded-full bg-emerald-400/90" />
+          <span className="text-xs font-medium text-slate-200">Saved</span>
         </div>
-
-        {/* Content */}
-        {loading ? (
-          <div className="space-y-4">
-            <PostSkeleton />
-            <PostSkeleton />
-            <PostSkeleton />
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center text-neutral-400/90 py-16">
-            <div className="mx-auto mb-3 h-12 w-12 rounded-xl bg-white/5 ring-1 ring-white/10" />
-            <p className="text-sm">You haven&apos;t saved any posts yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                {...post}
-                onDeleted={handleDeleted}
-                onSavedChange={handleSavedChange}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Infinite scroll sentinel */}
-        {!loading && posts.length > 0 && (
-          <div ref={sentinelRef} className="h-16 flex items-center justify-center">
-            {isFetchingNext && (
-              <div className="w-full">
-                <PostSkeleton />
-              </div>
-            )}
-          </div>
-        )}
+        <div className="mt-3 flex items-end justify-between">
+          <h1 className="text-2xl font-semibold text-slate-100">Saved posts</h1>
+          {typeof total === "number" && (
+            <span className="text-sm text-slate-400">{total} total</span>
+          )}
+        </div>
+        <div className="mt-2 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="space-y-4">
+          <PostSkeleton />
+          <PostSkeleton />
+          <PostSkeleton />
+        </div>
+      ) : posts.length === 0 ? (
+        <div className="text-center text-neutral-400/90 py-16">
+          <div className="mx-auto mb-3 h-12 w-12 rounded-xl bg-white/5 ring-1 ring-white/10" />
+          <p className="text-sm">You haven&apos;t saved any posts yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {posts.map((post) => (
+            <PostCard
+              key={post.id}
+              {...post}
+              onDeleted={handleDeleted}
+              onSavedChange={handleSavedChange}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Infinite scroll sentinel */}
+      {!loading && posts.length > 0 && (
+        <div ref={sentinelRef} className="h-16 flex items-center justify-center">
+          {isFetchingNext && (
+            <div className="w-full">
+              <PostSkeleton />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
