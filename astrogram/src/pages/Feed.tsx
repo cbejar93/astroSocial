@@ -1079,11 +1079,10 @@ function Feed() {
         <div className="absolute left-1/2 top-[-12%] h-[38vh] w-[65vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/12 via-fuchsia-500/10 to-emerald-500/12 blur-3xl" />
       </div>
 
-      {/* Desktop: start the fixed shell below the (shorter) navbar */}
-      <div className="w-full lg:fixed lg:inset-x-0 lg:bottom-0 lg:top[48px] lg:overflow-hidden lg:top-[48px]">
+      <div className="w-full">
         <div
           className={`w-full px-0 sm:px-4 lg:px-6
-                      lg:h-full lg:grid ${
+                      lg:grid ${
                         showRightPanel
                           ? "lg:grid-cols-[minmax(0,1fr)_360px]"
                           : "lg:grid-cols-1"
@@ -1093,7 +1092,7 @@ function Feed() {
           <div
             id="feedScroll"
             ref={scrollerRef}
-            className="pretty-scroll scrollbar-cute [scrollbar-gutter:stable] min-w-0 lg:h-full lg:overflow-y-auto lg:pt-4 pb-16"
+            className="pretty-scroll scrollbar-cute [scrollbar-gutter:stable] min-w-0 lg:overflow-y-auto lg:pt-4 pb-16"
           >
             <div className={`sticky ${STICKY_TOP_CLASS} z-30 bg-transparent`}>
               <div className="relative px-2 sm:px-4">
