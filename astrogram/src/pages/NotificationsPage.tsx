@@ -296,7 +296,7 @@ const NotificationsPage: React.FC = () => {
       </div>
 
       {/* Center the section */}
-      <div className="mx-auto w-full max-w-3xl px-0 sm:px-4 text-gray-200 py-8">
+      <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:48rem] px-0 sm:px-4 text-gray-200 py-8">
         {/* Header Card */}
         <div className="mb-6 rounded-2xl ring-1 ring-white/10 bg-transparent p-4 backdrop-blur-[2px]">
           <div className="flex items-center justify-between">

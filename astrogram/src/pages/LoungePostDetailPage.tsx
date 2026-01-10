@@ -99,9 +99,9 @@ const LoungePostDetailPage: React.FC = () => {
 
   /* ---------------------- Render ---------------------- */
     return (
-      <div className="relative w-full flex justify-center lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+      <div className="relative w-full lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
         {/* Mobile stacked; Desktop two columns */}
-        <div className="w-full max-w-6xl mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
+        <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:72rem] mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
           {/* LEFT COLUMN */}
           <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
             <AuroraBorder>

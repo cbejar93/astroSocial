@@ -114,51 +114,52 @@ const CompleteProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="w-full py-8 lg:pl-64 flex justify-center">
+    <div className="w-full py-8">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-gray-800 p-6 rounded-xl space-y-6"
+        className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:28rem] bg-gray-800 p-6 rounded-xl space-y-6"
       >
-      <h2 className="text-xl font-semibold text-center">Complete Your Profile</h2>
+        <h2 className="text-xl font-semibold text-center">Complete Your Profile</h2>
 
-      {/* Username */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Username</label>
-        <input
-          type="text"
-          value={username}
-          maxLength={USERNAME_MAX_LENGTH}
-          onChange={(e) => {
-            setUsername(e.target.value);
-            if (error) {
-              setError(null);
-            }
-          }}
-          placeholder="Choose a username"
-          className="w-full px-4 py-2 rounded bg-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-teal-400 outline-none"
-        />
-        <p className="mt-1 text-xs text-gray-400">
-          Use {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} characters: letters, numbers, periods, or underscores.
-        </p>
-        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
-      </div>
+        {/* Username */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Username</label>
+          <input
+            type="text"
+            value={username}
+            maxLength={USERNAME_MAX_LENGTH}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              if (error) {
+                setError(null);
+              }
+            }}
+            placeholder="Choose a username"
+            className="w-full px-4 py-2 rounded bg-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-teal-400 outline-none"
+          />
+          <p className="mt-1 text-xs text-gray-400">
+            Use {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} characters: letters,
+            numbers, periods, or underscores.
+          </p>
+          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+        </div>
 
-      {/* Styled file upload */}
-      <div>
-        <label
-          htmlFor="avatar"
-          className="
-            flex flex-col items-center justify-center
-            border-2 border-dashed border-gray-600
-            hover:border-teal-400 p-6 rounded-lg
-            cursor-pointer bg-gray-700 hover:bg-gray-600
-            transition
-          "
-        >
-          <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
-          <span className="text-sm text-gray-400">
-            {selectedFile ? "Change" : "Click to upload"} profile picture
-          </span>
+        {/* Styled file upload */}
+        <div>
+          <label
+            htmlFor="avatar"
+            className="
+              flex flex-col items-center justify-center
+              border-2 border-dashed border-gray-600
+              hover:border-teal-400 p-6 rounded-lg
+              cursor-pointer bg-gray-700 hover:bg-gray-600
+              transition
+            "
+          >
+            <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
+            <span className="text-sm text-gray-400">
+              {selectedFile ? "Change" : "Click to upload"} profile picture
+            </span>
 
           {selectedFile && (
             <span className="mt-2 text-xs text-gray-300 truncate">

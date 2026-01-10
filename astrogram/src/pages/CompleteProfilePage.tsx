@@ -117,85 +117,88 @@ const CompleteProfilePage: React.FC = () => {
     <div className="relative isolate flex min-h-[calc(100vh-5rem)] items-center justify-center px-4 py-12 lg:py-16">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg space-y-6 rounded-3xl border border-white/10 bg-white/10 px-6 py-8 text-white shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
+        className="w-full max-w-[var(--page-content-max)] [--page-content-max:32rem] space-y-6 rounded-3xl border border-white/10 bg-white/10 px-6 py-8 text-white shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
       >
-          <div className="space-y-2 text-center">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/70">step 02</p>
-            <h2 className="text-2xl font-semibold">Complete Your Profile</h2>
-            <p className="text-sm text-white/70">Choose a public username and upload an avatar so the community knows it's you.</p>
-          </div>
+        <div className="space-y-2 text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/70">step 02</p>
+          <h2 className="text-2xl font-semibold">Complete Your Profile</h2>
+          <p className="text-sm text-white/70">
+            Choose a public username and upload an avatar so the community knows it's you.
+          </p>
+        </div>
 
-          {/* Username */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-white/80">Username</label>
-            <input
-              type="text"
-              value={username}
-              maxLength={USERNAME_MAX_LENGTH}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                if (error) {
-                  setError(null);
-                }
-              }}
-              placeholder="Choose a username"
-              className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2.5 text-white placeholder-white/40 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-400/60"
-            />
-            <p className="text-xs text-white/60">
-              Use {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} characters: letters, numbers, periods, or underscores.
-            </p>
-            {error && <p className="text-sm text-rose-300">{error}</p>}
-          </div>
+        {/* Username */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-white/80">Username</label>
+          <input
+            type="text"
+            value={username}
+            maxLength={USERNAME_MAX_LENGTH}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              if (error) {
+                setError(null);
+              }
+            }}
+            placeholder="Choose a username"
+            className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2.5 text-white placeholder-white/40 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-400/60"
+          />
+          <p className="text-xs text-white/60">
+            Use {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} characters: letters, numbers,
+            periods, or underscores.
+          </p>
+          {error && <p className="text-sm text-rose-300">{error}</p>}
+        </div>
 
-          {/* Styled file upload */}
-          <div>
-            <label
-              htmlFor="avatar"
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/20 bg-white/5 px-6 py-6 text-center text-white/80 transition hover:border-white/40 hover:bg-white/10"
-            >
-              <UploadCloud className="h-10 w-10 text-white/60" />
-              <span className="text-sm">
-                {selectedFile ? "Change" : "Click to upload"} profile picture
-              </span>
-
-              {selectedFile && (
-                <span className="text-xs text-white/50">{selectedFile.name}</span>
-              )}
-
-              {previewUrl && (
-                <img
-                  src={previewUrl}
-                  alt="avatar preview"
-                  className="mt-2 h-20 w-20 rounded-full object-cover ring-2 ring-white/20"
-                />
-              )}
-
-              <input
-                id="avatar"
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={handleImageChange}
-              />
-            </label>
-          </div>
-
-          {/* Submit button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-fuchsia-500 px-4 py-2.5 text-base font-semibold shadow-lg shadow-sky-900/40 transition hover:brightness-110 disabled:opacity-60"
+        {/* Styled file upload */}
+        <div>
+          <label
+            htmlFor="avatar"
+            className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/20 bg-white/5 px-6 py-6 text-center text-white/80 transition hover:border-white/40 hover:bg-white/10"
           >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Saving profile
-              </>
-            ) : (
-              "Save profile"
+            <UploadCloud className="h-10 w-10 text-white/60" />
+            <span className="text-sm">
+              {selectedFile ? "Change" : "Click to upload"} profile picture
+            </span>
+
+            {selectedFile && (
+              <span className="text-xs text-white/50">{selectedFile.name}</span>
             )}
-          </button>
-        </form>
+
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="avatar preview"
+                className="mt-2 h-20 w-20 rounded-full object-cover ring-2 ring-white/20"
+              />
+            )}
+
+            <input
+              id="avatar"
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={handleImageChange}
+            />
+          </label>
+        </div>
+
+        {/* Submit button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-fuchsia-500 px-4 py-2.5 text-base font-semibold shadow-lg shadow-sky-900/40 transition hover:brightness-110 disabled:opacity-60"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Saving profile
+            </>
+          ) : (
+            "Save profile"
+          )}
+        </button>
+      </form>
     </div>
   );
 };

@@ -82,7 +82,7 @@ const SupabaseAuthCallbackPage: React.FC = () => {
       {status.state === "loading" ? (
         <div className="text-lg font-medium tracking-wide">Completing your sign in…</div>
       ) : (
-        <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/10 px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl space-y-6">
+        <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:32rem] rounded-3xl border border-white/10 bg-white/10 px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl space-y-6">
           <div className="text-2xl font-semibold">We couldn’t finish signing you in</div>
           <p className="text-base text-white/80">{status.message}</p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
