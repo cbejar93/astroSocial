@@ -98,7 +98,7 @@ const DesktopNav: React.FC = () => {
       className={[
         "desktop-nav",
         collapsed ? "desktop-nav--collapsed" : "desktop-nav--expanded",
-        "fixed left-4 md:left-8 2xl:left-[calc((100vw-1536px)/2+2rem)]",
+        "fixed left-[var(--desktop-nav-offset)]",
       ].join(" ")}
       style={{
         width: collapsed ? "var(--desktop-nav-collapsed)" : "var(--desktop-nav-expanded)",
