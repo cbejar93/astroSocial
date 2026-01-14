@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class CreatePostDto {
   /** Short headline for the post */
@@ -14,6 +14,11 @@ export class CreatePostDto {
   @IsString()
   @IsOptional()
   imageUrl?: string;
+
+  /** Optional link to a YouTube video */
+  @IsUrl()
+  @IsOptional()
+  youtubeUrl?: string;
 
   /** Lounge to post into */
   @IsString()

@@ -392,6 +392,7 @@ export class UsersService {
       avatarUrl:
         p.originalAuthor?.avatarUrl || user?.avatarUrl || '/defaultPfp.png',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+      ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
       caption: p.body,
       title: p.title,
       loungeId: p.loungeId || undefined,
@@ -476,6 +477,7 @@ export class UsersService {
       avatarUrl:
         p.originalAuthor?.avatarUrl || user.avatarUrl || '/defaultPfp.png',
       ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+      ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
       caption: p.body,
       title: p.title,
       loungeId: p.loungeId || undefined,

@@ -708,11 +708,13 @@ function RightProfilePanel() {
 function PostComposer({ onPosted }: { onPosted: () => void }) {
   const { user } = useAuth();
   const [caption, setCaption] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [captionError, setCaptionError] = useState<string | null>(null);
+  const [youtubeError, setYoutubeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -741,6 +743,22 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
     setPreview(null);
   };
 
+  const isValidYoutubeUrl = (value: string) => {
+    try {
+      const parsed = new URL(value);
+      const host = parsed.hostname.toLowerCase();
+      return (
+        host === "youtube.com" ||
+        host === "www.youtube.com" ||
+        host === "m.youtube.com" ||
+        host === "youtu.be" ||
+        host === "www.youtu.be"
+      );
+    } catch {
+      return false;
+    }
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -749,7 +767,12 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
       setCaptionError("Caption is required");
       return;
     }
+    if (youtubeUrl.trim() && !isValidYoutubeUrl(youtubeUrl.trim())) {
+      setYoutubeError("Please enter a valid YouTube link.");
+      return;
+    }
     setCaptionError(null);
+    setYoutubeError(null);
     setError(null);
     setLoading(true);
 
@@ -757,6 +780,7 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
       const form = new FormData();
       form.append("body", caption);
       if (file) form.append("image", file);
+      if (youtubeUrl.trim()) form.append("youtubeUrl", youtubeUrl.trim());
 
       const res = await apiFetch("/posts", { method: "POST", body: form });
       if (!res.ok) {
@@ -775,6 +799,7 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
       } catch {}
 
       setCaption("");
+      setYoutubeUrl("");
       setFile(null);
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
@@ -825,6 +850,29 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
           {captionError && (
             <p className="mt-1 text-xs text-red-400">{captionError}</p>
           )}
+
+          <div className="mt-3">
+            <label
+              htmlFor="youtube-url"
+              className="block text-xs text-gray-300 mb-1"
+            >
+              YouTube URL (optional)
+            </label>
+            <input
+              id="youtube-url"
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={youtubeUrl}
+              onChange={(e) => {
+                setYoutubeUrl(e.target.value);
+                if (youtubeError) setYoutubeError(null);
+              }}
+              className="w-full rounded-2xl bg-white/[0.06] border border-white/10 text-gray-100 placeholder-gray-300/70 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 focus:border-white/20 px-3 py-1.5 text-sm"
+            />
+            {youtubeError && (
+              <p className="mt-1 text-xs text-red-400">{youtubeError}</p>
+            )}
+          </div>
 
           {preview && (
             <div className="mt-3 relative inline-block">
