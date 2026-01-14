@@ -19,30 +19,37 @@ export class UnfurlService {
 
   async unfurl(url: string): Promise<UnfurlResponseDto> {
     const normalized = this.normalizeUrl(url);
+    this.logger.log(`Unfurl request received for ${normalized}`);
     const cached = this.cache.get(normalized);
     if (cached && cached.expiresAt > Date.now()) {
+      this.logger.debug(`Unfurl cache hit for ${normalized}`);
       return cached.value;
     }
 
-    await this.ensureSafeUrl(normalized);
-    const html = await this.fetchHtml(normalized);
+    try {
+      await this.ensureSafeUrl(normalized);
+      const html = await this.fetchHtml(normalized);
 
-    const response: UnfurlResponseDto = {
-      url: normalized,
-      title: this.getMetaContent(html, 'og:title') ?? this.getTitle(html),
-      description:
-        this.getMetaContent(html, 'og:description') ??
-        this.getMetaByName(html, 'description'),
-      imageUrl: this.getMetaContent(html, 'og:image'),
-      siteName: this.getMetaContent(html, 'og:site_name'),
-    };
+      const response: UnfurlResponseDto = {
+        url: normalized,
+        title: this.getMetaContent(html, 'og:title') ?? this.getTitle(html),
+        description:
+          this.getMetaContent(html, 'og:description') ??
+          this.getMetaByName(html, 'description'),
+        imageUrl: this.getMetaContent(html, 'og:image'),
+        siteName: this.getMetaContent(html, 'og:site_name'),
+      };
 
-    this.cache.set(normalized, {
-      expiresAt: Date.now() + CACHE_TTL_MS,
-      value: response,
-    });
-
-    return response;
+      this.cache.set(normalized, {
+        expiresAt: Date.now() + CACHE_TTL_MS,
+        value: response,
+      });
+      this.logger.log(`Unfurl completed for ${normalized}`);
+      return response;
+    } catch (err) {
+      this.logger.warn(`Unfurl failed for ${normalized}: ${String(err)}`);
+      throw err;
+    }
   }
 
   private normalizeUrl(url: string) {
@@ -60,6 +67,7 @@ export class UnfurlService {
   private async ensureSafeUrl(url: string) {
     const parsed = new URL(url);
     const hostname = parsed.hostname.toLowerCase();
+    this.logger.debug(`Validating hostname ${hostname}`);
     if (
       hostname === 'localhost' ||
       hostname.endsWith('.localhost') ||
@@ -70,6 +78,9 @@ export class UnfurlService {
     }
 
     const addresses = await lookup(hostname, { all: true });
+    this.logger.debug(
+      `Resolved ${hostname} to ${addresses.map((addr) => addr.address).join(', ')}`,
+    );
     for (const address of addresses) {
       if (this.isPrivateIp(address.address)) {
         throw new BadRequestException('Invalid URL host.');
@@ -103,6 +114,7 @@ export class UnfurlService {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
       try {
+        this.logger.debug(`Fetching ${currentUrl} (attempt ${i + 1})`);
         const res = await fetch(currentUrl, {
           redirect: 'manual',
           signal: controller.signal,
@@ -119,6 +131,7 @@ export class UnfurlService {
             throw new BadRequestException('Invalid redirect.');
           }
           const nextUrl = new URL(location, currentUrl).toString();
+          this.logger.debug(`Redirect ${currentUrl} -> ${nextUrl}`);
           await this.ensureSafeUrl(nextUrl);
           currentUrl = nextUrl;
           continue;
@@ -133,7 +146,9 @@ export class UnfurlService {
           throw new BadRequestException('URL does not point to HTML content.');
         }
 
-        return await this.readBodyWithLimit(res);
+        const html = await this.readBodyWithLimit(res);
+        this.logger.debug(`Fetched ${html.length} bytes from ${currentUrl}`);
+        return html;
       } catch (err) {
         if (err instanceof BadRequestException) {
           throw err;
