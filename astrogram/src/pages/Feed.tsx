@@ -758,6 +758,11 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
     return match?.[0] ?? null;
   };
 
+  const stripFirstUrl = (value: string, url: string | null) => {
+    if (!url) return value.trim();
+    return value.replace(url, "").replace(/\s{2,}/g, " ").trim();
+  };
+
   useEffect(() => {
     const detectedUrl = extractFirstUrl(caption);
     if (!detectedUrl) {
@@ -827,8 +832,9 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
     setLoading(true);
 
     try {
+      const cleanedCaption = stripFirstUrl(caption, linkPreview?.url ?? null);
       const form = new FormData();
-      form.append("body", caption);
+      form.append("body", cleanedCaption);
       if (file) form.append("image", file);
       if (linkPreview?.url) {
         form.append("linkUrl", linkPreview.url);

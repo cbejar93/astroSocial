@@ -149,7 +149,7 @@ const PostCard: React.FC<PostCardProps> = ({
     }
     return null;
   };
-  const youtubeId = getYoutubeId(youtubeUrl);
+  const youtubeId = getYoutubeId(youtubeUrl ?? linkUrl);
   const linkPreview =
     linkUrl || linkTitle || linkDescription || linkImageUrl || linkSiteName
       ? {
@@ -163,6 +163,13 @@ const PostCard: React.FC<PostCardProps> = ({
   const hasValidLinkPreview = Boolean(
     linkPreview && linkPreview.url.trim().length > 0
   );
+  const stripFirstUrl = (value: string, url: string | null) => {
+    if (!url) return value;
+    return value.replace(url, "").replace(/\s{2,}/g, " ").trim();
+  };
+  const captionText = hasValidLinkPreview
+    ? stripFirstUrl(caption, linkPreview?.url ?? null)
+    : caption;
 
   const handleLike = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -432,7 +439,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Caption */}
         <div className="relative z-[1] px-4 sm:px-6 pb-2 text-[14px] leading-snug text-slate-200/95">
-          {caption}
+          {captionText}
         </div>
 
         {/* Media */}
