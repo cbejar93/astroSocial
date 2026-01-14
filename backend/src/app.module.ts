@@ -10,6 +10,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { RequestLoggingMiddleware } from './middleware/logging.middleware';
 import { PostsModule } from './posts/post.module';
+import { UnfurlModule } from './unfurl/unfurl.module';
 import { CommentsModule } from './comments/comments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { LoungesModule } from './lounges/lounges.module';
@@ -26,6 +27,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     PrismaModule,
     AuthModule,
     PostsModule,
+    UnfurlModule,
     CommentsModule,
     NotificationsModule,
     LoungesModule,
