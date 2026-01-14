@@ -10,6 +10,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
+import LinkPreviewCard from "../components/LinkPreviewCard";
 import {
   fetchFeed,
   search,
@@ -853,6 +854,15 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
       form.append("body", caption);
       if (file) form.append("image", file);
       if (youtubeUrl.trim()) form.append("youtubeUrl", youtubeUrl.trim());
+      if (linkPreview?.url) {
+        form.append("linkUrl", linkPreview.url);
+        if (linkPreview.title) form.append("linkTitle", linkPreview.title);
+        if (linkPreview.description) {
+          form.append("linkDescription", linkPreview.description);
+        }
+        if (linkPreview.imageUrl) form.append("linkImageUrl", linkPreview.imageUrl);
+        if (linkPreview.siteName) form.append("linkSiteName", linkPreview.siteName);
+      }
 
       const res = await apiFetch("/posts", { method: "POST", body: form });
       if (!res.ok) {
@@ -872,6 +882,9 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
 
       setCaption("");
       setYoutubeUrl("");
+      setLinkPreview(null);
+      setPreviewError(null);
+      setPreviewLoading(false);
       setFile(null);
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
@@ -966,32 +979,19 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
           )}
 
           {(previewLoading || previewError || linkPreview) && (
-            <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs text-gray-200">
-              {previewLoading && <p className="text-gray-300">Loading link preview…</p>}
-              {previewError && <p className="text-red-400">{previewError}</p>}
-              {!previewLoading && !previewError && linkPreview && (
-                <div className="flex gap-3">
-                  {linkPreview.imageUrl && (
-                    <img
-                      src={linkPreview.imageUrl}
-                      alt={linkPreview.title ?? "Link preview"}
-                      className="h-16 w-24 rounded-lg object-cover border border-white/10"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                      {linkPreview.siteName ?? new URL(linkPreview.url).hostname}
-                    </p>
-                    {linkPreview.title && (
-                      <p className="font-semibold text-gray-100 line-clamp-2">
-                        {linkPreview.title}
-                      </p>
-                    )}
-                    {linkPreview.description && (
-                      <p className="text-gray-300 line-clamp-2">{linkPreview.description}</p>
-                    )}
-                  </div>
+            <div className="mt-3">
+              {previewLoading && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs text-gray-300">
+                  Loading link preview…
                 </div>
+              )}
+              {previewError && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs text-red-400">
+                  {previewError}
+                </div>
+              )}
+              {!previewLoading && !previewError && linkPreview && (
+                <LinkPreviewCard preview={linkPreview} />
               )}
             </div>
           )}

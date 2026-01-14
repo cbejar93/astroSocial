@@ -21,6 +21,7 @@ import {
 } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
 import { useAnalytics } from "../../hooks/useAnalytics";
+import LinkPreviewCard from "../LinkPreviewCard";
 
 export interface PostCardProps {
   id: string | number;
@@ -29,6 +30,11 @@ export interface PostCardProps {
   title?: string;
   imageUrl?: string;
   youtubeUrl?: string;
+  linkUrl?: string;
+  linkTitle?: string;
+  linkDescription?: string;
+  linkImageUrl?: string;
+  linkSiteName?: string;
   caption: string;
   timestamp: string;
   stars?: number;
@@ -53,6 +59,11 @@ const PostCard: React.FC<PostCardProps> = ({
   username,
   imageUrl,
   youtubeUrl,
+  linkUrl,
+  linkTitle,
+  linkDescription,
+  linkImageUrl,
+  linkSiteName,
   avatarUrl,
   caption,
   timestamp,
@@ -139,6 +150,19 @@ const PostCard: React.FC<PostCardProps> = ({
     return null;
   };
   const youtubeId = getYoutubeId(youtubeUrl);
+  const linkPreview =
+    linkUrl || linkTitle || linkDescription || linkImageUrl || linkSiteName
+      ? {
+          url: linkUrl ?? "",
+          title: linkTitle,
+          description: linkDescription,
+          imageUrl: linkImageUrl,
+          siteName: linkSiteName,
+        }
+      : null;
+  const hasValidLinkPreview = Boolean(
+    linkPreview && linkPreview.url.trim().length > 0
+  );
 
   const handleLike = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -440,6 +464,12 @@ const PostCard: React.FC<PostCardProps> = ({
               </div>
             </div>
           )
+        )}
+
+        {hasValidLinkPreview && linkPreview && (
+          <div className="relative z-[1] px-4 sm:px-6 pb-2">
+            <LinkPreviewCard preview={linkPreview} />
+          </div>
         )}
 
         {/* Views */}

@@ -84,6 +84,11 @@ model Post {
   body             String
   imageUrl         String?
   youtubeUrl       String?
+  linkUrl          String?
+  linkTitle        String?
+  linkDescription  String?
+  linkImageUrl     String?
+  linkSiteName     String?
   loungeId         String?
   likes            Int               @default(0)
   shares           Int               @default(0)

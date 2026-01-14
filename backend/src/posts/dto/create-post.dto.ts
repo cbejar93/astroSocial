@@ -20,6 +20,31 @@ export class CreatePostDto {
   @IsOptional()
   youtubeUrl?: string;
 
+  /** Optional URL for link preview unfurling */
+  @IsUrl()
+  @IsOptional()
+  linkUrl?: string;
+
+  /** Optional preview title */
+  @IsString()
+  @IsOptional()
+  linkTitle?: string;
+
+  /** Optional preview description */
+  @IsString()
+  @IsOptional()
+  linkDescription?: string;
+
+  /** Optional preview image URL */
+  @IsUrl()
+  @IsOptional()
+  linkImageUrl?: string;
+
+  /** Optional preview site name */
+  @IsString()
+  @IsOptional()
+  linkSiteName?: string;
+
   /** Lounge to post into */
   @IsString()
   @IsOptional()
