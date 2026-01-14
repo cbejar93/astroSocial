@@ -10,6 +10,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
+import LinkPreviewCard from "../components/LinkPreviewCard";
 import {
   fetchFeed,
   search,
@@ -708,11 +709,22 @@ function RightProfilePanel() {
 function PostComposer({ onPosted }: { onPosted: () => void }) {
   const { user } = useAuth();
   const [caption, setCaption] = useState("");
+  const [linkPreview, setLinkPreview] = useState<{
+    url: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    siteName?: string;
+  } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [captionError, setCaptionError] = useState<string | null>(null);
+  const lastPreviewUrl = useRef<string | null>(null);
+  const previewTimer = useRef<number | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -741,6 +753,72 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
     setPreview(null);
   };
 
+  const extractFirstUrl = (value: string) => {
+    const match = value.match(/https?:\/\/[^\s]+/i);
+    return match?.[0] ?? null;
+  };
+
+  const stripFirstUrl = (value: string, url: string | null) => {
+    if (!url) return value.trim();
+    return value.replace(url, "").replace(/\s{2,}/g, " ").trim();
+  };
+
+  useEffect(() => {
+    const detectedUrl = extractFirstUrl(caption);
+    if (!detectedUrl) {
+      if (previewTimer.current) {
+        window.clearTimeout(previewTimer.current);
+        previewTimer.current = null;
+      }
+      lastPreviewUrl.current = null;
+      setPreviewLoading(false);
+      setPreviewError(null);
+      setLinkPreview(null);
+      return;
+    }
+
+    if (detectedUrl === lastPreviewUrl.current) return;
+
+    if (previewTimer.current) {
+      window.clearTimeout(previewTimer.current);
+    }
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+
+    previewTimer.current = window.setTimeout(async () => {
+      try {
+        const res = await apiFetch("/unfurl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: detectedUrl }),
+        });
+        const data = (await res.json()) as {
+          url: string;
+          title?: string;
+          description?: string;
+          imageUrl?: string;
+          siteName?: string;
+        };
+        lastPreviewUrl.current = detectedUrl;
+        setLinkPreview(data);
+        setPreviewLoading(false);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unable to load preview.";
+        setPreviewError(message);
+        setLinkPreview(null);
+        setPreviewLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      if (previewTimer.current) {
+        window.clearTimeout(previewTimer.current);
+        previewTimer.current = null;
+      }
+    };
+  }, [caption]);
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -754,9 +832,19 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
     setLoading(true);
 
     try {
+      const cleanedCaption = stripFirstUrl(caption, linkPreview?.url ?? null);
       const form = new FormData();
-      form.append("body", caption);
+      form.append("body", cleanedCaption);
       if (file) form.append("image", file);
+      if (linkPreview?.url) {
+        form.append("linkUrl", linkPreview.url);
+        if (linkPreview.title) form.append("linkTitle", linkPreview.title);
+        if (linkPreview.description) {
+          form.append("linkDescription", linkPreview.description);
+        }
+        if (linkPreview.imageUrl) form.append("linkImageUrl", linkPreview.imageUrl);
+        if (linkPreview.siteName) form.append("linkSiteName", linkPreview.siteName);
+      }
 
       const res = await apiFetch("/posts", { method: "POST", body: form });
       if (!res.ok) {
@@ -775,6 +863,9 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
       } catch {}
 
       setCaption("");
+      setLinkPreview(null);
+      setPreviewError(null);
+      setPreviewLoading(false);
       setFile(null);
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
@@ -842,6 +933,24 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+          )}
+
+          {(previewLoading || previewError || linkPreview) && (
+            <div className="mt-3">
+              {previewLoading && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs text-gray-300">
+                  Loading link preview…
+                </div>
+              )}
+              {previewError && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs text-red-400">
+                  {previewError}
+                </div>
+              )}
+              {!previewLoading && !previewError && linkPreview && (
+                <LinkPreviewCard preview={linkPreview} />
+              )}
             </div>
           )}
 

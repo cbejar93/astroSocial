@@ -16,6 +16,12 @@ export interface FeedPostDto {
   repostedBy?: string;
   title?: string;
   imageUrl?: string;
+  youtubeUrl?: string;
+  linkUrl?: string;
+  linkTitle?: string;
+  linkDescription?: string;
+  linkImageUrl?: string;
+  linkSiteName?: string;
 }
 
 export interface FeedResponseDto {

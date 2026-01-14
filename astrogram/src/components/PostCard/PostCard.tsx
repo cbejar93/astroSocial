@@ -21,6 +21,7 @@ import {
 } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
 import { useAnalytics } from "../../hooks/useAnalytics";
+import LinkPreviewCard from "../LinkPreviewCard";
 
 export interface PostCardProps {
   id: string | number;
@@ -28,6 +29,12 @@ export interface PostCardProps {
   username: string;
   title?: string;
   imageUrl?: string;
+  youtubeUrl?: string;
+  linkUrl?: string;
+  linkTitle?: string;
+  linkDescription?: string;
+  linkImageUrl?: string;
+  linkSiteName?: string;
   caption: string;
   timestamp: string;
   stars?: number;
@@ -51,6 +58,12 @@ const PostCard: React.FC<PostCardProps> = ({
   id,
   username,
   imageUrl,
+  youtubeUrl,
+  linkUrl,
+  linkTitle,
+  linkDescription,
+  linkImageUrl,
+  linkSiteName,
   avatarUrl,
   caption,
   timestamp,
@@ -110,6 +123,54 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  const getYoutubeId = (url: string | undefined | null) => {
+    if (!url) return null;
+    try {
+      const parsed = new URL(url);
+      const host = parsed.hostname.toLowerCase();
+      if (host === "youtu.be" || host === "www.youtu.be") {
+        return parsed.pathname.replace("/", "") || null;
+      }
+      if (
+        host === "youtube.com" ||
+        host === "www.youtube.com" ||
+        host === "m.youtube.com"
+      ) {
+        if (parsed.pathname === "/watch") {
+          return parsed.searchParams.get("v");
+        }
+        if (parsed.pathname.startsWith("/embed/")) {
+          return parsed.pathname.split("/embed/")[1] || null;
+        }
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
+  const youtubeId = getYoutubeId(youtubeUrl ?? linkUrl);
+  const linkPreview =
+    linkUrl || linkTitle || linkDescription || linkImageUrl || linkSiteName
+      ? {
+          url: linkUrl ?? "",
+          title: linkTitle,
+          description: linkDescription,
+          imageUrl: linkImageUrl,
+          siteName: linkSiteName,
+        }
+      : null;
+  const hasValidLinkPreview = Boolean(
+    linkPreview && linkPreview.url.trim().length > 0
+  );
+  const hasVideoEmbed = Boolean(youtubeId);
+  const stripFirstUrl = (value: string, url: string | null) => {
+    if (!url) return value;
+    return value.replace(url, "").replace(/\s{2,}/g, " ").trim();
+  };
+  const captionText = hasValidLinkPreview
+    ? stripFirstUrl(caption, linkPreview?.url ?? null)
+    : caption;
 
   const handleLike = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -379,23 +440,43 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Caption */}
         <div className="relative z-[1] px-4 sm:px-6 pb-2 text-[14px] leading-snug text-slate-200/95">
-          {caption}
+          {captionText}
         </div>
 
         {/* Media */}
-        {imageUrl && (
+        {youtubeId ? (
           <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
-            <div className="flex items-center justify-center rounded-md border border-white/10 bg-black/10">
-              <img
-                src={imageUrl}
-                alt={`Post by ${username}: ${caption}`}
-                className="h-auto max-h-[70vh] max-w-full object-contain"
-                loading="lazy"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
-                }}
+            <div className="aspect-video w-full overflow-hidden rounded-md border border-white/10 bg-black/10">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+                title={`YouTube video from ${username}`}
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
               />
             </div>
+          </div>
+        ) : (
+          imageUrl && (
+            <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
+              <div className="flex items-center justify-center rounded-md border border-white/10 bg-black/10">
+                <img
+                  src={imageUrl}
+                  alt={`Post by ${username}: ${caption}`}
+                  className="h-auto max-h-[70vh] max-w-full object-contain"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
+                  }}
+                />
+              </div>
+            </div>
+          )
+        )}
+
+        {hasValidLinkPreview && linkPreview && !hasVideoEmbed && (
+          <div className="relative z-[1] px-4 sm:px-6 pb-2">
+            <LinkPreviewCard preview={linkPreview} />
           </div>
         )}
 

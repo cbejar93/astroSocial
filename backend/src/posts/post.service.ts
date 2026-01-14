@@ -61,6 +61,34 @@ export class PostsService {
     private readonly analytics: AnalyticsService,
   ) {}
 
+  private isValidYoutubeUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      const hostname = parsed.hostname.toLowerCase();
+      const allowedHosts = new Set([
+        'youtube.com',
+        'www.youtube.com',
+        'm.youtube.com',
+        'youtu.be',
+        'www.youtu.be',
+        'youtube-nocookie.com',
+        'www.youtube-nocookie.com',
+      ]);
+      return allowedHosts.has(hostname);
+    } catch {
+      return false;
+    }
+  }
+
+  private isValidHttpUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
   async create(
     userId: string,
     dto: CreatePostDto,
@@ -82,6 +110,14 @@ export class PostsService {
       throw new BadRequestException(
         'Post body must be 314 characters or fewer',
       );
+    }
+
+    if (dto.youtubeUrl && !this.isValidYoutubeUrl(dto.youtubeUrl)) {
+      throw new BadRequestException('Only YouTube URLs are allowed');
+    }
+
+    if (dto.linkUrl && !this.isValidHttpUrl(dto.linkUrl)) {
+      throw new BadRequestException('Only HTTP/HTTPS link URLs are allowed');
     }
 
     // 1) if they sent a file, upload it and grab the public URL
@@ -110,6 +146,12 @@ export class PostsService {
           body: dto.body,
           loungeId: dto.loungeId,
           ...(imageUrl ? { imageUrl } : {}),
+          ...(dto.youtubeUrl ? { youtubeUrl: dto.youtubeUrl } : {}),
+          ...(dto.linkUrl ? { linkUrl: dto.linkUrl } : {}),
+          ...(dto.linkTitle ? { linkTitle: dto.linkTitle } : {}),
+          ...(dto.linkDescription ? { linkDescription: dto.linkDescription } : {}),
+          ...(dto.linkImageUrl ? { linkImageUrl: dto.linkImageUrl } : {}),
+          ...(dto.linkSiteName ? { linkSiteName: dto.linkSiteName } : {}),
         },
       });
       this.logger.log(`Post created (id=${post.id})`);
@@ -171,6 +213,12 @@ export class PostsService {
             title: true,
             body: true,
             imageUrl: true,
+            youtubeUrl: true,
+            linkUrl: true,
+            linkTitle: true,
+            linkDescription: true,
+            linkImageUrl: true,
+            linkSiteName: true,
             loungeId: true,
             authorId: true,
           },
@@ -191,6 +239,18 @@ export class PostsService {
             body: original.body,
             loungeId: original.loungeId,
             ...(original.imageUrl ? { imageUrl: original.imageUrl } : {}),
+            ...(original.youtubeUrl ? { youtubeUrl: original.youtubeUrl } : {}),
+            ...(original.linkUrl ? { linkUrl: original.linkUrl } : {}),
+            ...(original.linkTitle ? { linkTitle: original.linkTitle } : {}),
+            ...(original.linkDescription
+              ? { linkDescription: original.linkDescription }
+              : {}),
+            ...(original.linkImageUrl
+              ? { linkImageUrl: original.linkImageUrl }
+              : {}),
+            ...(original.linkSiteName
+              ? { linkSiteName: original.linkSiteName }
+              : {}),
           },
         });
         this.logger.verbose(`✅ repost copy created for user ${userId}`);
@@ -308,6 +368,12 @@ export class PostsService {
         username: p.originalAuthor?.username || p.author.username!,
         ...(p.title ? { title: p.title } : {}),
         ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+        ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
+        ...(p.linkUrl ? { linkUrl: p.linkUrl } : {}),
+        ...(p.linkTitle ? { linkTitle: p.linkTitle } : {}),
+        ...(p.linkDescription ? { linkDescription: p.linkDescription } : {}),
+        ...(p.linkImageUrl ? { linkImageUrl: p.linkImageUrl } : {}),
+        ...(p.linkSiteName ? { linkSiteName: p.linkSiteName } : {}),
         avatarUrl:
           p.originalAuthor?.avatarUrl ||
           p.author.avatarUrl ||
@@ -395,6 +461,12 @@ export class PostsService {
         username: p.originalAuthor?.username || p.author.username!,
         title: p.title,
         ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+        ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
+        ...(p.linkUrl ? { linkUrl: p.linkUrl } : {}),
+        ...(p.linkTitle ? { linkTitle: p.linkTitle } : {}),
+        ...(p.linkDescription ? { linkDescription: p.linkDescription } : {}),
+        ...(p.linkImageUrl ? { linkImageUrl: p.linkImageUrl } : {}),
+        ...(p.linkSiteName ? { linkSiteName: p.linkSiteName } : {}),
         avatarUrl:
           p.originalAuthor?.avatarUrl ||
           p.author.avatarUrl ||
@@ -430,6 +502,12 @@ export class PostsService {
     authorId: string;
     avatarUrl: string;
     imageUrl?: string;
+    youtubeUrl?: string;
+    linkUrl?: string;
+    linkTitle?: string;
+    linkDescription?: string;
+    linkImageUrl?: string;
+    linkSiteName?: string;
     title?: string;
     caption: string;
     timestamp: string;
@@ -515,6 +593,12 @@ export class PostsService {
         post.author.avatarUrl ||
         '/defaultPfp.png',
       ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
+      ...(post.youtubeUrl ? { youtubeUrl: post.youtubeUrl } : {}),
+      ...(post.linkUrl ? { linkUrl: post.linkUrl } : {}),
+      ...(post.linkTitle ? { linkTitle: post.linkTitle } : {}),
+      ...(post.linkDescription ? { linkDescription: post.linkDescription } : {}),
+      ...(post.linkImageUrl ? { linkImageUrl: post.linkImageUrl } : {}),
+      ...(post.linkSiteName ? { linkSiteName: post.linkSiteName } : {}),
       ...(post.loungeId || post.title ? { title: post.title } : {}),
       caption: post.body,
       timestamp: post.createdAt.toISOString(),
@@ -714,6 +798,12 @@ export class PostsService {
             username: post.originalAuthor?.username || post.author.username!,
             ...(post.title ? { title: post.title } : {}),
             ...(post.imageUrl ? { imageUrl: post.imageUrl } : {}),
+            ...(post.youtubeUrl ? { youtubeUrl: post.youtubeUrl } : {}),
+            ...(post.linkUrl ? { linkUrl: post.linkUrl } : {}),
+            ...(post.linkTitle ? { linkTitle: post.linkTitle } : {}),
+            ...(post.linkDescription ? { linkDescription: post.linkDescription } : {}),
+            ...(post.linkImageUrl ? { linkImageUrl: post.linkImageUrl } : {}),
+            ...(post.linkSiteName ? { linkSiteName: post.linkSiteName } : {}),
             avatarUrl:
               post.originalAuthor?.avatarUrl ||
               post.author.avatarUrl ||

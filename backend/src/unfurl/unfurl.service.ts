@@ -1,0 +1,244 @@
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { lookup } from 'dns/promises';
+import { UnfurlResponseDto } from './dto/unfurl.dto';
+
+type CacheEntry = {
+  expiresAt: number;
+  value: UnfurlResponseDto;
+};
+
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const MAX_REDIRECTS = 3;
+const FETCH_TIMEOUT_MS = 4000;
+const MAX_RESPONSE_BYTES = 1024 * 1024;
+const YOUTUBE_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+
+@Injectable()
+export class UnfurlService {
+  private readonly logger = new Logger(UnfurlService.name);
+  private readonly cache = new Map<string, CacheEntry>();
+
+  async unfurl(url: string): Promise<UnfurlResponseDto> {
+    const normalized = this.normalizeUrl(url);
+    this.logger.log(`Unfurl request received for ${normalized}`);
+    const cached = this.cache.get(normalized);
+    if (cached && cached.expiresAt > Date.now()) {
+      this.logger.debug(`Unfurl cache hit for ${normalized}`);
+      return cached.value;
+    }
+
+    try {
+      await this.ensureSafeUrl(normalized);
+      const html = await this.fetchHtml(normalized);
+
+      const response: UnfurlResponseDto = {
+        url: normalized,
+        title: this.getMetaContent(html, 'og:title') ?? this.getTitle(html),
+        description:
+          this.getMetaContent(html, 'og:description') ??
+          this.getMetaByName(html, 'description'),
+        imageUrl: this.getMetaContent(html, 'og:image'),
+        siteName: this.getMetaContent(html, 'og:site_name'),
+      };
+
+      this.cache.set(normalized, {
+        expiresAt: Date.now() + CACHE_TTL_MS,
+        value: response,
+      });
+      this.logger.log(`Unfurl completed for ${normalized}`);
+      return response;
+    } catch (err) {
+      this.logger.warn(`Unfurl failed for ${normalized}: ${String(err)}`);
+      throw err;
+    }
+  }
+
+  private normalizeUrl(url: string) {
+    try {
+      const parsed = new URL(url);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new BadRequestException('Only HTTP/HTTPS URLs are allowed.');
+      }
+      return parsed.toString();
+    } catch {
+      throw new BadRequestException('Invalid URL.');
+    }
+  }
+
+  private async ensureSafeUrl(url: string) {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    this.logger.debug(`Validating hostname ${hostname}`);
+    if (
+      hostname === 'localhost' ||
+      hostname.endsWith('.localhost') ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.internal')
+    ) {
+      throw new BadRequestException('Invalid URL host.');
+    }
+
+    const addresses = await lookup(hostname, { all: true });
+    this.logger.debug(
+      `Resolved ${hostname} to ${addresses.map((addr) => addr.address).join(', ')}`,
+    );
+    for (const address of addresses) {
+      if (this.isPrivateIp(address.address)) {
+        throw new BadRequestException('Invalid URL host.');
+      }
+    }
+  }
+
+  private isPrivateIp(ip: string) {
+    if (ip === '127.0.0.1' || ip === '::1' || ip === '0.0.0.0') {
+      return true;
+    }
+    if (ip.startsWith('10.')) return true;
+    if (ip.startsWith('192.168.')) return true;
+    if (ip.startsWith('169.254.')) return true;
+    if (ip.startsWith('100.')) {
+      const second = Number(ip.split('.')[1]);
+      if (second >= 64 && second <= 127) return true;
+    }
+    if (ip.startsWith('172.')) {
+      const second = Number(ip.split('.')[1]);
+      if (second >= 16 && second <= 31) return true;
+    }
+    if (ip.startsWith('fc') || ip.startsWith('fd')) return true;
+    if (ip.startsWith('fe80:')) return true;
+    return false;
+  }
+
+  private async fetchHtml(url: string) {
+    let currentUrl = url;
+    for (let i = 0; i <= MAX_REDIRECTS; i += 1) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      try {
+        this.logger.debug(`Fetching ${currentUrl} (attempt ${i + 1})`);
+        const res = await fetch(currentUrl, {
+          redirect: 'manual',
+          signal: controller.signal,
+          headers: {
+            'User-Agent':
+              'AstroSocialBot/1.0 (+https://example.com) unfurl',
+            Accept: 'text/html,application/xhtml+xml',
+          },
+        });
+
+        if (res.status >= 300 && res.status < 400) {
+          const location = res.headers.get('location');
+          if (!location) {
+            throw new BadRequestException('Invalid redirect.');
+          }
+          const nextUrl = new URL(location, currentUrl).toString();
+          this.logger.debug(`Redirect ${currentUrl} -> ${nextUrl}`);
+          await this.ensureSafeUrl(nextUrl);
+          currentUrl = nextUrl;
+          continue;
+        }
+
+        if (!res.ok) {
+          throw new BadRequestException('Unable to fetch URL.');
+        }
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('text/html')) {
+          throw new BadRequestException('URL does not point to HTML content.');
+        }
+
+        const html = await this.readBodyWithLimit(
+          res,
+          this.getResponseLimit(currentUrl),
+        );
+        this.logger.debug(`Fetched ${html.length} bytes from ${currentUrl}`);
+        return html;
+      } catch (err) {
+        if (err instanceof BadRequestException) {
+          throw err;
+        }
+        this.logger.warn(`Failed to unfurl ${currentUrl}: ${String(err)}`);
+        throw new BadRequestException('Unable to fetch URL.');
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    throw new BadRequestException('Too many redirects.');
+  }
+
+  private async readBodyWithLimit(res: Response, limitBytes: number) {
+    const reader = res.body?.getReader();
+    if (!reader) {
+      const text = await res.text();
+      if (text.length > limitBytes) {
+        throw new BadRequestException('Response too large.');
+      }
+      return text;
+    }
+
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        total += value.length;
+        if (total > limitBytes) {
+          throw new BadRequestException('Response too large.');
+        }
+        chunks.push(value);
+      }
+    }
+    const buffer = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      buffer.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return new TextDecoder('utf-8').decode(buffer);
+  }
+
+  private getResponseLimit(url: string) {
+    try {
+      const hostname = new URL(url).hostname.toLowerCase();
+      if (
+        hostname === 'youtube.com' ||
+        hostname === 'www.youtube.com' ||
+        hostname === 'm.youtube.com' ||
+        hostname === 'youtu.be' ||
+        hostname === 'www.youtu.be' ||
+        hostname === 'youtube-nocookie.com' ||
+        hostname === 'www.youtube-nocookie.com'
+      ) {
+        return YOUTUBE_MAX_RESPONSE_BYTES;
+      }
+    } catch {
+      return MAX_RESPONSE_BYTES;
+    }
+    return MAX_RESPONSE_BYTES;
+  }
+
+  private getMetaContent(html: string, property: string) {
+    const regex = new RegExp(
+      `<meta[^>]+property=[\"']${property}[\"'][^>]+content=[\"']([^\"']+)[\"'][^>]*>`,
+      'i',
+    );
+    const match = html.match(regex);
+    return match?.[1]?.trim();
+  }
+
+  private getMetaByName(html: string, name: string) {
+    const regex = new RegExp(
+      `<meta[^>]+name=[\"']${name}[\"'][^>]+content=[\"']([^\"']+)[\"'][^>]*>`,
+      'i',
+    );
+    const match = html.match(regex);
+    return match?.[1]?.trim();
+  }
+
+  private getTitle(html: string) {
+    const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+    return match?.[1]?.trim();
+  }
+}
