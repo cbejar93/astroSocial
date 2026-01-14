@@ -27,8 +27,8 @@ import { trackEvent } from "../lib/analytics";
 
 const PAGE_SIZE = 20;
 
-/** Push content higher on all breakpoints */
-const NAV_PUSH_CLASS = "pt-0 sm:pt-0 lg:pt-0";
+/** Match Post detail page top padding */
+const NAV_PUSH_CLASS = "pt-3 sm:pt-8";
 
 /** Sticky anchor */
 const STICKY_TOP_CLASS = "top-0";
@@ -1081,7 +1081,7 @@ function Feed() {
 
       <div className="w-full">
         <div
-          className={`w-full px-0 sm:px-4 lg:px-6
+          className={`w-full max-w-[var(--page-content-max)] [--page-content-max:72rem] mx-auto px-0 sm:px-4 lg:px-6
                       lg:grid ${
                         showRightPanel
                           ? "lg:grid-cols-[minmax(0,1fr)_360px]"
