@@ -28,9 +28,6 @@ import { trackEvent } from "../lib/analytics";
 
 const PAGE_SIZE = 20;
 
-/** Match Post detail page top padding */
-const NAV_PUSH_CLASS = "pt-3 sm:pt-8";
-
 /** Sticky anchor */
 const STICKY_TOP_CLASS = "top-0";
 
@@ -1155,7 +1152,7 @@ function Feed() {
           results.lounges.page * results.lounges.limit)));
 
   return (
-    <div className={`relative ${NAV_PUSH_CLASS}`}>
+    <div className="relative">
       {/* Pretty scrollbar (Firefox + WebKit) */}
       <style>{`
         .pretty-scroll{
