@@ -76,10 +76,8 @@ const SavedPage: React.FC = () => {
   );
 
   return (
-    // Large screens: 3-column grid -> [LEFT gutter (sidebar width) | CENTER | RIGHT gutter (same width)]
-    // This keeps the center column truly centered relative to the viewport.
-    <div className="min-h-screen lg:grid lg:grid-cols-[16rem_minmax(0,1fr)_16rem]">
-      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-8 lg:col-start-2">
+    <div className="min-h-screen lg:grid lg:grid-cols-[var(--desktop-nav-current-width)_minmax(0,1fr)_var(--desktop-nav-current-width)]">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 lg:col-start-2">
         {/* Header */}
         <div className="mb-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm">
