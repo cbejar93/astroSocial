@@ -709,12 +709,23 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
   const { user } = useAuth();
   const [caption, setCaption] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [linkPreview, setLinkPreview] = useState<{
+    url: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    siteName?: string;
+  } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [captionError, setCaptionError] = useState<string | null>(null);
   const [youtubeError, setYoutubeError] = useState<string | null>(null);
+  const lastPreviewUrl = useRef<string | null>(null);
+  const previewTimer = useRef<number | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -742,6 +753,67 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
     if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
   };
+
+  const extractFirstUrl = (value: string) => {
+    const match = value.match(/https?:\/\/[^\s]+/i);
+    return match?.[0] ?? null;
+  };
+
+  useEffect(() => {
+    const detectedUrl = extractFirstUrl(caption);
+    if (!detectedUrl) {
+      if (previewTimer.current) {
+        window.clearTimeout(previewTimer.current);
+        previewTimer.current = null;
+      }
+      lastPreviewUrl.current = null;
+      setPreviewLoading(false);
+      setPreviewError(null);
+      setLinkPreview(null);
+      return;
+    }
+
+    if (detectedUrl === lastPreviewUrl.current) return;
+
+    if (previewTimer.current) {
+      window.clearTimeout(previewTimer.current);
+    }
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+
+    previewTimer.current = window.setTimeout(async () => {
+      try {
+        const res = await apiFetch("/unfurl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: detectedUrl }),
+        });
+        const data = (await res.json()) as {
+          url: string;
+          title?: string;
+          description?: string;
+          imageUrl?: string;
+          siteName?: string;
+        };
+        lastPreviewUrl.current = detectedUrl;
+        setLinkPreview(data);
+        setPreviewLoading(false);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unable to load preview.";
+        setPreviewError(message);
+        setLinkPreview(null);
+        setPreviewLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      if (previewTimer.current) {
+        window.clearTimeout(previewTimer.current);
+        previewTimer.current = null;
+      }
+    };
+  }, [caption]);
 
   const isValidYoutubeUrl = (value: string) => {
     try {
@@ -890,6 +962,37 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+          )}
+
+          {(previewLoading || previewError || linkPreview) && (
+            <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs text-gray-200">
+              {previewLoading && <p className="text-gray-300">Loading link preview…</p>}
+              {previewError && <p className="text-red-400">{previewError}</p>}
+              {!previewLoading && !previewError && linkPreview && (
+                <div className="flex gap-3">
+                  {linkPreview.imageUrl && (
+                    <img
+                      src={linkPreview.imageUrl}
+                      alt={linkPreview.title ?? "Link preview"}
+                      className="h-16 w-24 rounded-lg object-cover border border-white/10"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                      {linkPreview.siteName ?? new URL(linkPreview.url).hostname}
+                    </p>
+                    {linkPreview.title && (
+                      <p className="font-semibold text-gray-100 line-clamp-2">
+                        {linkPreview.title}
+                      </p>
+                    )}
+                    {linkPreview.description && (
+                      <p className="text-gray-300 line-clamp-2">{linkPreview.description}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
