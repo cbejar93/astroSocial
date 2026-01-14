@@ -11,6 +11,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_REDIRECTS = 3;
 const FETCH_TIMEOUT_MS = 4000;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
+const YOUTUBE_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
 @Injectable()
 export class UnfurlService {
@@ -146,7 +147,10 @@ export class UnfurlService {
           throw new BadRequestException('URL does not point to HTML content.');
         }
 
-        const html = await this.readBodyWithLimit(res);
+        const html = await this.readBodyWithLimit(
+          res,
+          this.getResponseLimit(currentUrl),
+        );
         this.logger.debug(`Fetched ${html.length} bytes from ${currentUrl}`);
         return html;
       } catch (err) {
@@ -163,11 +167,11 @@ export class UnfurlService {
     throw new BadRequestException('Too many redirects.');
   }
 
-  private async readBodyWithLimit(res: Response) {
+  private async readBodyWithLimit(res: Response, limitBytes: number) {
     const reader = res.body?.getReader();
     if (!reader) {
       const text = await res.text();
-      if (text.length > MAX_RESPONSE_BYTES) {
+      if (text.length > limitBytes) {
         throw new BadRequestException('Response too large.');
       }
       return text;
@@ -180,7 +184,7 @@ export class UnfurlService {
       if (done) break;
       if (value) {
         total += value.length;
-        if (total > MAX_RESPONSE_BYTES) {
+        if (total > limitBytes) {
           throw new BadRequestException('Response too large.');
         }
         chunks.push(value);
@@ -193,6 +197,26 @@ export class UnfurlService {
       offset += chunk.length;
     }
     return new TextDecoder('utf-8').decode(buffer);
+  }
+
+  private getResponseLimit(url: string) {
+    try {
+      const hostname = new URL(url).hostname.toLowerCase();
+      if (
+        hostname === 'youtube.com' ||
+        hostname === 'www.youtube.com' ||
+        hostname === 'm.youtube.com' ||
+        hostname === 'youtu.be' ||
+        hostname === 'www.youtu.be' ||
+        hostname === 'youtube-nocookie.com' ||
+        hostname === 'www.youtube-nocookie.com'
+      ) {
+        return YOUTUBE_MAX_RESPONSE_BYTES;
+      }
+    } catch {
+      return MAX_RESPONSE_BYTES;
+    }
+    return MAX_RESPONSE_BYTES;
   }
 
   private getMetaContent(html: string, property: string) {
