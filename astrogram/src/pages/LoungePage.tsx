@@ -573,37 +573,57 @@ const LoungePage: React.FC = () => {
                     }
                   >
                     <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-[#f04bb3] via-[#5aa2ff] to-[#22c55e] opacity-60" />
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={post.avatarUrl ?? "/defaultPfp.png"}
-                        alt={`${post.username} avatar`}
-                        className="w-9 h-9 rounded-full object-cover ring-2 ring-white/10"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/defaultPfp.png";
-                        }}
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Link
-                            to={`/users/${encodedUsername}/posts`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="font-semibold text-sm text-sky-300 hover:underline"
-                          >
-                            @{post.username}
-                          </Link>
-                          <span className="text-xs text-slate-400">
-                            {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
-                          </span>
+                    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_120px_160px_140px] gap-3 lg:gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={post.avatarUrl ?? "/defaultPfp.png"}
+                          alt={`${post.username} avatar`}
+                          className="w-9 h-9 rounded-full object-cover ring-2 ring-white/10"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/defaultPfp.png";
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <h2 className="text-[15px] sm:text-base font-semibold leading-tight truncate">
+                            {post.title}
+                          </h2>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                            <Link
+                              to={`/users/${encodedUsername}/posts`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="font-semibold text-sky-300 hover:underline"
+                            >
+                              @{post.username}
+                            </Link>
+                            <span className="text-slate-500">•</span>
+                            <span>
+                              {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+                            </span>
+                          </div>
                         </div>
-                        <h2 className="mt-1 text-[15px] sm:text-base font-semibold leading-tight">
-                          {post.title}
-                        </h2>
                       </div>
 
-                      <div className="ml-auto flex items-center gap-3">
+                      <div className="flex items-center lg:justify-center">
                         <span className="inline-flex items-center gap-1 text-xs text-slate-200 bg-white/5 px-2 py-1 rounded-full ring-1 ring-white/10">
                           <MessageSquare className="w-3.5 h-3.5" />
                           {post.comments}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-slate-300">
+                        {lastLine ? (
+                          <span>{lastLine}</span>
+                        ) : (
+                          <span className="text-slate-500">No replies yet</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between lg:justify-end gap-2">
+                        <span className="text-xs text-slate-400">
+                          {formatDistanceToNow(
+                            new Date(post.lastReplyTimestamp ?? post.timestamp),
+                            { addSuffix: true }
+                          )}
                         </span>
 
                         {isOwn && (
@@ -643,8 +663,6 @@ const LoungePage: React.FC = () => {
                         )}
                       </div>
                     </div>
-
-                    {lastLine && <p className="mt-2 text-[12px] text-slate-400">{lastLine}</p>}
                   </article>
                 );
               })
