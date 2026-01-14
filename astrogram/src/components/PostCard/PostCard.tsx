@@ -163,6 +163,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const hasValidLinkPreview = Boolean(
     linkPreview && linkPreview.url.trim().length > 0
   );
+  const hasVideoEmbed = Boolean(youtubeId);
   const stripFirstUrl = (value: string, url: string | null) => {
     if (!url) return value;
     return value.replace(url, "").replace(/\s{2,}/g, " ").trim();
@@ -473,7 +474,7 @@ const PostCard: React.FC<PostCardProps> = ({
           )
         )}
 
-        {hasValidLinkPreview && linkPreview && (
+        {hasValidLinkPreview && linkPreview && !hasVideoEmbed && (
           <div className="relative z-[1] px-4 sm:px-6 pb-2">
             <LinkPreviewCard preview={linkPreview} />
           </div>
