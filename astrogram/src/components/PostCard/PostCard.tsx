@@ -28,6 +28,7 @@ export interface PostCardProps {
   username: string;
   title?: string;
   imageUrl?: string;
+  youtubeUrl?: string;
   caption: string;
   timestamp: string;
   stars?: number;
@@ -51,6 +52,7 @@ const PostCard: React.FC<PostCardProps> = ({
   id,
   username,
   imageUrl,
+  youtubeUrl,
   avatarUrl,
   caption,
   timestamp,
@@ -110,6 +112,33 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  const getYoutubeId = (url: string | undefined | null) => {
+    if (!url) return null;
+    try {
+      const parsed = new URL(url);
+      const host = parsed.hostname.toLowerCase();
+      if (host === "youtu.be" || host === "www.youtu.be") {
+        return parsed.pathname.replace("/", "") || null;
+      }
+      if (
+        host === "youtube.com" ||
+        host === "www.youtube.com" ||
+        host === "m.youtube.com"
+      ) {
+        if (parsed.pathname === "/watch") {
+          return parsed.searchParams.get("v");
+        }
+        if (parsed.pathname.startsWith("/embed/")) {
+          return parsed.pathname.split("/embed/")[1] || null;
+        }
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
+  const youtubeId = getYoutubeId(youtubeUrl);
 
   const handleLike = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -383,20 +412,34 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
 
         {/* Media */}
-        {imageUrl && (
+        {youtubeId ? (
           <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
-            <div className="flex items-center justify-center rounded-md border border-white/10 bg-black/10">
-              <img
-                src={imageUrl}
-                alt={`Post by ${username}: ${caption}`}
-                className="h-auto max-h-[70vh] max-w-full object-contain"
-                loading="lazy"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
-                }}
+            <div className="aspect-video w-full overflow-hidden rounded-md border border-white/10 bg-black/10">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+                title={`YouTube video from ${username}`}
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
               />
             </div>
           </div>
+        ) : (
+          imageUrl && (
+            <div className="relative z-[1] w-full px-4 sm:px-6 pb-1.5">
+              <div className="flex items-center justify-center rounded-md border border-white/10 bg-black/10">
+                <img
+                  src={imageUrl}
+                  alt={`Post by ${username}: ${caption}`}
+                  className="h-auto max-h-[70vh] max-w-full object-contain"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/fallback.jpg.png";
+                  }}
+                />
+              </div>
+            </div>
+          )
         )}
 
         {/* Views */}
