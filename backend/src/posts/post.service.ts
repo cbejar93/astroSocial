@@ -33,8 +33,12 @@ export class PostsService {
         `shares=${post.shares}, reposts=${post.reposts})`,
     );
     const ageHours = (Date.now() - post.createdAt.getTime()) / 1000 / 60 / 60;
-    const halfLifeHours = 6; // every 6 hours the recency influence halves
-    const recencyWeight = Math.pow(2, -ageHours / halfLifeHours);
+    const halfLifeHours = 4; // every 4 hours the recency influence halves
+    const minRecencyWeight = 0.05; // keep a long-tail signal for month-old posts
+    const recencyWeight = Math.max(
+      minRecencyWeight,
+      Math.pow(2, -ageHours / halfLifeHours),
+    );
 
     const engagementScore =
       post.commentsCount * 3 +
