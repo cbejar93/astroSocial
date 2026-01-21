@@ -1255,6 +1255,18 @@ const ProfileOverviewPage: React.FC = () => {
                       className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-2 ring-white/20"
                     />
                   </div>
+                  <button
+                    ref={menuBtnRef}
+                    type="button"
+                    onClick={() => setAvatarMenuOpen((open) => !open)}
+                    className="absolute -bottom-1 -right-1 inline-flex items-center gap-1 rounded-full border border-white/20 bg-gray-900/90 px-2 py-1 text-[11px] text-white shadow-md hover:bg-gray-800"
+                    aria-haspopup="menu"
+                    aria-expanded={avatarMenuOpen}
+                    aria-label="Change profile picture"
+                  >
+                    <UploadCloud className="h-3 w-3" />
+                    Edit
+                  </button>
                   <input
                     ref={fileInputRef}
                     type="file"
