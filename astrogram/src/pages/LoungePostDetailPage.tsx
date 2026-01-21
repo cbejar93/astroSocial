@@ -98,70 +98,74 @@ const LoungePostDetailPage: React.FC = () => {
     : null;
 
   /* ---------------------- Render ---------------------- */
-    return (
-      <div className="relative w-full lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
-        {/* Mobile stacked; Desktop two columns */}
-        <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:72rem] mx-auto px-0 sm:px-3 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-6">
-          {/* LEFT COLUMN */}
-          <div className="lg:h-full lg:flex lg:flex-col lg:justify-center lg:min-w-0 order-1">
-            <AuroraBorder>
-              <div
-                className="relative flex flex-col h-full min-w-0 rounded-2xl backdrop-blur-xl backdrop-saturate-150 border border-white/10 shadow-[0_6px_30px_rgba(0,0,0,0.35)] bg-white/[0.04]"
-              >
+  return (
+    <div className="relative w-full lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+      <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:72rem] mx-auto px-3 sm:px-4 lg:px-6 lg:h-full">
+        <AuroraBorder>
+          <div className="flex flex-col min-w-0 rounded-2xl backdrop-blur-xl backdrop-saturate-150 border border-white/10 shadow-[0_6px_30px_rgba(0,0,0,0.35)] bg-white/[0.04]">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl">
+              <div className="flex items-center gap-3 min-w-0">
                 <button
                   onClick={handleBack}
-                  className="absolute top-2 left-4 inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
+                  className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/10 text-gray-200 hover:bg-white/10 transition backdrop-blur-sm bg-black/30"
                   aria-label="Back"
                   title="Back"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-gray-100 tracking-wide truncate">
+                    Thread
+                  </h2>
+                  <p className="text-xs text-gray-400 truncate">{post.title}</p>
+                </div>
+              </div>
 
-                <div className="p-3 sm:p-5 pt-5 sm:pt-10 space-y-5 overflow-hidden">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* ✅ Perfect circle avatar */}
-                    <div className="relative w-10 h-10 flex-none rounded-full overflow-hidden ring-1 ring-white/10">
-                      <img
-                        src={post.avatarUrl ?? "/defaultPfp.png"}
-                        alt={post.username}
-                        className="absolute inset-0 w-full h-full object-cover block"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-100 truncate">
-                        @{post.username}
-                      </h3>
-                      <p className="text-xs text-gray-400">
-                        Joined {authorJoined ?? "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {isOwn && (
-                    <div ref={menuRef} className="relative">
+              {isOwn && (
+                <div ref={menuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen((o) => !o)}
+                    className="rounded-full p-2 text-gray-400 hover:text-gray-200"
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </button>
+                  {menuOpen && (
+                    <div className="absolute right-0 mt-2 w-36 rounded-lg border border-white/10 bg-[#0B1220] shadow-xl overflow-hidden">
                       <button
-                        type="button"
-                        onClick={() => setMenuOpen((o) => !o)}
-                        className="rounded-full p-2 text-gray-400 hover:text-gray-200"
+                        onClick={() => navigate(-1)}
+                        className="block w-full px-4 py-2 text-left text-sm text-red-300 transition hover:bg-red-500/10"
                       >
-                        <MoreVertical className="h-5 w-5" />
+                        Delete Post
                       </button>
-                      {menuOpen && (
-                        <div className="absolute right-0 mt-2 w-36 rounded-lg border border-white/10 bg-[#0B1220] shadow-xl overflow-hidden">
-                          <button
-                            onClick={() => navigate(-1)}
-                            className="block w-full px-4 py-2 text-left text-sm text-red-300 transition hover:bg-red-500/10"
-                          >
-                            Delete Post
-                          </button>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
+              )}
+            </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-4 sm:gap-6 p-4 sm:p-6">
+              <aside className="flex flex-row lg:flex-col gap-4 min-w-0 rounded-xl border border-white/10 bg-[#0E1626]/70 p-4">
+                <div className="relative w-14 h-14 flex-none rounded-full overflow-hidden ring-1 ring-white/10">
+                  <img
+                    src={post.avatarUrl ?? "/defaultPfp.png"}
+                    alt={post.username}
+                    className="absolute inset-0 w-full h-full object-cover block"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-gray-100 truncate">
+                    @{post.username}
+                  </h3>
+                  <p className="text-xs text-gray-400">Joined {authorJoined ?? "—"}</p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Posted {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+                  </p>
+                </div>
+              </aside>
+
+              <section className="min-w-0 space-y-5">
                 <div className="min-w-0">
                   <h1 className="text-lg font-bold text-gray-100 mb-2 break-words">
                     {post.title}
@@ -180,39 +184,27 @@ const LoungePostDetailPage: React.FC = () => {
                     />
                   </div>
                 )}
-              </div>
-            </div>
-          </AuroraBorder>
-        </div>
 
-        {/* RIGHT COLUMN — mobile under, desktop side-by-side */}
-        <aside className="flex flex-col mt-4 lg:mt-0 lg:h-full lg:justify-center lg:min-w-0 order-2">
-          <div className="lg:hidden">
-            <Comments ref={commentsRef} postId={post.id} pageSize={10} />
-          </div>
-
-          <AuroraBorder className="hidden lg:block">
-            <div className="flex flex-col lg:h-[80vh] min-w-0">
-              <div className="px-5 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
-                  Thread Replies
-                </h2>
-              </div>
-
-              <div className="px-5 py-4 space-y-4 min-w-0 overflow-visible lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden">
-                <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
-                  <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+                <div className="rounded-2xl overflow-hidden ring-1 ring-white/10 bg-[#0E1626]/60 backdrop-blur-sm">
+                  <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-gray-100 tracking-wide">
+                      Thread Replies
+                    </h2>
+                  </div>
+                  <div className="px-5 py-4 space-y-4 min-w-0">
+                    <div className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] [&_*]:min-w-0 [&_img]:max-w-full [&_img]:h-auto [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:w-full [&_td]:break-words">
+                      <Comments ref={commentsRef} postId={post.id} pageSize={10} />
+                    </div>
+                  </div>
+                  <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center">
+                    Be kind and respectful in your replies 💬
+                  </div>
                 </div>
-              </div>
-
-              <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500 text-center bg-[#0E1626]/60 rounded-b-2xl">
-                Be kind and respectful in your replies 💬
-              </div>
+              </section>
             </div>
-          </AuroraBorder>
-        </aside>
+          </div>
+        </AuroraBorder>
       </div>
-
     </div>
   );
 };

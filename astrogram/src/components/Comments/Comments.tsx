@@ -91,6 +91,24 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       return el.innerHTML;
     };
 
+    const extractQuoteSource = (html: string) => {
+      const el = document.createElement("div");
+      el.innerHTML = html;
+      el.querySelectorAll("script,style").forEach((e) => e.remove());
+      const blockquotes = Array.from(el.querySelectorAll("blockquote"));
+      if (blockquotes.length === 0) {
+        return el.innerHTML;
+      }
+      const quoted = document.createElement("div");
+      blockquotes.forEach((blockquote, index) => {
+        const clone = blockquote.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll("blockquote").forEach((nested) => nested.remove());
+        if (index > 0) quoted.appendChild(document.createElement("br"));
+        quoted.appendChild(clone);
+      });
+      return quoted.innerHTML;
+    };
+
     const focusEditor = () => editorRef.current?.focus();
 
     useImperativeHandle(ref, () => ({
@@ -101,8 +119,9 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
     const insertQuote = (s: { id?: string; username: string; text: string; parentId?: string | null }) => {
       focusEditor();
       if (!editorRef.current) return;
+      const quoteSource = extractQuoteSource(s.text);
       const html = `<blockquote><p><strong>@${s.username}</strong>:</p>${sanitize(
-        s.text
+        quoteSource
       )}</blockquote><p><br/></p>`;
       editorRef.current.innerHTML += html;
       setReplyParentId(s.parentId ?? s.id ?? null);
