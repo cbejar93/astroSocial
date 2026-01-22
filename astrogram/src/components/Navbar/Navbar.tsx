@@ -487,7 +487,13 @@ const Navbar: React.FC = () => {
 
   // Close account popover on outside click and on route change
   useEffect(() => {
-    setAuthOpen(false);
+    const isProfileRoute = location.pathname.startsWith("/profile");
+    if (!user && isProfileRoute) {
+      setAuthMode("login");
+      setAuthOpen(true);
+    } else {
+      setAuthOpen(false);
+    }
 
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -509,7 +515,7 @@ const Navbar: React.FC = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [location.pathname, accountOpen]);
+  }, [location.pathname, accountOpen, user]);
 
   // Keyboard shortcut: / or Cmd/Ctrl+K focuses search
   useEffect(() => {
