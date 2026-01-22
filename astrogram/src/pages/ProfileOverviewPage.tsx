@@ -1232,7 +1232,7 @@ const ProfileOverviewPage: React.FC = () => {
 
   return (
     // Give space below fixed navbar
-    <div className="fixed inset-0 overflow-hidden pt-[88px] sm:pt-[96px]">
+    <div className="fixed inset-0 overflow-hidden pt-3 pb-8 sm:pt-8">
       {/* Background glows */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-[-12%] h-[36vh] w-[64vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/15 via-fuchsia-500/10 to-emerald-500/15 blur-3xl" />
