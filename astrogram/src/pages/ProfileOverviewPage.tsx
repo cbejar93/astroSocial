@@ -1232,16 +1232,16 @@ const ProfileOverviewPage: React.FC = () => {
 
   return (
     // Give space below fixed navbar
-    <div className="fixed inset-0 overflow-hidden pt-[88px] sm:pt-[96px]">
+    <div className="fixed inset-0 overflow-hidden pt-3 pb-8 sm:pt-8">
       {/* Background glows */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-[-12%] h-[36vh] w-[64vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/15 via-fuchsia-500/10 to-emerald-500/15 blur-3xl" />
         <div className="absolute left-[-10%] bottom-[-20%] h-[30vh] w-[38vw] rounded-[999px] bg-gradient-to-tr from-emerald-500/10 via-sky-500/10 to-transparent blur-3xl" />
       </div>
 
-      {/* Center the content card; it scrolls internally if needed */}
-      <div className="grid h-full w-full place-items-center px-4">
-        <div className="w-full max-w-6xl max-h-[92vh] overflow-y-auto overscroll-contain rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+      {/* Align content with global page margins; scroll the page as needed */}
+      <div className="h-full w-full overflow-y-auto px-4">
+        <div className="mx-auto w-full max-w-6xl rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
           {/* Hero */}
           <div className="relative">
             <div className="h-28 sm:h-36 bg-[radial-gradient(120%_80%_at_20%_0%,rgba(240,75,179,0.35),transparent),radial-gradient(120%_80%_at_90%_10%,rgba(90,162,255,0.35),transparent)]" />
