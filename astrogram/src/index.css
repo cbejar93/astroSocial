@@ -30,6 +30,7 @@
   --desktop-nav-offset: 1rem;
   --desktop-nav-current-width: var(--desktop-nav-expanded);
   --page-content-max: 80rem;
+  --app-header-height: 3.5rem;
   --accent-from: #f04bb3;
   --accent-to: #5aa2ff;
 }
