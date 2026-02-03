@@ -1002,7 +1002,7 @@ const ProfileOverviewPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="fixed inset-0 overflow-hidden pt-[88px] sm:pt-[96px]">
+      <div className="w-full pb-8">
         <div className="grid h-full w-full place-items-center px-4">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(1000px_600px_at_20%_-10%,rgba(168,85,247,0.18),transparent),radial-gradient(800px_500px_at_80%_110%,rgba(59,130,246,0.12),transparent)]" />
           <div className="rounded-2xl border border-white/10 bg-[#0E1626]/80 backdrop-blur-md px-6 py-10 text-center shadow-[0_8px_28px_rgba(2,6,23,0.45)]">
@@ -1231,8 +1231,8 @@ const ProfileOverviewPage: React.FC = () => {
   const tracking = user.following?.length ?? 0;
 
   return (
-    // Give space below fixed navbar
-    <div className="fixed inset-0 overflow-hidden pt-3 pb-8 sm:pt-8">
+    // PageShell handles header spacing
+    <div className="w-full pb-8">
       {/* Background glows */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-[-12%] h-[36vh] w-[64vw] -translate-x-1/2 rounded-[999px] bg-gradient-to-br from-sky-500/15 via-fuchsia-500/10 to-emerald-500/15 blur-3xl" />
