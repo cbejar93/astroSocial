@@ -80,6 +80,15 @@ fly secrets set SUPA_URL=... SUPA_SERVICE_KEY=...
 
 Do **not** bake the service role key into the Docker image; keep it injected at runtime only.
 
+#### API rate limiting (defaults)
+
+The backend applies separate rate limits for API traffic. You can tune these with environment variables (all values are per IP):
+
+* `API_RATE_LIMIT_WINDOW_MS` (default: `60000`) — window size for API rate limits in milliseconds.
+* `API_RATE_LIMIT_MAX` (default: `120`) — max requests per window for general `/api` traffic.
+* `API_AUTH_RATE_LIMIT_MAX` (default: `30`) — max requests per window for `/api/auth/*` endpoints.
+* `API_FEED_RATE_LIMIT_MAX` (default: `300`) — max requests per window for `/api/posts/feed`.
+
 ---
 
 ## 🤝 Contributing
