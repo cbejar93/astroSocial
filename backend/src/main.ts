@@ -36,6 +36,53 @@ async function bootstrap() {
     next();
   });
 
+  const apiRateLimitWindowMs = Number.parseInt(
+    process.env.API_RATE_LIMIT_WINDOW_MS ?? '60000',
+    10,
+  );
+  const apiRateLimitMax = Number.parseInt(
+    process.env.API_RATE_LIMIT_MAX ?? '120',
+    10,
+  );
+  const apiAuthRateLimitMax = Number.parseInt(
+    process.env.API_AUTH_RATE_LIMIT_MAX ?? '30',
+    10,
+  );
+  const apiFeedRateLimitMax = Number.parseInt(
+    process.env.API_FEED_RATE_LIMIT_MAX ?? '300',
+    10,
+  );
+
+  const apiLimiter = rateLimit({
+    windowMs: apiRateLimitWindowMs,
+    max: apiRateLimitMax,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests, please try again later.',
+    skip: (req) =>
+      req.path.startsWith('/api/auth') || req.path.startsWith('/api/posts/feed'),
+  });
+
+  const apiAuthLimiter = rateLimit({
+    windowMs: apiRateLimitWindowMs,
+    max: apiAuthRateLimitMax,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many auth requests, please try again later.',
+  });
+
+  const apiFeedLimiter = rateLimit({
+    windowMs: apiRateLimitWindowMs,
+    max: apiFeedRateLimitMax,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many feed requests, please try again later.',
+  });
+
+  server.use('/api/auth', apiAuthLimiter);
+  server.use('/api/posts/feed', apiFeedLimiter);
+  server.use('/api', apiLimiter);
+
   const serveIndexLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 60,
