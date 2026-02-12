@@ -6,6 +6,7 @@ import { apiFetch } from "../lib/api";
 import Comments, { type CommentsHandle } from "../components/Comments/Comments";
 import { useAuth } from "../hooks/useAuth";
 import { MoreVertical, ArrowLeft } from "lucide-react";
+import PageContainer from "../components/Layout/PageContainer";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -100,7 +101,7 @@ const LoungePostDetailPage: React.FC = () => {
   /* ---------------------- Render ---------------------- */
   return (
     <div className="relative w-full lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
-      <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:72rem] mx-auto px-3 sm:px-4 lg:px-6 lg:h-full">
+      <PageContainer size="standard" className="lg:h-full">
         <AuroraBorder>
           <div className="flex flex-col min-w-0 rounded-2xl backdrop-blur-xl backdrop-saturate-150 border border-white/10 shadow-[0_6px_30px_rgba(0,0,0,0.35)] bg-white/[0.04]">
             <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/10 bg-[#0E1626]/60 backdrop-blur-sm rounded-t-2xl">
@@ -204,7 +205,7 @@ const LoungePostDetailPage: React.FC = () => {
             </div>
           </div>
         </AuroraBorder>
-      </div>
+      </PageContainer>
     </div>
   );
 };

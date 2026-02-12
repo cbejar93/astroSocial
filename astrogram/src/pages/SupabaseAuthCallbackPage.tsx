@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import PageContainer from "../components/Layout/PageContainer";
 
 const SupabaseAuthCallbackPage: React.FC = () => {
   const { hash } = useLocation();
@@ -78,11 +79,11 @@ const SupabaseAuthCallbackPage: React.FC = () => {
   }, [hash, base, login, navigate]);
 
   return (
-    <div className="relative isolate flex min-h-[calc(100vh-5rem)] w-full items-center justify-center px-4 py-12 text-white">
+    <div className="relative isolate flex min-h-[calc(100vh-5rem)] w-full items-center justify-center py-12 text-white">
       {status.state === "loading" ? (
         <div className="text-lg font-medium tracking-wide">Completing your sign in…</div>
       ) : (
-        <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:32rem] rounded-3xl border border-white/10 bg-white/10 px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl space-y-6">
+        <PageContainer size="form" className="rounded-3xl border border-white/10 bg-white/10 px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl space-y-6">
           <div className="text-2xl font-semibold">We couldn’t finish signing you in</div>
           <p className="text-base text-white/80">{status.message}</p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -101,7 +102,7 @@ const SupabaseAuthCallbackPage: React.FC = () => {
               Try logging in
             </button>
           </div>
-        </div>
+        </PageContainer>
       )}
     </div>
   );

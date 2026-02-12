@@ -9,6 +9,7 @@ import {
 } from "../lib/supabaseClient";
 import { fireAccountCreationConversion } from "../lib/googleAds";
 import FormMessage from "../components/FormMessage";
+import PageContainer from "../components/Layout/PageContainer";
 
 const SignupPage: React.FC = () => {
   const base = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -163,8 +164,8 @@ const SignupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 lg:items-start lg:pt-16 px-4">
-      <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:24rem] p-8 space-y-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 lg:items-start lg:pt-16">
+      <PageContainer size="form" className="p-8 space-y-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
         <h1 className="text-2xl font-semibold text-center text-gray-800 dark:text-gray-100">
           {headingText}
         </h1>
@@ -255,7 +256,7 @@ const SignupPage: React.FC = () => {
             </>
           )}
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 };

@@ -1,9 +1,10 @@
 // src/pages/TermsPage.tsx
 import type { FC } from "react";
+import PageContainer from "../components/Layout/PageContainer";
 
 const TermsPage: FC = () => {
   return (
-    <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:48rem] px-4 sm:px-6 py-8 sm:py-12 text-white">
+    <PageContainer size="narrow" className="py-8 sm:py-12 text-white">
       {/* Header */}
       <header className="mb-6 sm:mb-8">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10 text-[11px] text-slate-300">
@@ -74,7 +75,7 @@ const TermsPage: FC = () => {
           support team.
         </p>
       </footer>
-    </div>
+    </PageContainer>
   );
 };
 
