@@ -3,18 +3,24 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UsersService } from './users.service';
-import { SocialPlatform, TemperatureUnit } from '@prisma/client';
+import { SocialPlatform, TemperatureUnit, AccentColor } from '@prisma/client';
 
 describe('UsersService', () => {
   let service: UsersService;
   let prisma: {
-    user: { findUnique: jest.Mock; update: jest.Mock };
+    user: { findUnique: jest.Mock; update: jest.Mock; delete: jest.Mock };
     userSocialAccount: {
       create: jest.Mock;
       findMany: jest.Mock;
       findUnique: jest.Mock;
       delete: jest.Mock;
     };
+    post: { findMany: jest.Mock; deleteMany: jest.Mock };
+    comment: { findMany: jest.Mock; deleteMany: jest.Mock };
+    commentLike: { deleteMany: jest.Mock };
+    postInteraction: { deleteMany: jest.Mock };
+    notification: { deleteMany: jest.Mock };
+    $transaction: jest.Mock;
   };
   let storage: { uploadFile: jest.Mock; deleteFile: jest.Mock };
 
@@ -30,6 +36,7 @@ describe('UsersService', () => {
       user: {
         findUnique: jest.fn(),
         update: jest.fn(),
+        delete: jest.fn(),
       },
       userSocialAccount: {
         create: jest.fn(),
@@ -37,6 +44,14 @@ describe('UsersService', () => {
         findUnique: jest.fn(),
         delete: jest.fn(),
       },
+      post: { findMany: jest.fn(), deleteMany: jest.fn() },
+      comment: { findMany: jest.fn(), deleteMany: jest.fn() },
+      commentLike: { deleteMany: jest.fn() },
+      postInteraction: { deleteMany: jest.fn() },
+      notification: { deleteMany: jest.fn() },
+      $transaction: jest.fn((args: unknown) =>
+        Array.isArray(args) ? Promise.all(args) : (args as Function)(prisma),
+      ),
     };
 
     storage = {
@@ -289,6 +304,168 @@ describe('UsersService', () => {
       await expect(
         service.deleteSocialAccount('user-123', 'social-1'),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('findById', () => {
+    it('returns UserDto when user exists', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-123',
+        username: 'alice',
+        avatarUrl: 'a.png',
+        bio: 'hello',
+        profileComplete: true,
+        role: 'USER',
+        temperature: TemperatureUnit.F,
+        accent: AccentColor.BRAND,
+        followedLounges: [],
+        followers: [],
+        following: [],
+      });
+
+      const result = await service.findById('user-123');
+      expect(result.id).toBe('user-123');
+      expect(result.username).toBe('alice');
+    });
+
+    it('throws NotFoundException when user does not exist', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.findById('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('findByUsername', () => {
+    it('returns UserDto when user exists', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-123',
+        username: 'alice',
+        avatarUrl: null,
+        profileComplete: true,
+        role: 'USER',
+        temperature: TemperatureUnit.C,
+        followedLounges: [],
+        followers: [],
+        following: [],
+      });
+
+      const result = await service.findByUsername('alice');
+      expect(result.id).toBe('user-123');
+    });
+
+    it('throws NotFoundException when username not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.findByUsername('ghost')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('updateTemperaturePreference', () => {
+    it('updates temperature to C', async () => {
+      prisma.user.update.mockResolvedValue({
+        id: 'user-123',
+        username: 'alice',
+        profileComplete: true,
+        role: 'USER',
+        temperature: TemperatureUnit.C,
+        followedLounges: [],
+        followers: [],
+        following: [],
+      });
+
+      const result = await service.updateTemperaturePreference('user-123', 'c');
+      expect(result.temperature).toBe(TemperatureUnit.C);
+    });
+
+    it('throws BadRequestException for invalid unit', async () => {
+      await expect(
+        service.updateTemperaturePreference('user-123', 'kelvin'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('updateBio', () => {
+    it('updates bio with valid text', async () => {
+      prisma.user.update.mockResolvedValue({
+        id: 'user-123',
+        username: 'alice',
+        bio: 'My bio',
+        profileComplete: true,
+        role: 'USER',
+        temperature: TemperatureUnit.F,
+        followedLounges: [],
+        followers: [],
+        following: [],
+      });
+
+      const result = await service.updateBio('user-123', 'My bio');
+      expect(result.bio).toBe('My bio');
+    });
+
+    it('throws BadRequestException when bio exceeds 400 words', async () => {
+      const longBio = Array(401).fill('word').join(' ');
+
+      await expect(
+        service.updateBio('user-123', longBio),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('updateAccentPreference', () => {
+    it('updates accent to OCEAN', async () => {
+      prisma.user.update.mockResolvedValue({
+        id: 'user-123',
+        username: 'alice',
+        profileComplete: true,
+        role: 'USER',
+        temperature: TemperatureUnit.F,
+        accent: AccentColor.OCEAN,
+        followedLounges: [],
+        followers: [],
+        following: [],
+      });
+
+      const result = await service.updateAccentPreference('user-123', 'ocean');
+      expect(result.accent).toBe(AccentColor.OCEAN);
+    });
+
+    it('throws BadRequestException for invalid accent', async () => {
+      await expect(
+        service.updateAccentPreference('user-123', 'red'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('followUser / unfollowUser', () => {
+    it('connects follower to target user', async () => {
+      prisma.user.update.mockResolvedValue({});
+
+      await service.followUser('target-1', 'follower-1');
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'follower-1' },
+        data: { following: { connect: { id: 'target-1' } } },
+      });
+    });
+
+    it('disconnects follower from target user', async () => {
+      prisma.user.update.mockResolvedValue({});
+
+      await service.unfollowUser('target-1', 'follower-1');
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'follower-1' },
+        data: { following: { disconnect: { id: 'target-1' } } },
+      });
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('executes cascading deletion transaction', async () => {
+      await service.deleteUser('user-123');
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
   });
 });
