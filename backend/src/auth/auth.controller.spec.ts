@@ -15,6 +15,7 @@ describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
   let supabase: ReturnType<typeof mockSupabaseClient>;
+  let module: TestingModule;
   const originalEnv = process.env;
 
   beforeEach(async () => {
@@ -25,7 +26,7 @@ describe('AuthController', () => {
 
     supabase = mockSupabaseClient();
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         {
@@ -87,7 +88,7 @@ describe('AuthController', () => {
       );
       expect(mockRes.cookie).toHaveBeenCalledWith(
         'jid',
-        'refresh-token',
+        expect.any(String),
         expect.objectContaining({
           httpOnly: true,
           secure: false,
@@ -118,6 +119,41 @@ describe('AuthController', () => {
       ).rejects.toBeInstanceOf(ForbiddenException);
       expect(authService.validateOAuthLogin).not.toHaveBeenCalled();
       expect(mockRes.cookie).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('refresh', () => {
+    it('returns a new accessToken from the JWT payload', () => {
+      const jwtService = module.get<JwtService>(JwtService);
+      (jwtService.sign as jest.Mock).mockReturnValue('new-access-token');
+
+      const req = { user: { sub: 'user-123', email: 'user@example.com' } } as any;
+      const result = controller.refresh(req);
+
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        { sub: 'user-123', email: 'user@example.com' },
+        expect.objectContaining({ secret: process.env.JWT_SECRET, expiresIn: '15m' }),
+      );
+      expect(result).toEqual({ accessToken: 'new-access-token' });
+    });
+  });
+
+  describe('logout', () => {
+    it('clears the jid cookie with expired date', () => {
+      const mockRes = { cookie: jest.fn() } as any;
+
+      const result = controller.logout(mockRes);
+
+      expect(mockRes.cookie).toHaveBeenCalledWith(
+        'jid',
+        '',
+        expect.objectContaining({
+          httpOnly: true,
+          path: '/',
+          expires: new Date(0),
+        }),
+      );
+      expect(result).toEqual({ success: true });
     });
   });
 });
