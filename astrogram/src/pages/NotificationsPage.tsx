@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 import { fetchNotifications, type NotificationItem } from "../lib/api";
 import { useNotifications } from "../hooks/useNotifications";
+import PageContainer from "../components/Layout/PageContainer";
 
 /* --------------------------- Date/Grouping utils --------------------------- */
 
@@ -295,8 +296,7 @@ const NotificationsPage: React.FC = () => {
         <div className="absolute left-[-10%] bottom-[-20%] h-[30vh] w-[38vw] rounded-[999px] bg-gradient-to-tr from-emerald-500/10 via-sky-500/10 to-transparent blur-3xl" />
       </div>
 
-      {/* Center the section */}
-      <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:48rem] px-0 sm:px-4 text-gray-200 py-8">
+      <PageContainer size="narrow" className="text-gray-200 py-8">
         {/* Header Card */}
         <div className="mb-6 rounded-2xl ring-1 ring-white/10 bg-transparent p-4 backdrop-blur-[2px]">
           <div className="flex items-center justify-between">
@@ -345,7 +345,7 @@ const NotificationsPage: React.FC = () => {
             ))}
           </div>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 };

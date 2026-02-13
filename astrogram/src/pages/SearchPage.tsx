@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { search, type SearchResponse } from '../lib/api';
+import PageContainer from '../components/Layout/PageContainer';
 
 const SearchPage: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -46,9 +47,8 @@ const SearchPage: React.FC = () => {
   );
 
   return (
-    <div className="w-full py-8">
-      <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:48rem] px-0 sm:px-4">
-        <div className="mx-auto max-w-[var(--page-content-max)] [--page-content-max:36rem]">
+    <PageContainer size="narrow" className="py-8">
+      <div className="mx-auto" style={{ maxWidth: "36rem" }}>
           <h1 className="text-2xl font-semibold mb-4">Search</h1>
           <form onSubmit={onSubmit} className="mb-4 flex gap-2">
             <input
@@ -132,9 +132,8 @@ const SearchPage: React.FC = () => {
               </button>
             </div>
           )}
-        </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

@@ -1,9 +1,10 @@
 // src/pages/CommunityGuidelinesPage.tsx
 import type { FC, PropsWithChildren } from "react";
+import PageContainer from "../components/Layout/PageContainer";
 
 const CommunityGuidelinesPage: FC = () => {
   return (
-    <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:48rem] px-4 sm:px-6 py-8 sm:py-12 text-white">
+    <PageContainer size="narrow" className="py-8 sm:py-12 text-white">
       {/* Header */}
       <header className="mb-6 sm:mb-8">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10 text-[11px] text-slate-300">
@@ -114,7 +115,7 @@ const CommunityGuidelinesPage: FC = () => {
           Thank you for helping us keep AstroLounge welcoming, safe, and inspiring for everyone.
         </p>
       </footer>
-    </div>
+    </PageContainer>
   );
 };
 

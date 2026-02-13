@@ -1,6 +1,7 @@
 // src/pages/SettingsPage.tsx
 import React, { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
+import PageContainer from "../components/Layout/PageContainer";
 import {
   Moon,
   Minimize2,
@@ -163,10 +164,8 @@ const SettingsPage: React.FC = () => {
   }, [grad.from, grad.to]);
 
   return (
-    <div className="w-full">
-      {/* Center horizontally (uplift kept) */}
-      <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:56rem] px-4 sm:px-6 pt-2 pb-8">
-        <div className="text-gray-200 space-y-6">
+    <PageContainer size="narrow" className="pt-2 pb-8">
+      <div className="text-gray-200 space-y-6">
           {/* Header (now frosted like PostCard) */}
           <AuroraBorder>
             <div className="px-5 py-5">
@@ -299,9 +298,8 @@ const SettingsPage: React.FC = () => {
               Legal pages open in a modal so you don’t lose your place.
             </p>
           </Card>
-        </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

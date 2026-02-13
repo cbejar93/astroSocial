@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { UploadCloud } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
+import PageContainer from '../components/Layout/PageContainer';
 
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._]+$/;
@@ -114,10 +115,10 @@ const CompleteProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="w-full py-8">
+    <PageContainer size="form" className="py-8">
       <form
         onSubmit={handleSubmit}
-        className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:28rem] bg-gray-800 p-6 rounded-xl space-y-6"
+        className="mx-auto w-full bg-gray-800 p-6 rounded-xl space-y-6"
       >
         <h2 className="text-xl font-semibold text-center">Complete Your Profile</h2>
 
@@ -203,7 +204,7 @@ const CompleteProfilePage: React.FC = () => {
         )}
       </button>
       </form>
-    </div>
+    </PageContainer>
   );
 };
 

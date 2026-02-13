@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Star } from 'lucide-react';
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard';
+import PageContainer from '../components/Layout/PageContainer';
 import { useAuth } from '../hooks/useAuth';
 import { Link, useParams } from 'react-router-dom';
 import {
@@ -78,8 +79,7 @@ const UserPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full py-8">
-      <div className="mx-auto w-full max-w-[var(--page-content-max)] [--page-content-max:48rem] px-0 sm:px-4 text-gray-200">
+    <PageContainer size="narrow" className="py-8 text-gray-200">
         {info && (
           <>
             <div className="flex items-center space-x-2 mb-2">
@@ -191,8 +191,7 @@ const UserPage: React.FC = () => {
             ))}
           </ul>
         )}
-      </div>
-    </div>
+    </PageContainer>
   );
 };
 

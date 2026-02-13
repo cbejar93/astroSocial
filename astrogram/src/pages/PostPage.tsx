@@ -15,6 +15,7 @@ import HomeFeedComments, {
 import { useAuth } from "../hooks/useAuth";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { MessageCircle, MoreVertical, Repeat2, Star } from "lucide-react";
+import PageContainer from "../components/Layout/PageContainer";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -425,7 +426,7 @@ const PostPage: React.FC = () => {
   return (
     <div className="relative w-full overflow-x-hidden pt-3 sm:pt-8">
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
-      <div className="w-full max-w-[var(--page-content-max)] [--page-content-max:72rem] mx-auto px-0 sm:px-4 lg:px-6 lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6">
+      <PageContainer size="standard" className="lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:min-w-0">
           <AuroraBorder>
@@ -571,7 +572,7 @@ const PostPage: React.FC = () => {
             <HomeFeedComments ref={commentsRef} postId={String(post.id)} pageSize={10} />
           </div>
         </aside>
-      </div>
+      </PageContainer>
 
     </div>
   );

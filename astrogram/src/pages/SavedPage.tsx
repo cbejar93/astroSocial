@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
+import PageContainer from "../components/Layout/PageContainer";
 import { fetchSavedPosts } from "../lib/api";
 
 const PAGE_SIZE = 20;
@@ -76,8 +77,7 @@ const SavedPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[var(--desktop-nav-current-width)_minmax(0,1fr)_var(--desktop-nav-current-width)]">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 lg:col-start-2">
+    <PageContainer size="narrow" className="py-8">
         {/* Header */}
         <div className="mb-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm">
@@ -128,8 +128,7 @@ const SavedPage: React.FC = () => {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </PageContainer>
   );
 };
 

@@ -10,6 +10,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import PostCard, { type PostCardProps } from "../components/PostCard/PostCard";
 import PostSkeleton from "../components/PostCard/PostSkeleton";
+import PageContainer from "../components/Layout/PageContainer";
 import LinkPreviewCard from "../components/LinkPreviewCard";
 import {
   fetchFeed,
@@ -1186,13 +1187,13 @@ function Feed() {
       </div>
 
       <div className="w-full">
-        <div
-          className={`w-full max-w-[var(--page-content-max)] [--page-content-max:72rem] mx-auto px-0 sm:px-4 lg:px-6
-                      lg:grid ${
-                        showRightPanel
-                          ? "lg:grid-cols-[minmax(0,1fr)_360px]"
-                          : "lg:grid-cols-1"
-                      } lg:gap-6`}
+        <PageContainer
+          size="standard"
+          className={`lg:grid ${
+            showRightPanel
+              ? "lg:grid-cols-[minmax(0,1fr)_360px]"
+              : "lg:grid-cols-1"
+          } lg:gap-6`}
         >
           {/* LEFT SCROLLER (ADD-ONLY: scrollbar-cute + scrollbar-gutter) */}
           <div
@@ -1320,7 +1321,7 @@ function Feed() {
               <RightProfilePanel />
             </div>
           )}
-        </div>
+        </PageContainer>
       </div>
 
       {/* Mobile-only "Scroll to top" FAB (above bottom nav) */}
