@@ -24,8 +24,12 @@ jobs:
         run: npm ci
         working-directory: backend
 
-      - name: Run backend tests
-        run: npm test
+      - name: Run backend unit tests
+        run: npm run test:unit
+        working-directory: backend
+
+      - name: Run backend e2e tests
+        run: npm run test:e2e -- --verbose
         working-directory: backend
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
