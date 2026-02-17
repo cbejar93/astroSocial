@@ -71,6 +71,47 @@ main a:hover,
   color: #e0f2fe;
 }
 
+/* Article prose typography */
+.prose-article {
+  color: #e2e8f0;
+  line-height: 1.75;
+}
+.prose-article h1,
+.prose-article h2,
+.prose-article h3 {
+  color: #f1f5f9;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.prose-article p {
+  margin-bottom: 1rem;
+}
+.prose-article ul,
+.prose-article ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+.prose-article ul { list-style-type: disc; }
+.prose-article ol { list-style-type: decimal; }
+.prose-article li { margin-bottom: 0.25rem; }
+.prose-article img {
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+}
+.prose-article pre {
+  background-color: #1e293b;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+.prose-article code {
+  background-color: #1e293b;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
 @layer base {
   /* Reset margin and keep layout responsive */
   body {

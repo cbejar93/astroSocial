@@ -4,7 +4,10 @@ import {
   createLounge,
   updateLounge,
   fetchAdminUsers,
+  fetchAdminArticles,
+  deleteArticle,
   type AdminUserSummary,
+  type Article,
 } from '../lib/api';
 import AdminAnalyticsDashboard from '../components/AdminAnalyticsDashboard';
 import { useAuth } from '../hooks/useAuth';
@@ -27,14 +30,16 @@ const tabClasses =
 const AdminPage: React.FC = () => {
   const { tab } = useParams<{ tab?: string }>();
   const { user } = useAuth();
-  const active: 'lounge' | 'users' | 'posts' | 'analytics' =
+  const active: 'lounge' | 'users' | 'posts' | 'analytics' | 'articles' =
     tab === 'users'
       ? 'users'
       : tab === 'posts'
         ? 'posts'
         : tab === 'analytics'
           ? 'analytics'
-          : 'lounge';
+          : tab === 'articles'
+            ? 'articles'
+            : 'lounge';
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -49,6 +54,13 @@ const AdminPage: React.FC = () => {
   const [usersLimit] = useState(20);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
+
+  const [articlesList, setArticlesList] = useState<Article[]>([]);
+  const [articlesPage, setArticlesPage] = useState(1);
+  const [articlesTotal, setArticlesTotal] = useState(0);
+  const [articlesLimit] = useState(20);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [articlesError, setArticlesError] = useState<string | null>(null);
 
   const location = useLocation();
   const editingLounge = (location.state as LoungeState | undefined)?.lounge;
@@ -95,6 +107,43 @@ const AdminPage: React.FC = () => {
     };
   }, [active, user, usersLimit, usersPage]);
 
+
+  useEffect(() => {
+    let isMounted = true;
+    if (active !== 'articles') return;
+    const loadArticles = async () => {
+      setArticlesLoading(true);
+      setArticlesError(null);
+      try {
+        const data = await fetchAdminArticles(articlesPage, articlesLimit);
+        if (!isMounted) return;
+        setArticlesList(data.articles);
+        setArticlesTotal(data.total);
+      } catch (err) {
+        if (!isMounted) return;
+        setArticlesError(
+          err instanceof Error ? err.message : 'Unable to load articles.',
+        );
+      } finally {
+        if (isMounted) setArticlesLoading(false);
+      }
+    };
+    void loadArticles();
+    return () => {
+      isMounted = false;
+    };
+  }, [active, articlesPage, articlesLimit]);
+
+  const handleDeleteArticle = async (articleId: string) => {
+    if (!window.confirm('Delete this article?')) return;
+    try {
+      await deleteArticle(articleId);
+      setArticlesList((prev) => prev.filter((a) => a.id !== articleId));
+      setArticlesTotal((prev) => prev - 1);
+    } catch {
+      setArticlesError('Failed to delete article.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,6 +206,16 @@ const AdminPage: React.FC = () => {
               }`}
             >
               Posts
+            </Link>
+            <Link
+              to="/admin/articles"
+              className={`${tabClasses} ${
+                active === 'articles'
+                  ? 'border-brand text-white'
+                  : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              Articles
             </Link>
             <Link
               to="/admin/analytics"
@@ -322,6 +381,139 @@ const AdminPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+        {active === 'articles' && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white">Articles</h2>
+                <p className="text-sm text-gray-400">
+                  {articlesTotal === 0
+                    ? 'No articles yet.'
+                    : `${articlesTotal} total articles`}
+                </p>
+              </div>
+              <Link
+                to="/admin/articles/new"
+                className="px-4 py-2 bg-brand text-white rounded text-sm font-medium hover:bg-brand-dark"
+              >
+                New Article
+              </Link>
+            </div>
+
+            {articlesError && (
+              <div className="rounded border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-200">
+                {articlesError}
+              </div>
+            )}
+
+            <div className="overflow-hidden rounded-lg border border-gray-700">
+              <table className="min-w-full divide-y divide-gray-700 text-sm">
+                <thead className="bg-gray-800/60 text-left text-gray-300">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Title</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold">Author</th>
+                    <th className="px-4 py-3 font-semibold">Date</th>
+                    <th className="px-4 py-3 font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800 bg-gray-900/40">
+                  {articlesLoading && (
+                    <tr>
+                      <td className="px-4 py-6 text-gray-400" colSpan={5}>
+                        Loading articles...
+                      </td>
+                    </tr>
+                  )}
+                  {!articlesLoading && articlesList.length === 0 && (
+                    <tr>
+                      <td className="px-4 py-6 text-gray-400" colSpan={5}>
+                        No articles to display.
+                      </td>
+                    </tr>
+                  )}
+                  {!articlesLoading &&
+                    articlesList.map((article) => (
+                      <tr key={article.id}>
+                        <td className="px-4 py-3 font-medium text-white">
+                          {article.title}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                              article.status === 'PUBLISHED'
+                                ? 'bg-green-500/20 text-green-300'
+                                : 'bg-yellow-500/20 text-yellow-300'
+                            }`}
+                          >
+                            {article.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-300">
+                          {article.author?.username ?? '—'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-400">
+                          {article.publishedAt
+                            ? new Date(article.publishedAt).toLocaleDateString()
+                            : new Date(article.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            <Link
+                              to={`/admin/articles/edit/${article.id}`}
+                              className="text-sm text-blue-400 hover:text-blue-300"
+                            >
+                              Edit
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteArticle(article.id)}
+                              className="text-sm text-red-400 hover:text-red-300"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {articlesTotal > articlesLimit && (
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setArticlesPage((p) => Math.max(p - 1, 1))}
+                  disabled={articlesPage <= 1 || articlesLoading}
+                  className="px-3 py-1 rounded border border-gray-600 text-sm text-white disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-gray-400">
+                  Page {articlesPage} of{' '}
+                  {Math.max(1, Math.ceil(articlesTotal / articlesLimit))}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setArticlesPage((p) =>
+                      p < Math.ceil(articlesTotal / articlesLimit) ? p + 1 : p,
+                    )
+                  }
+                  disabled={
+                    articlesLoading ||
+                    articlesPage >= Math.ceil(articlesTotal / articlesLimit)
+                  }
+                  className="px-3 py-1 rounded border border-gray-600 text-sm text-white disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
         {active === 'posts' && <div>Post moderation coming soon.</div>}

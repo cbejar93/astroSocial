@@ -698,3 +698,86 @@ export async function search(
   );
   return res.json();
 }
+
+// --------------------------------------------------
+// Articles API helpers
+
+export interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  body: string;
+  excerpt?: string;
+  coverImageUrl?: string;
+  status: 'DRAFT' | 'PUBLISHED';
+  authorId: string;
+  author?: { username: string; avatarUrl: string };
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ArticlesListResponse {
+  articles: Article[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export async function fetchPublishedArticles(
+  page = 1,
+  limit = 10,
+): Promise<ArticlesListResponse> {
+  const res = await apiFetch(`/articles?page=${page}&limit=${limit}`);
+  return res.json();
+}
+
+export async function fetchArticleBySlug(slug: string): Promise<Article> {
+  const res = await apiFetch(`/articles/${encodeURIComponent(slug)}`);
+  return res.json();
+}
+
+export async function fetchAdminArticles(
+  page = 1,
+  limit = 20,
+): Promise<ArticlesListResponse> {
+  const res = await apiFetch(`/articles/admin?page=${page}&limit=${limit}`);
+  return res.json();
+}
+
+export async function fetchAdminArticleById(id: string): Promise<Article> {
+  const res = await apiFetch(`/articles/admin/${id}`);
+  return res.json();
+}
+
+export async function createArticle(form: FormData): Promise<Article> {
+  const res = await apiFetch('/articles', { method: 'POST', body: form });
+  return res.json();
+}
+
+export async function updateArticle(
+  id: string,
+  form: FormData,
+): Promise<Article> {
+  const res = await apiFetch(`/articles/${id}`, {
+    method: 'PATCH',
+    body: form,
+  });
+  return res.json();
+}
+
+export async function deleteArticle(id: string): Promise<void> {
+  await apiFetch(`/articles/${id}`, { method: 'DELETE' });
+}
+
+export async function uploadArticleImage(
+  file: File,
+): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append('image', file);
+  const res = await apiFetch('/articles/upload-image', {
+    method: 'POST',
+    body: form,
+  });
+  return res.json();
+}

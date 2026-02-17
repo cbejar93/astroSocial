@@ -30,6 +30,11 @@ enum AccentColor {
   MINT
 }
 
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
 enum SocialPlatform {
   TWITTER
   INSTAGRAM
@@ -72,6 +77,7 @@ model User {
   analyticsEvents   AnalyticsEvent[]
   requestMetrics    RequestMetric[]
   socialAccounts    UserSocialAccount[]
+  articles          Article[]         @relation("UserArticles")
 
   @@unique([provider, providerId], name: "provider_providerId")
 }
@@ -243,4 +249,21 @@ model UserSocialAccount {
   @@unique([userId, platform, url], name: "unique_user_social_url")
   @@index([userId])
   @@index([platform])
+}
+
+model Article {
+  id            String        @id @default(uuid())
+  title         String
+  slug          String        @unique
+  body          String        @db.Text
+  excerpt       String?       @db.Text
+  coverImageUrl String?
+  status        ArticleStatus @default(DRAFT)
+  authorId      String
+  author        User          @relation("UserArticles", fields: [authorId], references: [id])
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status, publishedAt])
 }
