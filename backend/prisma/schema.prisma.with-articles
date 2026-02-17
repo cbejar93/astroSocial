@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InteractionType {
+  LIKE
+  SHARE
+  REPOST
+}
+
+enum NotificationType {
+  POST_LIKE
+  COMMENT
+  COMMENT_LIKE
+}
+
+enum TemperatureUnit {
+  C
+  F
+}
+
+enum AccentColor {
+  BRAND
+  OCEAN
+  MINT
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum SocialPlatform {
+  TWITTER
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  LINKEDIN
+  GITHUB
+  WEBSITE
+  OTHER
+}
+
+model User {
+  id                String            @id @default(uuid())
+  emailEncrypted    String
+  emailHash         String            @unique
+  name              String?
+  provider          String
+  providerId        String
+  createdAt         DateTime          @default(now())
+  lastLoginAt       DateTime?
+  avatarUrl         String?
+  bio               String?           @db.Text
+  profileComplete   Boolean           @default(false)
+  username          String?           @unique
+  role              String            @default("USER")
+  temperature       TemperatureUnit   @default(F)
+  accent            AccentColor       @default(BRAND)
+  comments          Comment[]         @relation("UserComments")
+  posts             Post[]            @relation("UserPosts")
+  originalPosts     Post[]            @relation("OriginalAuthor")
+  interactions      PostInteraction[]
+  commentLikes      CommentLike[]
+  sentNotifications Notification[]    @relation("Actor") // created by this user
+  notifications     Notification[] // received by this user
+  followedLounges   Lounge[]          @relation("LoungeFollowers")
+  followers         User[]            @relation("UserFollows")
+  following         User[]            @relation("UserFollows")
+  savedPosts        SavedPost[]
+  analyticsSessions AnalyticsSession[]
+  analyticsEvents   AnalyticsEvent[]
+  requestMetrics    RequestMetric[]
+  socialAccounts    UserSocialAccount[]
+  articles          Article[]         @relation("UserArticles")
+
+  @@unique([provider, providerId], name: "provider_providerId")
+}
+
+model Post {
+  id               String            @id @default(uuid())
+  authorId         String
+  originalAuthorId String?
+  title            String
+  body             String
+  imageUrl         String?
+  youtubeUrl       String?
+  linkUrl          String?
+  linkTitle        String?
+  linkDescription  String?
+  linkImageUrl     String?
+  linkSiteName     String?
+  loungeId         String?
+  likes            Int               @default(0)
+  shares           Int               @default(0)
+  reposts          Int               @default(0)
+  createdAt        DateTime          @default(now())
+  comments         Comment[]         @relation("PostComments")
+  author           User              @relation("UserPosts", fields: [authorId], references: [id])
+  originalAuthor   User?             @relation("OriginalAuthor", fields: [originalAuthorId], references: [id])
+  lounge           Lounge?           @relation(fields: [loungeId], references: [id])
+  interactions     PostInteraction[]
+  notifications    Notification[]
+  savedBy          SavedPost[]
+}
+
+model Comment {
+  id            String         @id @default(uuid())
+  postId        String
+  authorId      String
+  text          String
+  likes         Int            @default(0)
+  createdAt     DateTime       @default(now())
+  parentId      String?
+  author        User           @relation("UserComments", fields: [authorId], references: [id])
+  post          Post           @relation("PostComments", fields: [postId], references: [id])
+  parent        Comment?       @relation("CommentReplies", fields: [parentId], references: [id])
+  replies       Comment[]      @relation("CommentReplies")
+  likedBy       CommentLike[]
+  notifications Notification[]
+}
+
+model CommentLike {
+  id        String   @id @default(uuid())
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  commentId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId], name: "one_like_per_user_per_comment")
+}
+
+model PostInteraction {
+  id        String          @id @default(uuid())
+  post      Post            @relation(fields: [postId], references: [id])
+  postId    String
+  user      User            @relation(fields: [userId], references: [id])
+  userId    String
+  type      InteractionType
+  createdAt DateTime        @default(now())
+
+  @@unique([postId, userId, type], name: "one_interaction_per_user_per_post")
+}
+
+model SavedPost {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId], name: "one_save_per_user_per_post")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+  actor     User             @relation("Actor", fields: [actorId], references: [id])
+  actorId   String
+  post      Post?            @relation(fields: [postId], references: [id])
+  postId    String?
+  comment   Comment?         @relation(fields: [commentId], references: [id])
+  commentId String?
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}
+
+model Lounge {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String @db.Text
+  bannerUrl   String
+  profileUrl  String
+  posts       Post[]
+  followers   User[] @relation("LoungeFollowers")
+}
+
+model AnalyticsSession {
+  id         String           @id @default(uuid())
+  sessionKey String           @unique
+  userId     String?
+  startedAt  DateTime         @default(now())
+  endedAt    DateTime?
+  userAgent  String?
+  ipAddress  String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user   User?            @relation(fields: [userId], references: [id])
+  events AnalyticsEvent[]
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid())
+  sessionId  String?
+  userId     String?
+  type       String
+  targetType String?
+  targetId   String?
+  durationMs Int?
+  value      Float?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  session AnalyticsSession? @relation(fields: [sessionId], references: [id])
+  user    User?             @relation(fields: [userId], references: [id])
+
+  @@index([type])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model RequestMetric {
+  id         String   @id @default(uuid())
+  route      String?
+  method     String?
+  statusCode Int
+  durationMs Int
+  occurredAt DateTime @default(now())
+  requestId  String?
+  userId     String?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([occurredAt])
+  @@index([statusCode])
+}
+
+model UserSocialAccount {
+  id        String         @id @default(uuid())
+  userId    String
+  platform  SocialPlatform
+  url       String
+  metadata  Json?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, url], name: "unique_user_social_url")
+  @@index([userId])
+  @@index([platform])
+}
+
+model Article {
+  id            String        @id @default(uuid())
+  title         String
+  slug          String        @unique
+  body          String        @db.Text
+  excerpt       String?       @db.Text
+  coverImageUrl String?
+  status        ArticleStatus @default(DRAFT)
+  authorId      String
+  author        User          @relation("UserArticles", fields: [authorId], references: [id])
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+}
