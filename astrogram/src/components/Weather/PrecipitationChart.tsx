@@ -106,7 +106,7 @@ const PrecipitationChart: React.FC<PrecipitationChartProps> = ({
                     <span className="text-xs font-semibold text-sky-600 dark:text-sky-300">
                       {bar.value}%
                     </span>
-                    <div className="w-full flex-1 flex items-end justify-center h-[120px] sm:h-[150px]">
+                    <div className="w-full flex items-end justify-center h-[120px] sm:h-[150px]">
                       <div
                         className="w-full max-w-[1.75rem] rounded-t-lg bg-gradient-to-t from-sky-600 to-cyan-400 dark:from-sky-500 dark:to-cyan-300 shadow-[0_0_6px_rgba(56,189,248,0.35)] transition-all duration-500"
                         style={{ height: heightStyle, opacity }}
