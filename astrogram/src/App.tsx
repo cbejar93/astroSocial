@@ -28,6 +28,9 @@ import LoungesPage from "./pages/LoungesPage";
 // import LoungePostPage from "./pages/LoungePostPage";
 import LoungePostDetailPage from "./pages/LoungePostDetailPage";
 import AdminPage from "./pages/AdminPage";
+import AdminArticleEditorPage from "./pages/AdminArticleEditorPage";
+import ArticlesPage from "./pages/ArticlesPage";
+import ArticleDetailPage from "./pages/ArticleDetailPage";
 import SavedPage from "./pages/SavedPage";
 
 import NotFoundPage from "./pages/NotFoundPage";
@@ -80,6 +83,10 @@ const App: React.FC = () => {
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/community-guidelines" element={<CommunityGuidelinesPage />} />
 
+          {/* Public articles (no auth required) */}
+          <Route path="/articles" element={<ArticlesPage />} />
+          <Route path="/articles/:slug" element={<ArticleDetailPage />} />
+
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<SignupPage />} />
           <Route path="/auth/success" element={<AuthSuccessPage />} />
@@ -116,6 +123,8 @@ const App: React.FC = () => {
 
             <Route element={<RequireAdmin />}>
               <Route path="/admin" element={<Navigate to="/admin/lounge" replace />} />
+              <Route path="/admin/articles/new" element={<AdminArticleEditorPage />} />
+              <Route path="/admin/articles/edit/:id" element={<AdminArticleEditorPage />} />
               <Route path="/admin/:tab" element={<AdminPage />} />
             </Route>
 

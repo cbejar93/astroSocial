@@ -1,7 +1,7 @@
 // src/components/BottomNavbar.tsx
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, CloudSun, User, Settings, ChartArea } from "lucide-react";
+import { Home, CloudSun, User, Settings, ChartArea, Newspaper } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -15,11 +15,12 @@ interface Tab {
 
 // Match DesktopNav order and icons 1:1
 const BASE_TABS: Tab[] = [
-  { name: "Home",     path: "/",         icon: Home },
-  { name: "Weather",  path: "/weather",  icon: CloudSun },
-  { name: "Lounges",  path: "/lounge",   icon: LavaLampIcon },
-  { name: "Profile",  path: "/profile",  icon: User },
-  { name: "Settings", path: "/settings", icon: Settings },
+  { name: "Home",     path: "/",          icon: Home },
+  { name: "Weather",  path: "/weather",   icon: CloudSun },
+  { name: "Articles", path: "/articles",  icon: Newspaper },
+  { name: "Lounges",  path: "/lounge",    icon: LavaLampIcon },
+  { name: "Profile",  path: "/profile",   icon: User },
+  { name: "Settings", path: "/settings",  icon: Settings },
 ];
 
 // Compact sizing to keep things tidy

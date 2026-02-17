@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   ChartArea,
+  Newspaper,
 } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
 import { fetchLounges } from "../../lib/api";
@@ -40,6 +41,7 @@ interface LoungeInfo {
 const navItems: NavItem[] = [
   { label: "Home", to: "/", icon: Home },
   { label: "Weather", to: "/weather", icon: CloudSun },
+  { label: "Articles", to: "/articles", icon: Newspaper, matchStartsWith: "/articles" },
   { label: "Lounges", to: "/lounge", icon: LavaLampIcon, matchStartsWith: "/lounge" },
   { label: "Profile", to: "/profile", icon: User },
   { label: "Settings", to: "/settings", icon: Settings },
