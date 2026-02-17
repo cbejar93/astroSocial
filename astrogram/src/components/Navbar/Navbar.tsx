@@ -562,7 +562,8 @@ const Navbar: React.FC = () => {
   const hasResults =
     results &&
     ((results.users?.results.length ?? 0) > 0 ||
-      (results.lounges?.results.length ?? 0) > 0);
+      (results.lounges?.results.length ?? 0) > 0 ||
+      (results.articles?.results.length ?? 0) > 0);
 
   const hasPrev = page > 1;
   const hasNext =
@@ -571,7 +572,10 @@ const Navbar: React.FC = () => {
       results.users.total > results.users.page * results.users.limit) ||
       (results.lounges &&
         results.lounges.total >
-          results.lounges.page * results.lounges.limit));
+          results.lounges.page * results.lounges.limit) ||
+      (results.articles &&
+        results.articles.total >
+          results.articles.page * results.articles.limit));
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -639,7 +643,7 @@ const Navbar: React.FC = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search users & lounges…  ( /  or  ⌘K / Ctrl+K )"
+                placeholder="Search users, lounges & articles…  ( /  or  ⌘K / Ctrl+K )"
                 className="w-full pl-9 pr-9 rounded-full
                            bg-white/[0.07] backdrop-blur-md
                            border border-white/10
@@ -729,6 +733,35 @@ const Navbar: React.FC = () => {
                                   />
                                 )}
                                 <span>{l.name}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+
+                      {results?.articles?.results.length ? (
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2 text-amber-300">
+                            Articles
+                          </h3>
+                          <ul className="space-y-2">
+                            {results.articles.results.map((a) => (
+                              <li
+                                key={a.id}
+                                className="flex items-center gap-2 text-sm hover:bg-white/5 p-1.5 rounded-md cursor-pointer transition"
+                                onClick={() => {
+                                  navigate(`/articles/${a.slug}`);
+                                  setShowDropdown(false);
+                                }}
+                              >
+                                {a.coverImageUrl && (
+                                  <img
+                                    src={a.coverImageUrl}
+                                    alt={a.title}
+                                    className="w-7 h-7 rounded object-cover"
+                                  />
+                                )}
+                                <span>{a.title}</span>
                               </li>
                             ))}
                           </ul>

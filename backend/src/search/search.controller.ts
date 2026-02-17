@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { LoungesService } from '../lounges/lounges.service';
+import { ArticlesService } from '../articles/articles.service';
 import { Request } from 'express';
 
 const WINDOW_MS = 60_000; // 1 minute
@@ -20,6 +21,7 @@ export class SearchController {
   constructor(
     private readonly users: UsersService,
     private readonly lounges: LoungesService,
+    private readonly articles: ArticlesService,
   ) {}
 
   @Get()
@@ -58,10 +60,14 @@ export class SearchController {
     if (type === 'lounge' || type === 'lounges') {
       return { lounges: await this.lounges.searchLounges(query, p, l) };
     }
-    const [users, lounges] = await Promise.all([
+    if (type === 'article' || type === 'articles') {
+      return { articles: await this.articles.searchArticles(query, p, l) };
+    }
+    const [users, lounges, articles] = await Promise.all([
       this.users.searchUsers(query, p, l),
       this.lounges.searchLounges(query, p, l),
+      this.articles.searchArticles(query, p, l),
     ]);
-    return { users, lounges };
+    return { users, lounges, articles };
   }
 }
