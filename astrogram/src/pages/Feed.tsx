@@ -1054,7 +1054,7 @@ function Feed() {
 
   const isDesktop = useIsDesktop();
   const { user } = useAuth();
-  const showRightPanel = isDesktop && !!user;
+  const showRightPanel = false;
 
   async function performSearch(newPage: number) {
     if (!query.trim()) return;
