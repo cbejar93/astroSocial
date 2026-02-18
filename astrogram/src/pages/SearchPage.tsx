@@ -33,7 +33,8 @@ const SearchPage: React.FC = () => {
   const hasResults = Boolean(
     results &&
       ((results.users?.results.length ?? 0) > 0 ||
-        (results.lounges?.results.length ?? 0) > 0),
+        (results.lounges?.results.length ?? 0) > 0 ||
+        (results.articles?.results.length ?? 0) > 0),
   );
 
   const hasPrev = page > 1;
@@ -43,7 +44,10 @@ const SearchPage: React.FC = () => {
         results.users.total > results.users.page * results.users.limit) ||
         (results.lounges &&
           results.lounges.total >
-            results.lounges.page * results.lounges.limit)),
+            results.lounges.page * results.lounges.limit) ||
+        (results.articles &&
+          results.articles.total >
+            results.articles.page * results.articles.limit)),
   );
 
   return (
@@ -104,6 +108,28 @@ const SearchPage: React.FC = () => {
                           />
                         )}
                         <span>{l.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {results?.articles?.results.length ? (
+                <div>
+                  <h2 className="text-xl font-semibold mb-2">Articles</h2>
+                  <ul className="space-y-2">
+                    {results.articles.results.map((a) => (
+                      <li key={a.id} className="flex items-center gap-2">
+                        {a.coverImageUrl && (
+                          <img
+                            src={a.coverImageUrl}
+                            alt={a.title}
+                            className="w-8 h-8 rounded object-cover"
+                          />
+                        )}
+                        <a href={`/articles/${a.slug}`} className="hover:underline">
+                          {a.title}
+                        </a>
                       </li>
                     ))}
                   </ul>

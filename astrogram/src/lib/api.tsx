@@ -676,6 +676,13 @@ export interface SearchLounge {
   bannerUrl: string;
 }
 
+export interface SearchArticle {
+  id: string;
+  title: string;
+  slug: string;
+  coverImageUrl: string | null;
+}
+
 export interface PaginatedResults<T> {
   results: T[];
   total: number;
@@ -686,6 +693,7 @@ export interface PaginatedResults<T> {
 export interface SearchResponse {
   users?: PaginatedResults<SearchUser>;
   lounges?: PaginatedResults<SearchLounge>;
+  articles?: PaginatedResults<SearchArticle>;
 }
 
 export async function search(
