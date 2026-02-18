@@ -40,17 +40,17 @@ export class PostsController {
         @Req() req: any,
         @Query('page') page = '1',
         @Query('limit') limit = '20',
+        @Query('mode') mode = 'foryou',
     ): Promise<FeedResponseDto> {
         const p = parseInt(page, 10) || 1;
         const l = parseInt(limit, 10) || 20;
-        this.logger.log(`Fetching public feed (page=${p}, limit=${l})`);
+        const feedMode = mode === 'following' ? 'following' : 'foryou';
+        this.logger.log(`Fetching feed (mode=${feedMode}, page=${p}, limit=${l})`);
 
-        console.log(req.user);
-
-        const id = req.user ? req.user.sub : null
+        const id = req.user ? req.user.sub : null;
 
         try {
-            const feed = await this.posts.getWeightedFeed(id, p, l);
+            const feed = await this.posts.getWeightedFeed(id, p, l, feedMode);
             this.logger.log(`Feed fetched: ${feed.posts.length} items`);
             return feed;
         } catch (err: any) {

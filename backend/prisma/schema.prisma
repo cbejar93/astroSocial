@@ -17,6 +17,8 @@ enum NotificationType {
   POST_LIKE
   COMMENT
   COMMENT_LIKE
+  FOLLOW
+  REPOST
 }
 
 enum TemperatureUnit {
@@ -78,6 +80,10 @@ model User {
   requestMetrics    RequestMetric[]
   socialAccounts    UserSocialAccount[]
   articles          Article[]         @relation("UserArticles")
+  currentStreak     Int               @default(0)
+  longestStreak     Int               @default(0)
+  lastPostDate      DateTime?
+  postMilestone     Int               @default(0)
 
   @@unique([provider, providerId], name: "provider_providerId")
 }

@@ -85,6 +85,25 @@ const ReplyIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
     />
   </svg>
 );
+const PersonIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="8" r="4" fill="currentColor" opacity=".9" />
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="currentColor" opacity=".9" />
+  </svg>
+);
+const RepeatIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity=".9"
+    />
+  </svg>
+);
 
 /* --------------------------------- Row UI --------------------------------- */
 
@@ -102,6 +121,18 @@ function TypeChip({ type }: { type: NotificationItem["type"] }) {
       return (
         <span className={`${base} bg-pink-400/10 text-pink-300 ring-pink-400/30`}>
           <HeartIcon /> Like
+        </span>
+      );
+    case "FOLLOW":
+      return (
+        <span className={`${base} bg-emerald-400/10 text-emerald-300 ring-emerald-400/30`}>
+          <PersonIcon /> Follow
+        </span>
+      );
+    case "REPOST":
+      return (
+        <span className={`${base} bg-amber-400/10 text-amber-300 ring-amber-400/30`}>
+          <RepeatIcon /> Repost
         </span>
       );
     default:
@@ -129,13 +160,20 @@ function NotificationRow({ n }: { n: NotificationItem }) {
       ? "commented on your post"
       : n.type === "POST_LIKE"
       ? "liked your post"
+      : n.type === "FOLLOW"
+      ? "started following you"
+      : n.type === "REPOST"
+      ? "reposted your post"
       : "liked your comment";
 
   const link =
-    (n as any).postId &&
-    ((n as any).loungeName
-      ? `/lounge/${encodeURIComponent((n as any).loungeName)}/posts/${(n as any).postId}`
-      : `/posts/${(n as any).postId}`);
+    n.type === "FOLLOW"
+      ? `/users/${encodeURIComponent((n as any)?.actor?.username ?? "")}`
+      : (n as any).postId
+      ? (n as any).loungeName
+        ? `/lounge/${encodeURIComponent((n as any).loungeName)}/posts/${(n as any).postId}`
+        : `/posts/${(n as any).postId}`
+      : null;
 
   const isUnread = Boolean((n as any).unread);
 
@@ -197,7 +235,7 @@ function NotificationRow({ n }: { n: NotificationItem }) {
                       : "bg-[rgba(90,162,255,0.10)] text-slate-200 ring-[rgba(90,162,255,0.30)] hover:bg-[rgba(90,162,255,0.16)]"
                   }`}
                 >
-                  View post
+                  {n.type === "FOLLOW" ? "View profile" : "View post"}
                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       d="M13 5l7 7-7 7M20 12H4"

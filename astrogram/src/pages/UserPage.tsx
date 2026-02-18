@@ -10,7 +10,10 @@ import {
   fetchUserComments,
   toggleCommentLike,
   fetchUser,
+  fetchUserStats,
+  type UserStats,
 } from '../lib/api';
+import MilestoneBadge from '../components/MilestoneBadge';
 
 interface CommentItem {
   id: string;
@@ -36,6 +39,7 @@ const UserPage: React.FC = () => {
   const { username = '', tab } = useParams<{ username: string; tab?: string }>();
   const active: 'posts' | 'comments' = tab === 'comments' ? 'comments' : 'posts';
   const [info, setInfo] = useState<UserInfo | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +49,7 @@ const UserPage: React.FC = () => {
   useEffect(() => {
     if (!username) return;
     fetchUser<UserInfo>(username).then(setInfo).catch(() => {});
+    fetchUserStats(username).then(setStats).catch(() => {});
     fetchUserPosts<PostCardProps>(username)
       .then(setPosts)
       .catch(() => {})
@@ -88,27 +93,50 @@ const UserPage: React.FC = () => {
                 alt="avatar"
                 className="w-12 h-12 rounded-full object-cover"
               />
-              <h2 className="text-lg font-bold">@{info.username}</h2>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold">@{info.username}</h2>
+                {stats && stats.postMilestone > 0 && (
+                  <MilestoneBadge postMilestone={stats.postMilestone} className="mt-0.5" />
+                )}
+              </div>
               {user && user.id !== info.id && (
                 <button
                   type="button"
                   onClick={handleFollow}
-                  className="ml-auto px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
+                  className="ml-auto shrink-0 px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-200"
                 >
                   {isFollowing ? 'Unfollow' : 'Follow'}
                 </button>
               )}
             </div>
-            <div className="text-sm text-gray-400 mb-4">
+            <div className="text-sm text-gray-400 mb-3">
               <span className="mr-4">
                 <span className="font-semibold text-white">Trackers</span>{" "}
-                {info.followers?.length ?? 0}
+                {stats?.followerCount ?? info.followers?.length ?? 0}
               </span>
-              <span>
+              <span className="mr-4">
                 <span className="font-semibold text-white">Tracking</span>{" "}
-                {info.following?.length ?? 0}
+                {stats?.followingCount ?? info.following?.length ?? 0}
               </span>
+              {stats && (
+                <span>
+                  <span className="font-semibold text-white">Posts</span>{" "}
+                  {stats.postCount}
+                </span>
+              )}
             </div>
+            {stats && stats.currentStreak > 0 && (
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm mb-4">
+                <span className={stats.currentStreak >= 3 ? 'animate-pulse' : ''} aria-hidden>🔥</span>
+                <span className="font-semibold">{stats.currentStreak}-day</span>
+                <span className="text-gray-400">posting streak</span>
+                {stats.longestStreak > stats.currentStreak && (
+                  <span className="text-xs text-gray-500">
+                    · best: {stats.longestStreak}d
+                  </span>
+                )}
+              </div>
+            )}
           </>
         )}
         <div className="border-b border-gray-700 mb-4 pt-4">

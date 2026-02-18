@@ -380,6 +380,34 @@ function RightProfilePanel() {
             </div>
           </div>
 
+          {/* Streak widget */}
+          {(user.currentStreak ?? 0) > 0 && (
+            <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+              <span
+                className={`text-2xl leading-none ${
+                  (user.currentStreak ?? 0) >= 3 ? 'animate-pulse' : ''
+                }`}
+                aria-hidden
+              >
+                🔥
+              </span>
+              <div>
+                <div className="text-xs text-gray-400">Posting Streak</div>
+                <div className="text-base font-bold">
+                  {user.currentStreak} day{user.currentStreak !== 1 ? 's' : ''}
+                </div>
+              </div>
+              {(user.longestStreak ?? 0) > (user.currentStreak ?? 0) && (
+                <div className="ml-auto text-right">
+                  <div className="text-[10px] text-gray-500">Best</div>
+                  <div className="text-sm font-semibold text-gray-300">
+                    {user.longestStreak}d
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Tabs */}
           <div className="mt-4 grid grid-cols-3 rounded-lg border border-white/10 p-1 bg-gray-900/40">
             <button
@@ -1011,6 +1039,7 @@ function Feed() {
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingNext, setIsFetchingNext] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [feedMode, setFeedMode] = useState<'foryou' | 'following'>('foryou');
 
   const navigate = useNavigate();
 
@@ -1025,7 +1054,7 @@ function Feed() {
 
   const isDesktop = useIsDesktop();
   const { user } = useAuth();
-  const showRightPanel = false;
+  const showRightPanel = isDesktop && !!user;
 
   async function performSearch(newPage: number) {
     if (!query.trim()) return;
@@ -1056,11 +1085,11 @@ function Feed() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadPage = useCallback(async (nextPage: number) => {
+  const loadPage = useCallback(async (nextPage: number, mode: 'foryou' | 'following' = feedMode) => {
     if (nextPage === 1) setLoading(true);
     setIsFetchingNext(true);
     try {
-      const response = await fetchFeed<PostCardProps>(nextPage, PAGE_SIZE);
+      const response = await fetchFeed<PostCardProps>(nextPage, PAGE_SIZE, mode);
       setPosts((prev) => {
         if (nextPage === 1) return response.posts;
         const existingIds = new Set(prev.map((p) => String(p.id)));
@@ -1079,11 +1108,22 @@ function Feed() {
       if (nextPage === 1) setLoading(false);
       setIsFetchingNext(false);
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedMode]);
+
+  const switchFeedMode = (mode: 'foryou' | 'following') => {
+    if (mode === feedMode) return;
+    setFeedMode(mode);
+    setPosts([]);
+    setPage(0);
+    setHasMore(true);
+    loadPage(1, mode);
+  };
 
   useEffect(() => {
     loadPage(1);
-  }, [loadPage]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -1273,6 +1313,36 @@ function Feed() {
                 )}
               </div>
             </div>
+
+            {/* Feed mode tabs — only shown to logged-in users */}
+            {user && (
+              <div className="px-2 sm:px-4 mt-3">
+                <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => switchFeedMode('foryou')}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+                      feedMode === 'foryou'
+                        ? 'bg-accent-gradient text-white shadow'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    For You
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchFeedMode('following')}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+                      feedMode === 'following'
+                        ? 'bg-accent-gradient text-white shadow'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    Following
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Increased spacing between the sticky composer section and the posts */}
             <div className="h-6" />
