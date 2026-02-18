@@ -341,14 +341,14 @@ export class PostsService {
       interactions: {
         where: {
           userId: userId || undefined,
-          type: { in: [InteractionType.LIKE, InteractionType.REPOST] },
+          type: { in: [InteractionType.LIKE, InteractionType.REPOST] as InteractionType[] },
         },
         select: { id: true, type: true },
       },
       ...(userId
         ? { savedBy: { where: { userId }, select: { id: true } } }
         : {}),
-    } as const;
+    };
   }
 
   /** Shape a raw DB post record into the feed DTO shape */
@@ -509,7 +509,7 @@ export class PostsService {
 
     // Apply diversity filter then paginate
     const diversified = this.diversifyFeed(
-      scored.map((p) => ({ ...p, authorId: p.author.id })),
+      scored.map((p) => ({ ...p, authorId: p.authorId })),
     );
     const start = (page - 1) * limit;
     const pageItems = diversified.slice(start, start + limit);
