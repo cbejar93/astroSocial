@@ -1,5 +1,6 @@
 import { UsersService } from '../src/users/users.service';
 import { LoungesService } from '../src/lounges/lounges.service';
+import { ArticlesService } from '../src/articles/articles.service';
 import { SearchController } from '../src/search/search.controller';
 
 describe('Search services', () => {
@@ -43,7 +44,7 @@ describe('Search services', () => {
     });
   });
 
-  it('search controller returns users and lounges when type is missing', async () => {
+  it('search controller returns users, lounges and articles when type is missing', async () => {
     const users: any = {
       searchUsers: jest.fn().mockResolvedValue({
         results: [{ id: '1', username: 'alice', avatarUrl: 'a.png' }],
@@ -60,7 +61,15 @@ describe('Search services', () => {
         limit: 20,
       }),
     };
-    const controller = new SearchController(users, lounges);
+    const articles: any = {
+      searchArticles: jest.fn().mockResolvedValue({
+        results: [{ id: '3', title: 'Astro 101', slug: 'astro-101', coverImageUrl: null }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    };
+    const controller = new SearchController(users, lounges, articles);
     const req: any = { ip: '127.0.0.1' };
     const result = await controller.search(req, undefined, 'a');
     expect(result).toEqual({
@@ -72,6 +81,12 @@ describe('Search services', () => {
       },
       lounges: {
         results: [{ id: '2', name: 'space', bannerUrl: 'b.png' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      },
+      articles: {
+        results: [{ id: '3', title: 'Astro 101', slug: 'astro-101', coverImageUrl: null }],
         total: 1,
         page: 1,
         limit: 20,
