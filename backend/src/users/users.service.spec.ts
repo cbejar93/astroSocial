@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UsersService } from './users.service';
 import { SocialPlatform, TemperatureUnit, AccentColor } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+import { createMockNotifications } from '../test-utils/mocks';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -23,6 +25,7 @@ describe('UsersService', () => {
     $transaction: jest.Mock;
   };
   let storage: { uploadFile: jest.Mock; deleteFile: jest.Mock };
+  let notifications: ReturnType<typeof createMockNotifications>;
 
   const supabase = {} as SupabaseClient;
   const file = {
@@ -59,10 +62,13 @@ describe('UsersService', () => {
       deleteFile: jest.fn(),
     };
 
+    notifications = createMockNotifications();
+
     service = new UsersService(
       supabase,
       storage as unknown as StorageService,
       prisma as unknown as PrismaService,
+      notifications as unknown as NotificationsService,
     );
   });
 
