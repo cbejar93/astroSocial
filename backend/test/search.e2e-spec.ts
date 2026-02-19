@@ -14,7 +14,7 @@ describe('Search services', () => {
       },
       $transaction: (promises: any[]) => Promise.all(promises),
     };
-    const service = new UsersService({} as any, {} as any, prisma);
+    const service = new UsersService({} as any, {} as any, prisma, {} as any);
     const result = await service.searchUsers('ali', 1, 20);
     expect(result).toEqual({
       results: [{ id: '1', username: 'alice', avatarUrl: 'a.png' }],
