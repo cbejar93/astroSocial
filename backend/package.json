@@ -14,7 +14,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest --config ./test/jest-e2e.json",
+    "test": "jest --verbose && jest --config ./test/jest-e2e.json --verbose",
     "test:unit": "jest --verbose",
     "test:all": "jest --verbose && jest --config ./test/jest-e2e.json --verbose",
     "test:watch": "jest --watch",
