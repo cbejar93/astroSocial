@@ -244,6 +244,11 @@ export class UsersController {
     return { success: true };
   }
 
+  @Get(':username/stats')
+  async getUserStats(@Param('username') username: string) {
+    return this.usersService.getUserStats(username);
+  }
+
   @Get(':username/followers')
   async getFollowers(@Param('username') username: string) {
     const user = await this.usersService.findByUsername(username);

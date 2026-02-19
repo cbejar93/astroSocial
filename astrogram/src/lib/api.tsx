@@ -125,15 +125,17 @@ export interface FeedResponse<T> {
   }
   
   /**
-   * Fetch the paginated, weighted feed.
+   * Fetch the paginated feed.
    * @param page  1‑based page number (default: 1)
    * @param limit items per page (default: 20)
+   * @param mode  'foryou' (personalized algorithmic) or 'following' (chronological)
    */
   export async function fetchFeed<Item = unknown>(
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
+    mode: 'foryou' | 'following' = 'foryou',
   ): Promise<FeedResponse<Item>> {
-    const res = await apiFetch(`/posts/feed?page=${page}&limit=${limit}`);
+    const res = await apiFetch(`/posts/feed?page=${page}&limit=${limit}&mode=${mode}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch feed (status ${res.status})`);
     }
@@ -462,7 +464,7 @@ export async function toggleCommentLike(
 
 export interface NotificationItem {
   id: string;
-  type: 'POST_LIKE' | 'COMMENT' | 'COMMENT_LIKE';
+  type: 'POST_LIKE' | 'COMMENT' | 'COMMENT_LIKE' | 'FOLLOW' | 'REPOST';
   timestamp: string;
   actor: { username: string; avatarUrl: string };
   postId?: string;
@@ -582,6 +584,22 @@ export async function fetchAdminUsers(
 export async function fetchUser<T = unknown>(username: string): Promise<T> {
   const encoded = encodeURIComponent(username);
   const res = await apiFetch(`/users/${encoded}`);
+  return res.json();
+}
+
+export interface UserStats {
+  followerCount: number;
+  followingCount: number;
+  postCount: number;
+  currentStreak: number;
+  longestStreak: number;
+  postMilestone: number;
+  joinedAt: string;
+}
+
+export async function fetchUserStats(username: string): Promise<UserStats> {
+  const encoded = encodeURIComponent(username);
+  const res = await apiFetch(`/users/${encoded}/stats`);
   return res.json();
 }
 

@@ -26,36 +26,62 @@ export class PostsService {
     likes: number;
     shares: number;
     reposts: number;
+    saves: number;
+    authorIsFollowed?: boolean;
+    loungeIsFollowed?: boolean;
   }): number {
-    this.logger.verbose(
-      `Computing score for post created ${post.createdAt.toISOString()} ` +
-        `(comments=${post.commentsCount}, likes=${post.likes}, ` +
-        `shares=${post.shares}, reposts=${post.reposts})`,
-    );
     const ageHours = (Date.now() - post.createdAt.getTime()) / 1000 / 60 / 60;
-    const halfLifeHours = 4; // every 4 hours the recency influence halves
-    const minRecencyWeight = 0.05; // keep a long-tail signal for month-old posts
+    const halfLifeHours = 6; // increased from 4h — less punishing to quality older content
+    const minRecencyWeight = 0.05;
     const recencyWeight = Math.max(
       minRecencyWeight,
       Math.pow(2, -ageHours / halfLifeHours),
     );
 
+    // saves added as intentional-bookmark signal; comments weighted higher (deepest engagement)
     const engagementScore =
-      post.commentsCount * 3 +
+      post.commentsCount * 4 +
       post.likes * 1 +
-      post.shares * 2 +
-      post.reposts * 2;
+      post.saves * 3 +
+      post.reposts * 2 +
+      post.shares * 1;
 
-    const freshnessBoost = recencyWeight * 10; // give new posts a big initial push
-    const weightedEngagement = engagementScore * (1 + recencyWeight);
-    const score = weightedEngagement + freshnessBoost;
+    const authorBoost = post.authorIsFollowed ? 1.5 : 1.0;
+    const loungeBoost = post.loungeIsFollowed ? 1.3 : 1.0;
 
-    this.logger.verbose(
-      `Score computed: ${score.toFixed(2)} (ageHours=${ageHours.toFixed(
-        2,
-      )}, recencyWeight=${recencyWeight.toFixed(2)})`,
-    );
+    const score =
+      engagementScore * (1 + recencyWeight) * authorBoost * loungeBoost +
+      recencyWeight * 8;
+
     return score;
+  }
+
+  /** Diversity filter: at most `maxPerAuthor` posts per author in any `windowSize` posts */
+  private diversifyFeed<T extends { authorId: string }>(
+    posts: T[],
+    windowSize = 10,
+    maxPerAuthor = 2,
+  ): T[] {
+    const result: T[] = [];
+    const pending = [...posts];
+
+    while (pending.length > 0) {
+      const window = result.slice(-windowSize);
+      const authorCount = new Map<string, number>();
+      for (const p of window) {
+        authorCount.set(p.authorId, (authorCount.get(p.authorId) ?? 0) + 1);
+      }
+      const idx = pending.findIndex(
+        (p) => (authorCount.get(p.authorId) ?? 0) < maxPerAuthor,
+      );
+      if (idx === -1) {
+        // All remaining authors over limit — append the rest as-is
+        result.push(...pending.splice(0));
+      } else {
+        result.push(...pending.splice(idx, 1));
+      }
+    }
+    return result;
   }
 
   constructor(
@@ -159,6 +185,8 @@ export class PostsService {
         },
       });
       this.logger.log(`Post created (id=${post.id})`);
+      // Update posting streak in the background (non-blocking)
+      void this.updateStreak(userId);
       return post;
     } catch (err: any) {
       this.logger.error(`Failed to create post for user ${userId}`, err.stack);
@@ -258,6 +286,14 @@ export class PostsService {
           },
         });
         this.logger.verbose(`✅ repost copy created for user ${userId}`);
+
+        // Notify the original author about the repost
+        await this.notifications.create(
+          original.authorId,
+          userId,
+          NotificationType.REPOST,
+          postId,
+        );
       } catch (e: any) {
         this.logger.error(`❌ failed to create repost copy`, e.stack);
         throw new InternalServerErrorException(
@@ -295,119 +331,195 @@ export class PostsService {
   }
 
   /**
-   * Fetch feed ordered by our custom score
+   * Build the standard post include block for feed queries.
+   */
+  private buildPostInclude(userId: string | null) {
+    return {
+      author: { select: { id: true, username: true, avatarUrl: true } },
+      originalAuthor: { select: { id: true, username: true, avatarUrl: true } },
+      _count: { select: { comments: true, savedBy: true } },
+      interactions: {
+        where: {
+          userId: userId || undefined,
+          type: { in: [InteractionType.LIKE, InteractionType.REPOST] as InteractionType[] },
+        },
+        select: { id: true, type: true },
+      },
+      ...(userId
+        ? { savedBy: { where: { userId }, select: { id: true } } }
+        : {}),
+    };
+  }
+
+  /** Shape a raw DB post record into the feed DTO shape */
+  private shapePost(p: any) {
+    return {
+      id: p.id,
+      authorId: p.author.id,
+      username: p.originalAuthor?.username || p.author.username!,
+      ...(p.title ? { title: p.title } : {}),
+      ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+      ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
+      ...(p.linkUrl ? { linkUrl: p.linkUrl } : {}),
+      ...(p.linkTitle ? { linkTitle: p.linkTitle } : {}),
+      ...(p.linkDescription ? { linkDescription: p.linkDescription } : {}),
+      ...(p.linkImageUrl ? { linkImageUrl: p.linkImageUrl } : {}),
+      ...(p.linkSiteName ? { linkSiteName: p.linkSiteName } : {}),
+      avatarUrl:
+        p.originalAuthor?.avatarUrl || p.author.avatarUrl || '/defaultPfp.png',
+      caption: p.body,
+      timestamp: p.createdAt.toISOString(),
+      stars: p.likes,
+      comments: p._count.comments,
+      shares: p.shares,
+      reposts: p.reposts,
+      likedByMe: p.interactions?.some(
+        (i: any) => i.type === InteractionType.LIKE,
+      ) ?? false,
+      savedByMe: Boolean(p.savedBy?.length),
+      saves: p._count.savedBy,
+      repostedByMe: p.interactions?.some(
+        (i: any) => i.type === InteractionType.REPOST,
+      ) ?? false,
+      ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
+        ? { repostedBy: p.author.username! }
+        : {}),
+    };
+  }
+
+  /**
+   * Fetch feed with two modes:
+   *  - "foryou"    : personalized algorithmic feed (default, works unauthenticated too)
+   *  - "following" : chronological posts from followed users only (requires auth)
    */
   async getWeightedFeed(
     userId: string | null,
     page = 1,
     limit = 20,
+    mode: 'foryou' | 'following' = 'foryou',
   ): Promise<FeedResponseDto> {
-    this.logger.log(`Fetching weighted feed (page=${page}, limit=${limit})`);
+    this.logger.log(
+      `Fetching feed (mode=${mode}, page=${page}, limit=${limit}, userId=${userId ?? 'anon'})`,
+    );
+
     try {
-      // 1) fetch raw posts + counts
-      const posts = await this.prisma.post.findMany({
-        where: { loungeId: null },
-        orderBy: { createdAt: 'desc' },
-        take: page * limit,
-        include: {
-          author: {
-            select: { id: true, username: true, avatarUrl: true },
-          },
-          originalAuthor: {
-            select: { id: true, username: true, avatarUrl: true },
-          },
-          _count: {
-            select: { comments: true, savedBy: true },
-          },
-          // always include an interactions array (it'll just be empty if userId is falsy)
-          interactions: {
-            where: {
-              // if userId is undefined this just becomes `where: { userId: undefined, … }`
-              // which yields an empty array rather than dropping the field entirely
-              userId: userId || undefined,
-              type: { in: [InteractionType.LIKE, InteractionType.REPOST] },
-            },
-            select: { id: true, type: true },
-          },
-          ...(userId
-            ? {
-                savedBy: {
-                  where: { userId },
-                  select: { id: true },
-                },
-              }
-            : {}),
-        },
-      });
-
-      this.logger.verbose(`Fetched ${posts.length} posts from DB`);
-
-      // 2) score them
-      const scored = posts.map((p) => ({
-        ...p,
-        likedByMe: p.interactions.some((i) => i.type === InteractionType.LIKE),
-        repostedByMe: p.interactions.some(
-          (i) => i.type === InteractionType.REPOST,
-        ),
-        savedByMe: Boolean((p as any).savedBy?.length),
-        score: this.computeScore({
-          createdAt: p.createdAt,
-          commentsCount: p._count.comments,
-          likes: p.likes,
-          shares: p.shares,
-          reposts: p.reposts,
-        }),
-      }));
-      this.logger.verbose(`Computed scores for posts`);
-
-      // 3) sort by score descending
-      scored.sort((a, b) => b.score - a.score);
-      this.logger.verbose(`Sorted posts by score`);
-
-      // 4) paginate
-      const start = (page - 1) * limit;
-      const pageItems = scored.slice(start, start + limit).map((p) => ({
-        id: p.id,
-        authorId: p.author.id,
-        username: p.originalAuthor?.username || p.author.username!,
-        ...(p.title ? { title: p.title } : {}),
-        ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
-        ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
-        ...(p.linkUrl ? { linkUrl: p.linkUrl } : {}),
-        ...(p.linkTitle ? { linkTitle: p.linkTitle } : {}),
-        ...(p.linkDescription ? { linkDescription: p.linkDescription } : {}),
-        ...(p.linkImageUrl ? { linkImageUrl: p.linkImageUrl } : {}),
-        ...(p.linkSiteName ? { linkSiteName: p.linkSiteName } : {}),
-        avatarUrl:
-          p.originalAuthor?.avatarUrl ||
-          p.author.avatarUrl ||
-          '/defaultPfp.png',
-        caption: p.body,
-        timestamp: p.createdAt.toISOString(),
-        stars: p.likes,
-        comments: p._count.comments,
-        shares: p.shares,
-        reposts: p.reposts,
-        likedByMe: p.likedByMe,
-        savedByMe: p.savedByMe,
-        saves: p._count.savedBy,
-        repostedByMe: p.repostedByMe,
-        ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
-          ? { repostedBy: p.author.username! }
-          : {}),
-      }));
-      this.logger.log(`Returning ${pageItems.length} posts for page ${page}`);
-
-      return {
-        posts: pageItems,
-        total: posts.length,
-        page,
-        limit,
-      };
+      if (mode === 'following' && userId) {
+        return await this.getFollowingFeed(userId, page, limit);
+      }
+      return await this.getForYouFeed(userId, page, limit);
     } catch (err: any) {
-      this.logger.error(`Failed to fetch weighted feed`, err.stack);
+      this.logger.error(`Failed to fetch feed`, err.stack);
       throw new InternalServerErrorException('Could not fetch feed');
     }
+  }
+
+  /** Chronological feed of posts from followed users */
+  private async getFollowingFeed(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<FeedResponseDto> {
+    // Resolve the IDs of users that this user follows
+    const viewer = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { following: { select: { id: true } } },
+    });
+    const followingIds = viewer?.following.map((u) => u.id) ?? [];
+
+    if (followingIds.length === 0) {
+      return { posts: [], total: 0, page, limit };
+    }
+
+    const [total, posts] = await this.prisma.$transaction([
+      this.prisma.post.count({
+        where: { loungeId: null, authorId: { in: followingIds } },
+      }),
+      this.prisma.post.findMany({
+        where: { loungeId: null, authorId: { in: followingIds } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: this.buildPostInclude(userId),
+      }),
+    ]);
+
+    return {
+      posts: posts.map((p) => this.shapePost(p)),
+      total,
+      page,
+      limit,
+    };
+  }
+
+  /** Personalized algorithmic feed */
+  private async getForYouFeed(
+    userId: string | null,
+    page: number,
+    limit: number,
+  ): Promise<FeedResponseDto> {
+    // Cap the candidate pool at limit*5 (max 100) to avoid unbounded memory use
+    const candidateLimit = Math.min(limit * 5, 100);
+
+    // Resolve viewer's social graph so we can apply personalization boosts
+    let followingIds: string[] = [];
+    let followedLoungeIds: string[] = [];
+
+    if (userId) {
+      const viewer = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          following: { select: { id: true } },
+          followedLounges: { select: { id: true } },
+        },
+      });
+      followingIds = viewer?.following.map((u) => u.id) ?? [];
+      followedLoungeIds = viewer?.followedLounges.map((l) => l.id) ?? [];
+    }
+
+    // Fetch the candidate pool: most recent non-lounge posts
+    const posts = await this.prisma.post.findMany({
+      where: { loungeId: null },
+      orderBy: { createdAt: 'desc' },
+      take: candidateLimit,
+      include: this.buildPostInclude(userId),
+    });
+
+    const followingSet = new Set(followingIds);
+    const followedLoungeSet = new Set(followedLoungeIds);
+
+    // Score each candidate
+    const scored = posts.map((p) => ({
+      ...p,
+      score: this.computeScore({
+        createdAt: p.createdAt,
+        commentsCount: p._count.comments,
+        likes: p.likes,
+        shares: p.shares,
+        reposts: p.reposts,
+        saves: p._count.savedBy,
+        authorIsFollowed: followingSet.has(p.authorId),
+        loungeIsFollowed: p.loungeId
+          ? followedLoungeSet.has(p.loungeId)
+          : false,
+      }),
+    }));
+
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+
+    // Apply diversity filter then paginate
+    const diversified = this.diversifyFeed(
+      scored.map((p) => ({ ...p, authorId: p.authorId })),
+    );
+    const start = (page - 1) * limit;
+    const pageItems = diversified.slice(start, start + limit);
+
+    return {
+      posts: pageItems.map((p) => this.shapePost(p)),
+      total: diversified.length,
+      page,
+      limit,
+    };
   }
 
   async getLoungePosts(
@@ -840,6 +952,67 @@ export class PostsService {
         err?.stack,
       );
       throw new InternalServerErrorException('Could not fetch saved posts');
+    }
+  }
+
+  /** Update posting streak and milestone for a user after they create a post */
+  private async updateStreak(userId: string): Promise<void> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          currentStreak: true,
+          longestStreak: true,
+          lastPostDate: true,
+          postMilestone: true,
+        },
+      });
+      if (!user) return;
+
+      const now = new Date();
+      const startOfToday = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+      );
+      const startOfYesterday = new Date(startOfToday.getTime() - 86400000);
+
+      let newStreak = 1;
+      if (user.lastPostDate) {
+        const lastUTC = new Date(
+          Date.UTC(
+            user.lastPostDate.getUTCFullYear(),
+            user.lastPostDate.getUTCMonth(),
+            user.lastPostDate.getUTCDate(),
+          ),
+        );
+        if (lastUTC.getTime() === startOfToday.getTime()) {
+          // Already posted today — keep streak unchanged
+          newStreak = user.currentStreak;
+        } else if (lastUTC.getTime() === startOfYesterday.getTime()) {
+          // Consecutive day — extend streak
+          newStreak = user.currentStreak + 1;
+        }
+        // else: gap in posting — streak resets to 1
+      }
+
+      const totalPosts = await this.prisma.post.count({
+        where: { authorId: userId },
+      });
+      const milestones = [1, 10, 25, 50, 100, 250, 500];
+      const newMilestone =
+        milestones.filter((m) => totalPosts >= m).pop() ?? 0;
+
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          currentStreak: newStreak,
+          longestStreak: Math.max(newStreak, user.longestStreak),
+          lastPostDate: now,
+          postMilestone: Math.max(newMilestone, user.postMilestone),
+        },
+      });
+    } catch (err: any) {
+      // Non-critical — log and continue so the post creation isn't blocked
+      this.logger.error(`Failed to update streak for user ${userId}`, err.stack);
     }
   }
 

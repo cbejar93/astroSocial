@@ -16,9 +16,11 @@ import {
   TemperatureUnit,
   AccentColor,
   UserSocialAccount,
+  NotificationType,
 } from '@prisma/client';
 import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
 import { UserSocialAccountDto } from './dto/user-social-account.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +33,7 @@ export class UsersService {
     @Inject('SUPABASE_CLIENT') private supabase: SupabaseClient,
     private readonly storage: StorageService,
     private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
   ) {}
   private readonly logger = new Logger(UsersService.name);
   /**
@@ -44,13 +47,16 @@ export class UsersService {
         username: true,
         avatarUrl: true,
         bio: true,
-        profileComplete: true, // ← add this
+        profileComplete: true,
         role: true,
         temperature: true,
         accent: true,
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
+        currentStreak: true,
+        longestStreak: true,
+        postMilestone: true,
       },
     });
 
@@ -452,10 +458,51 @@ export class UsersService {
         followedLounges: { select: { id: true } },
         followers: { select: { id: true } },
         following: { select: { id: true } },
+        currentStreak: true,
+        longestStreak: true,
+        postMilestone: true,
       },
     });
     if (!user) throw new NotFoundException('User not found');
     return this.toDto(user);
+  }
+
+  async getUserStats(username: string): Promise<{
+    followerCount: number;
+    followingCount: number;
+    postCount: number;
+    currentStreak: number;
+    longestStreak: number;
+    postMilestone: number;
+    joinedAt: string;
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        createdAt: true,
+        currentStreak: true,
+        longestStreak: true,
+        postMilestone: true,
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+            posts: true,
+          },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return {
+      followerCount: user._count.followers,
+      followingCount: user._count.following,
+      postCount: user._count.posts,
+      currentStreak: user.currentStreak,
+      longestStreak: user.longestStreak,
+      postMilestone: user.postMilestone,
+      joinedAt: user.createdAt.toISOString(),
+    };
   }
 
   async getPostsByUsername(username: string) {
@@ -529,7 +576,7 @@ export class UsersService {
 
   async followUser(targetUserId: string, followerId: string) {
     this.logger.log(`User ${followerId} following user ${targetUserId}`);
-    return this.prisma.user.update({
+    const result = await this.prisma.user.update({
       where: { id: followerId },
       data: {
         following: {
@@ -537,6 +584,13 @@ export class UsersService {
         },
       },
     });
+    // Notify the target user that someone followed them
+    await this.notifications.create(
+      targetUserId,
+      followerId,
+      NotificationType.FOLLOW,
+    );
+    return result;
   }
 
   async unfollowUser(targetUserId: string, followerId: string) {
@@ -718,6 +772,9 @@ export class UsersService {
     followedLounges?: { id: string }[];
     followers?: { id: string }[];
     following?: { id: string }[];
+    currentStreak?: number;
+    longestStreak?: number;
+    postMilestone?: number;
   }): UserDto {
     return {
       id: user.id,
@@ -731,6 +788,9 @@ export class UsersService {
       followedLounges: user.followedLounges?.map((l) => l.id),
       followers: user.followers?.map((u) => u.id),
       following: user.following?.map((u) => u.id),
+      currentStreak: user.currentStreak ?? 0,
+      longestStreak: user.longestStreak ?? 0,
+      postMilestone: user.postMilestone ?? 0,
     };
   }
 

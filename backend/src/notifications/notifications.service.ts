@@ -15,6 +15,22 @@ export class NotificationsService {
     commentId?: string,
   ) {
     if (userId === actorId) return; // don't notify self
+
+    // Deduplicate POST_LIKE: suppress if an unread like notification already
+    // exists for the same post within the last hour to avoid notification floods
+    if (type === NotificationType.POST_LIKE && postId) {
+      const recent = await this.prisma.notification.count({
+        where: {
+          userId,
+          type: NotificationType.POST_LIKE,
+          postId,
+          read: false,
+          createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
+        },
+      });
+      if (recent > 0) return;
+    }
+
     return this.prisma.notification.create({
       data: { userId, actorId, type, postId, commentId },
     });

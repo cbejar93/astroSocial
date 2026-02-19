@@ -13,4 +13,7 @@ export interface UserDto {
   followedLounges?: string[];
   followers?: string[];
   following?: string[];
+  currentStreak?: number;
+  longestStreak?: number;
+  postMilestone?: number;
 }
