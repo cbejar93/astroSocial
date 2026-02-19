@@ -43,7 +43,7 @@ describe('PostsController', () => {
       service.getWeightedFeed.mockResolvedValue(feed);
 
       const result = await controller.getFeed(optionalReq('u1'), '2', '10');
-      expect(service.getWeightedFeed).toHaveBeenCalledWith('u1', 2, 10);
+      expect(service.getWeightedFeed).toHaveBeenCalledWith('u1', 2, 10, 'foryou');
       expect(result).toBe(feed);
     });
 
@@ -51,14 +51,14 @@ describe('PostsController', () => {
       service.getWeightedFeed.mockResolvedValue({ posts: [] });
 
       await controller.getFeed(optionalReq(), '1', '20');
-      expect(service.getWeightedFeed).toHaveBeenCalledWith(null, 1, 20);
+      expect(service.getWeightedFeed).toHaveBeenCalledWith(null, 1, 20, 'foryou');
     });
 
     it('uses null userId when no auth user present', async () => {
       service.getWeightedFeed.mockResolvedValue({ posts: [] });
 
       await controller.getFeed(optionalReq(), '1', '20');
-      expect(service.getWeightedFeed).toHaveBeenCalledWith(null, 1, 20);
+      expect(service.getWeightedFeed).toHaveBeenCalledWith(null, 1, 20, 'foryou');
     });
 
     it('throws InternalServerErrorException when service throws', async () => {
