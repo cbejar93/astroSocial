@@ -32,6 +32,7 @@ import AdminArticleEditorPage from "./pages/AdminArticleEditorPage";
 import ArticlesPage from "./pages/ArticlesPage";
 import ArticleDetailPage from "./pages/ArticleDetailPage";
 import SavedPage from "./pages/SavedPage";
+import GamesPage from "./pages/GamesPage";
 
 import NotFoundPage from "./pages/NotFoundPage";
 import SearchPage from "./pages/SearchPage";
@@ -104,6 +105,7 @@ const App: React.FC = () => {
             <Route path="/lounge/:loungeName" element={<LoungePage />} />
             <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/games" element={<GamesPage />} />
             {/* <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} /> */}
             <Route path="/upload" element={<UploadForm />} />
             <Route
