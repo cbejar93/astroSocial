@@ -17,6 +17,32 @@ class GreenReporter {
 
   onRunStart() {
     this._startTime = Date.now();
+
+    // Strip the "Uncovered Line #s" column from the Istanbul coverage table.
+    // Istanbul writes the table to process.stdout in the main process (not in
+    // test workers), so this interception is effective.
+    const origWrite = process.stdout.write.bind(process.stdout);
+    let seenCoverageHeader = false;
+
+    process.stdout.write = (chunk, ...args) => {
+      if (typeof chunk === 'string') {
+        if (!seenCoverageHeader && chunk.includes('Uncovered Line #s')) {
+          seenCoverageHeader = true;
+        }
+        if (seenCoverageHeader) {
+          chunk = chunk
+            .split('\n')
+            .map((line) => {
+              // Coverage table rows / separators have 6 pipe-delimited columns;
+              // drop the last one (Uncovered Line #s).
+              const cols = line.split('|');
+              return cols.length >= 6 ? cols.slice(0, 5).join('|') : line;
+            })
+            .join('\n');
+        }
+      }
+      return origWrite(chunk, ...args);
+    };
   }
 
   onTestResult(_test, testResult) {
