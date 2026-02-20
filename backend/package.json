@@ -101,7 +101,7 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "coverageReporters": ["text-summary"],
+    "coverageReporters": ["text"],
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1"
