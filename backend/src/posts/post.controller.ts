@@ -51,10 +51,10 @@ export class PostsController {
 
         try {
             const feed = await this.posts.getWeightedFeed(id, p, l, feedMode);
-            this.logger.log(`Feed fetched: ${feed.posts.length} items`);
+            this.logger.log(`Feed retrieved: ${feed.posts.length} post(s)`);
             return feed;
         } catch (err: any) {
-            this.logger.error(`Failed to fetch feed`, err.stack);
+            this.logger.error(`Failed to retrieve feed: ${err.message}`, err.stack);
             throw new InternalServerErrorException('Could not fetch feed');
         }
     }
@@ -89,14 +89,14 @@ export class PostsController {
         @Body() dto: CreatePostDto,
     ) {
         const userId = req.user.sub as string
-        this.logger.log(`User ${userId} → CREATE POST`)
+        this.logger.log(`Creating post for user ${userId}`)
         try {
             const post = await this.posts.create(userId, dto, file)
-            this.logger.log(`CREATE POST success: ${post.id}`)
+            this.logger.log(`Post created successfully: ${post.id}`)
             return post
         } catch (err: any) {
             this.logger.error(
-                `CREATE POST failed for user ${userId}: ${err.message}`,
+                `Failed to create post for user ${userId}: ${err.message}`,
                 err.stack,
             )
             throw err
@@ -107,7 +107,7 @@ export class PostsController {
     @Post(':id/share')
     async sharePost(@Req() req: any, @Param('id') postId: string) {
         const userId = req.user.sub as string
-        this.logger.log(`User ${userId} → SHARE → post ${postId}`)
+        this.logger.log(`Sharing post ${postId} for user ${userId}`)
 
         try {
             const result = await this.posts.interact(
@@ -116,12 +116,12 @@ export class PostsController {
                 InteractionType.SHARE,
             )
             this.logger.log(
-                `SHARE successful for post ${postId}, new shares = ${result.count}`,
+                `Post ${postId} shared successfully (total shares: ${result.count})`,
             )
             return result
         } catch (err: any) {
             this.logger.error(
-                `SHARE failed for post ${postId}: ${err.message}`,
+                `Failed to share post ${postId}: ${err.message}`,
                 err.stack,
             )
             throw err
@@ -132,7 +132,7 @@ export class PostsController {
     @Post(':id/repost')
     async repostPost(@Req() req: any, @Param('id') postId: string) {
         const userId = req.user.sub as string
-        this.logger.log(`User ${userId} → REPOST → post ${postId}`)
+        this.logger.log(`Reposting post ${postId} for user ${userId}`)
 
         try {
             const result = await this.posts.interact(
@@ -141,12 +141,12 @@ export class PostsController {
                 InteractionType.REPOST,
             )
             this.logger.log(
-                `REPOST successful for post ${postId}, new reposts = ${result.count}`,
+                `Post ${postId} reposted successfully (total reposts: ${result.count})`,
             )
             return result
         } catch (err: any) {
             this.logger.error(
-                `REPOST failed for post ${postId}: ${err.message}`,
+                `Failed to repost post ${postId}: ${err.message}`,
                 err.stack,
             )
             throw err
@@ -157,13 +157,13 @@ export class PostsController {
     @Post(':id/like')
     async toggleLikePost(@Req() req: any, @Param('id') postId: string) {
         const userId = req.user.sub as string;
-        this.logger.log(`User ${userId} → TOGGLE LIKE → post ${postId}`);
+        this.logger.log(`Toggling like on post ${postId} for user ${userId}`);
         try {
             const { liked, count } = await this.posts.toggleLike(userId, postId);
-            this.logger.log(`TOGGLE LIKE: liked=${liked}, total=${count}`);
+            this.logger.log(`Like toggled on post ${postId}: liked=${liked}, total=${count}`);
             return { liked, count };
         } catch (err: any) {
-            this.logger.error(`TOGGLE LIKE failed for ${postId}: ${err.message}`, err.stack);
+            this.logger.error(`Failed to toggle like on post ${postId}: ${err.message}`, err.stack);
             throw err;
         }
     }
@@ -172,13 +172,13 @@ export class PostsController {
     @Post(':id/save')
     async savePost(@Req() req: any, @Param('id') postId: string) {
         const userId = req.user.sub as string;
-        this.logger.log(`User ${userId} → SAVE POST → ${postId}`);
+        this.logger.log(`Saving post ${postId} for user ${userId}`);
         try {
             const result = await this.posts.savePost(userId, postId);
-            this.logger.log(`SAVE POST: saved=${result.saved}, total=${result.count}`);
+            this.logger.log(`Post ${postId} saved: saved=${result.saved}, total=${result.count}`);
             return result;
         } catch (err: any) {
-            this.logger.error(`SAVE POST failed for ${postId}: ${err.message}`, err.stack);
+            this.logger.error(`Failed to save post ${postId}: ${err.message}`, err.stack);
             throw err;
         }
     }
@@ -187,13 +187,13 @@ export class PostsController {
     @Delete(':id/save')
     async unsavePost(@Req() req: any, @Param('id') postId: string) {
         const userId = req.user.sub as string;
-        this.logger.log(`User ${userId} → UNSAVE POST → ${postId}`);
+        this.logger.log(`Removing saved post ${postId} for user ${userId}`);
         try {
             const result = await this.posts.unsavePost(userId, postId);
-            this.logger.log(`UNSAVE POST: saved=${result.saved}, total=${result.count}`);
+            this.logger.log(`Post ${postId} unsaved: saved=${result.saved}, total=${result.count}`);
             return result;
         } catch (err: any) {
-            this.logger.error(`UNSAVE POST failed for ${postId}: ${err.message}`, err.stack);
+            this.logger.error(`Failed to unsave post ${postId}: ${err.message}`, err.stack);
             throw err;
         }
     }
@@ -208,13 +208,13 @@ export class PostsController {
         const userId = req.user.sub as string;
         const p = parseInt(page, 10) || 1;
         const l = parseInt(limit, 10) || 20;
-        this.logger.log(`User ${userId} → FETCH SAVED POSTS (page=${p}, limit=${l})`);
+        this.logger.log(`Fetching saved posts for user ${userId} (page=${p}, limit=${l})`);
 
         try {
             return await this.posts.getSavedPosts(userId, p, l);
         } catch (err: any) {
             this.logger.error(
-                `FETCH SAVED POSTS failed for ${userId}: ${err.message}`,
+                `Failed to fetch saved posts for user ${userId}: ${err.message}`,
                 err.stack,
             );
             throw err;
@@ -228,13 +228,13 @@ export class PostsController {
         @Param('id') postId: string
     ) {
         const userId = req.user?.sub as string ? req.user.sub : null;
-        this.logger.log(`User ${userId} → FETCH POST → ${postId}`);
+        this.logger.log(`Fetching post ${postId} for user ${userId}`);
         try {
             const post = await this.posts.getPostById(postId, userId);
-            this.logger.log(`FETCH POST success: ${postId}`);
+            this.logger.log(`Post ${postId} fetched successfully`);
             return post;
         } catch (err) {
-            this.logger.error(`FETCH POST failed for ${postId}: ${err.message}`);
+            this.logger.error(`Failed to fetch post ${postId}: ${err.message}`);
             throw err;
         }
     }
