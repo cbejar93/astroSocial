@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import Anthropic from '@anthropic-ai/sdk';
 import { PostsService } from '../posts/post.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 type ContentType = 'fact' | 'news' | 'quote';
 
@@ -17,7 +18,10 @@ export class BotService {
   private readonly logger = new Logger(BotService.name);
   private readonly anthropic: Anthropic;
 
-  constructor(private readonly postsService: PostsService) {
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly prisma: PrismaService,
+  ) {
     this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   }
 
@@ -28,6 +32,13 @@ export class BotService {
       this.logger.warn('BOT_USER_ID not set — skipping daily bot post');
       return;
     }
+
+    const botUser = await this.prisma.user.findUnique({ where: { id: botUserId } });
+    if (!botUser || botUser.role !== 'BOT') {
+      this.logger.error('BOT_USER_ID does not resolve to a BOT-role user — aborting');
+      return;
+    }
+
     if (!process.env.ANTHROPIC_API_KEY) {
       this.logger.warn('ANTHROPIC_API_KEY not set — skipping daily bot post');
       return;
