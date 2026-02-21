@@ -11,7 +11,7 @@ import { GamesService } from './games.service';
 import { CreateGameScoreDto } from './dto/create-game-score.dto';
 import { OptionalAuthGuard } from '../auth/jwt-optional.guard';
 
-@Controller('games')
+@Controller('api/games')
 export class GamesController {
   constructor(private readonly gamesService: GamesService) {}
 
