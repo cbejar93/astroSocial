@@ -33,6 +33,7 @@ import ArticlesPage from "./pages/ArticlesPage";
 import ArticleDetailPage from "./pages/ArticleDetailPage";
 import SavedPage from "./pages/SavedPage";
 import GamesPage from "./pages/GamesPage";
+import TrueNorthPage from "./pages/TrueNorthPage";
 
 import NotFoundPage from "./pages/NotFoundPage";
 import SearchPage from "./pages/SearchPage";
@@ -88,6 +89,10 @@ const App: React.FC = () => {
           <Route path="/articles" element={<ArticlesPage />} />
           <Route path="/articles/:slug" element={<ArticleDetailPage />} />
 
+          {/* Games — public so anonymous users can play */}
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/true-north" element={<TrueNorthPage />} />
+
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<SignupPage />} />
           <Route path="/auth/success" element={<AuthSuccessPage />} />
@@ -105,7 +110,6 @@ const App: React.FC = () => {
             <Route path="/lounge/:loungeName" element={<LoungePage />} />
             <Route path="/lounge/:loungeName/posts/:postId" element={<LoungePostDetailPage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/games" element={<GamesPage />} />
             {/* <Route path="/lounge/:loungeName/post" element={<LoungePostModal />} /> */}
             <Route path="/upload" element={<UploadForm />} />
             <Route

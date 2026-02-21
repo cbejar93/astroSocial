@@ -80,6 +80,7 @@ model User {
   requestMetrics    RequestMetric[]
   socialAccounts    UserSocialAccount[]
   articles          Article[]         @relation("UserArticles")
+  gameScores        GameScore[]
   currentStreak     Int               @default(0)
   longestStreak     Int               @default(0)
   lastPostDate      DateTime?
@@ -272,4 +273,19 @@ model Article {
   updatedAt     DateTime      @updatedAt
 
   @@index([status, publishedAt])
+}
+
+model GameScore {
+  id          String    @id @default(uuid())
+  gameId      String
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  displayName String
+  score       Int
+  rounds      Int
+  avgAccuracy Float
+  playedAt    DateTime  @default(now())
+
+  @@index([gameId, score])
+  @@index([gameId, playedAt])
 }

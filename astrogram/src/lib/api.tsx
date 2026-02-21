@@ -807,3 +807,40 @@ export async function uploadArticleImage(
   });
   return res.json();
 }
+
+// ─── Games ───────────────────────────────────────────────────────────────────
+
+export interface GameScorePayload {
+  gameId: string;
+  displayName: string;
+  score: number;
+  rounds: number;
+  avgAccuracy: number;
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  displayName: string;
+  score: number;
+  rounds: number;
+  avgAccuracy: number;
+  playedAt: string;
+}
+
+export async function submitGameScore(
+  payload: GameScorePayload,
+): Promise<LeaderboardEntry> {
+  const res = await apiFetch('/games/scores', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+export async function fetchGameLeaderboard(
+  gameId: string,
+): Promise<LeaderboardEntry[]> {
+  const res = await apiFetch(`/games/${gameId}/leaderboard`);
+  return res.json();
+}
