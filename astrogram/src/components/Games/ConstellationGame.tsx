@@ -181,6 +181,7 @@ const ConstellationGame: React.FC = () => {
   const dragging                        = useRef(false);
 
   // Leaderboard
+  const leaderboardRef                  = useRef<HTMLDivElement>(null);
   const [leaderboard, setLeaderboard]   = useState<LeaderboardEntry[]>([]);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submitting, setSubmitting]     = useState(false);
@@ -203,13 +204,15 @@ const ConstellationGame: React.FC = () => {
   constellationRef.current = constellation;
 
   // ── Canvas draw ───────────────────────────────────────────────────────────
+  // NOTE: `phase` must be in deps — the canvas element only mounts when phase
+  // becomes "playing", so we need the effect to re-run at that transition.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.width  = canvasSize;
     canvas.height = canvasSize;
     drawScene(canvas, constellation, rotation);
-  }, [constellation, rotation, canvasSize]);
+  }, [constellation, rotation, canvasSize, phase]);
 
   // ── Countdown ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -388,6 +391,9 @@ const ConstellationGame: React.FC = () => {
       setScoreSubmitted(true);
       const updated = await fetchGameLeaderboard(GAME_ID);
       setLeaderboard(updated);
+      setTimeout(() => {
+        leaderboardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
     } catch {
       // fail silently; player still sees results
     } finally {
@@ -397,6 +403,12 @@ const ConstellationGame: React.FC = () => {
 
   // ── Start a new game ──────────────────────────────────────────────────────
   const handleStartGame = () => {
+    // Anon users only get one play per day — send them back to the lobby
+    // where the "played today" blocked UI will show.
+    if (isAnon && !canAnonPlayToday(GAME_ID)) {
+      setPhase("lobby");
+      return;
+    }
     const first = pickRandom(CONSTELLATIONS);
     setConstellation(first);
     setRotation(Math.floor(Math.random() * 360));
@@ -582,7 +594,7 @@ const ConstellationGame: React.FC = () => {
 
         {/* Leaderboard */}
         {leaderboard.length > 0 && (
-          <div className="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 overflow-hidden">
+          <div ref={leaderboardRef} className="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
               <Trophy className="h-4 w-4 text-amber-400" />
               <span className="text-sm font-semibold text-slate-200">Leaderboard</span>
@@ -620,15 +632,22 @@ const ConstellationGame: React.FC = () => {
         )}
 
         {/* Play again */}
-        <div className="flex justify-center">
-          <button
-            onClick={handleStartGame}
-            className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white hover:brightness-110 active:scale-95 transition-all"
-            style={{ background: "linear-gradient(90deg, #0ea5e9, #a855f7)" }}
-          >
-            Play Again
-          </button>
-        </div>
+        {isAnon ? (
+          <div className="text-center space-y-1 py-1">
+            <p className="text-sm text-slate-400">Come back tomorrow for your next free game.</p>
+            <p className="text-xs text-slate-600">Sign up for unlimited plays and a persistent leaderboard spot.</p>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <button
+              onClick={handleStartGame}
+              className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white hover:brightness-110 active:scale-95 transition-all"
+              style={{ background: "linear-gradient(90deg, #0ea5e9, #a855f7)" }}
+            >
+              Play Again
+            </button>
+          </div>
+        )}
       </div>
     );
   }

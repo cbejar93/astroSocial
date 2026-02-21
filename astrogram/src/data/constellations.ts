@@ -209,4 +209,127 @@ export const CONSTELLATIONS: Constellation[] = [
       { from: 1, to: 2 },
     ],
   },
+  {
+    id: "bootes",
+    name: "Boötes (The Herdsman)",
+    description: "The Herdsman — a kite-shaped constellation anchored by Arcturus, the fourth-brightest star in the sky and the brightest in the northern celestial hemisphere.",
+    navigationTip: "Follow the arc of the Big Dipper's handle to 'arc to Arcturus' — one of the most useful mnemonics in astronomy. Continue the arc further to 'speed to Spica' in Virgo. Arcturus's distinctive orange-yellow color makes it unmistakable in the spring sky.",
+    stars: [
+      { x:  0.00, y: -0.60, magnitude: -0.1, name: "Arcturus" }, // 0 very bright, bottom of kite
+      { x: -0.30, y:  0.10, magnitude: 2.7, name: "Izar" },      // 1 left middle
+      { x:  0.20, y:  0.05, magnitude: 2.7, name: "Muphrid" },   // 2 right middle
+      { x: -0.40, y:  0.50, magnitude: 3.0, name: "Seginus" },   // 3 upper left
+      { x:  0.40, y:  0.50, magnitude: 2.7, name: "Rho Boo" },   // 4 upper right
+      { x:  0.00, y:  0.75, magnitude: 3.5, name: "Nekkar" },    // 5 top of kite
+    ],
+    lines: [
+      { from: 0, to: 1 },
+      { from: 0, to: 2 },
+      { from: 1, to: 2 },
+      { from: 1, to: 3 },
+      { from: 2, to: 4 },
+      { from: 3, to: 5 },
+      { from: 4, to: 5 },
+    ],
+  },
+  {
+    id: "scorpius",
+    name: "Scorpius",
+    description: "The Scorpion — a summer constellation with a distinctive S-curve from head to sting, anchored by the brilliant red supergiant Antares.",
+    navigationTip: "Scorpius lies opposite Orion in the sky — ancient myths say they never appear together. Antares (meaning 'rival of Mars') glows unmistakably red-orange low in the summer southern sky. Shaula and Lesath mark the stinger tip. The Scorpion's tail curls toward the Milky Way core.",
+    stars: [
+      { x: -0.25, y:  0.65, magnitude: 2.6, name: "Graffias" },   // 0 head left
+      { x:  0.10, y:  0.60, magnitude: 2.3, name: "Dschubba" },   // 1 head right
+      { x: -0.10, y:  0.30, magnitude: 1.1, name: "Antares" },    // 2 heart (very bright)
+      { x:  0.15, y:  0.00, magnitude: 2.9, name: "Tau Sco" },    // 3 body
+      { x:  0.30, y: -0.25, magnitude: 2.9, name: "Epsilon Sco"}, // 4 body
+      { x:  0.38, y: -0.50, magnitude: 1.9, name: "Sargas" },     // 5 tail
+      { x:  0.20, y: -0.68, magnitude: 1.6, name: "Shaula" },     // 6 stinger (bright)
+      { x:  0.05, y: -0.62, magnitude: 2.7, name: "Lesath" },     // 7 stinger pair
+    ],
+    lines: [
+      { from: 0, to: 2 },
+      { from: 1, to: 2 },
+      { from: 2, to: 3 },
+      { from: 3, to: 4 },
+      { from: 4, to: 5 },
+      { from: 5, to: 6 },
+      { from: 5, to: 7 },
+      { from: 6, to: 7 },
+    ],
+  },
+  {
+    id: "gemini",
+    name: "Gemini (The Twins)",
+    description: "The Twins — two parallel chains of stars representing Castor and Pollux, the immortal brothers of Greek myth, each leading their own figure down through the winter sky.",
+    navigationTip: "Castor and Pollux mark the two heads of the Twins and are easy to spot as a close bright pair in the winter sky. Orion's Belt extended northeast points toward them. Pollux (the slightly brighter and closer twin) lies almost exactly on the ecliptic, making it a useful reference for the zodiac band.",
+    stars: [
+      { x: -0.35, y:  0.70, magnitude: 1.6, name: "Castor" },    // 0 head left
+      { x:  0.20, y:  0.65, magnitude: 1.1, name: "Pollux" },    // 1 head right (brighter)
+      { x: -0.50, y:  0.25, magnitude: 3.5, name: "Delta Gem" }, // 2 Castor mid
+      { x:  0.05, y:  0.18, magnitude: 3.2, name: "Kappa Gem" }, // 3 Pollux mid
+      { x: -0.55, y: -0.15, magnitude: 2.9, name: "Mebsuda" },  // 4 Castor lower
+      { x:  0.00, y: -0.22, magnitude: 3.2, name: "Mu Gem" },    // 5 Pollux lower
+      { x: -0.45, y: -0.58, magnitude: 3.7, name: "Propus" },   // 6 Castor foot
+      { x:  0.25, y: -0.58, magnitude: 1.9, name: "Alhena" },   // 7 Pollux foot (bright)
+    ],
+    lines: [
+      { from: 0, to: 1 }, // connecting heads
+      { from: 0, to: 2 }, // Castor chain
+      { from: 2, to: 4 },
+      { from: 4, to: 6 },
+      { from: 1, to: 3 }, // Pollux chain
+      { from: 3, to: 5 },
+      { from: 5, to: 7 },
+      { from: 2, to: 3 }, // connecting shoulders
+    ],
+  },
+  {
+    id: "aquila",
+    name: "Aquila (The Eagle)",
+    description: "The Eagle — soaring along the Milky Way with Altair as its brilliant heart. Altair is one of the closest naked-eye stars to Earth, just 17 light-years away.",
+    navigationTip: "Altair forms one vertex of the Summer Triangle (with Vega in Lyra and Deneb in Cygnus), a huge asterism that dominates summer nights. Altair rises almost exactly due East and lies near the celestial equator, making it a useful east-west reference year-round for observers in the northern hemisphere.",
+    stars: [
+      { x:  0.00, y:  0.15, magnitude: 0.8, name: "Altair" },    // 0 center (bright)
+      { x: -0.20, y:  0.35, magnitude: 2.7, name: "Tarazed" },   // 1 upper left flanker
+      { x:  0.20, y:  0.33, magnitude: 3.7, name: "Alshain" },   // 2 upper right flanker
+      { x: -0.55, y: -0.10, magnitude: 3.4, name: "Delta Aql" }, // 3 left wing
+      { x:  0.50, y:  0.00, magnitude: 3.2, name: "Theta Aql" }, // 4 right wing
+      { x: -0.15, y: -0.55, magnitude: 3.4, name: "Zeta Aql" },  // 5 tail
+      { x:  0.10, y: -0.68, magnitude: 2.7, name: "Lambda Aql"}, // 6 tail tip
+    ],
+    lines: [
+      { from: 1, to: 0 },
+      { from: 0, to: 2 },
+      { from: 3, to: 0 },
+      { from: 0, to: 4 },
+      { from: 0, to: 5 },
+      { from: 5, to: 6 },
+    ],
+  },
+  {
+    id: "taurus",
+    name: "Taurus (The Bull)",
+    description: "The Bull — its V-shaped face (the Hyades cluster) and fiery orange eye (Aldebaran) are among the most distinctive sights in the winter sky.",
+    navigationTip: "Orion's Belt points northwest directly toward Aldebaran, the orange eye of the Bull — one of the longest pointer lines in the sky. The Pleiades star cluster (Seven Sisters) lies just northwest of the V-tip, and the long horns of the Bull point eastward toward the twin stars Castor and Pollux in Gemini.",
+    stars: [
+      { x: -0.05, y: -0.05, magnitude: 0.9, name: "Aldebaran" }, // 0 eye (very bright, orange)
+      { x: -0.35, y:  0.20, magnitude: 3.4, name: "Ain" },        // 1 V left arm
+      { x:  0.30, y:  0.18, magnitude: 3.5, name: "Theta Tau" }, // 2 V right arm
+      { x: -0.55, y:  0.42, magnitude: 2.7, name: "Prima Hya" }, // 3 V left tip
+      { x:  0.55, y:  0.38, magnitude: 3.8, name: "Delta Tau" }, // 4 V right tip
+      { x: -0.30, y:  0.72, magnitude: 1.7, name: "Elnath" },    // 5 north horn (bright)
+      { x:  0.55, y:  0.72, magnitude: 3.0, name: "Zeta Tau" },  // 6 south horn
+      { x:  0.00, y: -0.60, magnitude: 2.9, name: "Lambda Tau"}, // 7 body below
+    ],
+    lines: [
+      { from: 0, to: 1 },
+      { from: 1, to: 3 },
+      { from: 0, to: 2 },
+      { from: 2, to: 4 },
+      { from: 3, to: 5 }, // left arm to horn
+      { from: 4, to: 6 }, // right arm to horn
+      { from: 0, to: 7 }, // body downward
+    ],
+  },
 ];
