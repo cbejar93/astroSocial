@@ -820,7 +820,21 @@ export interface GameScorePayload {
 
 export interface LeaderboardEntry {
   id: string;
+  userId?: string;
   displayName: string;
+  score: number;
+  rounds: number;
+  avgAccuracy: number;
+  playedAt: string;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  userRank: number | null;
+}
+
+export interface PersonalScore {
+  id: string;
   score: number;
   rounds: number;
   avgAccuracy: number;
@@ -840,7 +854,14 @@ export async function submitGameScore(
 
 export async function fetchGameLeaderboard(
   gameId: string,
-): Promise<LeaderboardEntry[]> {
+): Promise<LeaderboardResponse> {
   const res = await apiFetch(`/games/${gameId}/leaderboard`);
+  return res.json();
+}
+
+export async function fetchMyGameScores(
+  gameId: string,
+): Promise<PersonalScore[]> {
+  const res = await apiFetch(`/games/${gameId}/my-scores`);
   return res.json();
 }

@@ -10,7 +10,9 @@ import {
 import {
   submitGameScore,
   fetchGameLeaderboard,
+  fetchMyGameScores,
   type LeaderboardEntry,
+  type PersonalScore,
 } from "../../lib/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -183,6 +185,8 @@ const ConstellationGame: React.FC = () => {
   // Leaderboard
   const leaderboardRef                  = useRef<HTMLDivElement>(null);
   const [leaderboard, setLeaderboard]   = useState<LeaderboardEntry[]>([]);
+  const [userRank, setUserRank]         = useState<number | null>(null);
+  const [myScores, setMyScores]         = useState<PersonalScore[]>([]);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submitting, setSubmitting]     = useState(false);
   const [displayName, setDisplayName]   = useState(() =>
@@ -361,18 +365,60 @@ const ConstellationGame: React.FC = () => {
     };
   }, [getAngleFromCenter]);
 
-  // ── Fetch leaderboard on finished ─────────────────────────────────────────
+  // ── On game finished: auto-submit for logged-in users, fetch leaderboard ──
   useEffect(() => {
     if (phase !== "finished") return;
     if (isAnon) markAnonPlayedToday(GAME_ID);
-    fetchGameLeaderboard(GAME_ID)
-      .then(setLeaderboard)
-      .catch(() => { /* silently ignore offline */ });
-  }, [phase, isAnon]);
 
-  // ── Submit score to backend ───────────────────────────────────────────────
+    const doFinish = async () => {
+      // Auto-submit for logged-in users
+      if (!isAnon && !scoreSubmitted && resultsRef.current.length > 0) {
+        setSubmitting(true);
+        try {
+          const total    = resultsRef.current.reduce((s, r) => s + r.score, 0);
+          const answered = resultsRef.current.filter((r) => !r.skipped);
+          const avgAcc   = answered.length
+            ? answered.reduce((s, r) => s + r.accuracy, 0) / answered.length
+            : 90;
+
+          await submitGameScore({
+            gameId:      GAME_ID,
+            displayName: user?.username ?? "Player",
+            score:       total,
+            rounds:      resultsRef.current.length,
+            avgAccuracy: Math.round(avgAcc * 10) / 10,
+          });
+          setScoreSubmitted(true);
+
+          // Fetch personal scores after submitting
+          const personal = await fetchMyGameScores(GAME_ID);
+          setMyScores(personal);
+        } catch {
+          // fail silently
+        } finally {
+          setSubmitting(false);
+        }
+      }
+
+      // Fetch global leaderboard (top 10 + user rank)
+      try {
+        const lb = await fetchGameLeaderboard(GAME_ID);
+        setLeaderboard(lb.entries);
+        setUserRank(lb.userRank);
+      } catch { /* silently ignore offline */ }
+
+      setTimeout(() => {
+        leaderboardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    };
+
+    doFinish();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  // ── Manual submit (anon users only) ──────────────────────────────────────
   const handleSubmitScore = async () => {
-    if (scoreSubmitted || results.length === 0) return;
+    if (!isAnon || scoreSubmitted || results.length === 0) return;
     setSubmitting(true);
     try {
       const total      = results.reduce((s, r) => s + r.score, 0);
@@ -383,14 +429,15 @@ const ConstellationGame: React.FC = () => {
 
       await submitGameScore({
         gameId:      GAME_ID,
-        displayName: displayName.trim() || (isAnon ? getAnonName() : (user?.username ?? "Player")),
+        displayName: displayName.trim() || getAnonName(),
         score:       total,
         rounds:      results.length,
         avgAccuracy: Math.round(avgAccuracy * 10) / 10,
       });
       setScoreSubmitted(true);
       const updated = await fetchGameLeaderboard(GAME_ID);
-      setLeaderboard(updated);
+      setLeaderboard(updated.entries);
+      setUserRank(updated.userRank);
       setTimeout(() => {
         leaderboardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
@@ -419,6 +466,8 @@ const ConstellationGame: React.FC = () => {
     setLastResult(null);
     setTimeLeft(GAME_DURATION);
     setScoreSubmitted(false);
+    setMyScores([]);
+    setUserRank(null);
     setCountdownCount(3);
     setPhase("countdown");
   };
@@ -468,8 +517,7 @@ const ConstellationGame: React.FC = () => {
         ) : (
           <button
             onClick={handleStartGame}
-            className="rounded-xl px-8 py-3 text-sm font-semibold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all"
-            style={{ background: "linear-gradient(90deg, #0ea5e9, #a855f7)" }}
+            className="bg-accent-gradient rounded-xl px-8 py-3 text-sm font-semibold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all"
           >
             Start Game
           </button>
@@ -559,8 +607,16 @@ const ConstellationGame: React.FC = () => {
           )}
         </div>
 
-        {/* Submit to leaderboard */}
-        {!scoreSubmitted ? (
+        {/* Score submission status */}
+        {!isAnon ? (
+          <div className="text-center text-sm">
+            {submitting ? (
+              <p className="text-slate-400">Submitting score…</p>
+            ) : scoreSubmitted ? (
+              <p className="text-emerald-400 font-medium">Score submitted!</p>
+            ) : null}
+          </div>
+        ) : !scoreSubmitted ? (
           <div className="space-y-3">
             <div className="flex gap-2">
               <input
@@ -574,17 +630,14 @@ const ConstellationGame: React.FC = () => {
               <button
                 onClick={handleSubmitScore}
                 disabled={submitting || results.length === 0}
-                className="shrink-0 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
-                style={{ background: "linear-gradient(90deg, #0ea5e9, #a855f7)" }}
+                className="bg-accent-gradient shrink-0 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 {submitting ? "Saving…" : "Submit Score"}
               </button>
             </div>
-            {isAnon && (
-              <p className="text-xs text-slate-500 text-center">
-                Sign up to track your scores and play unlimited times per day.
-              </p>
-            )}
+            <p className="text-xs text-slate-500 text-center">
+              Sign up to track your scores and play unlimited times per day.
+            </p>
           </div>
         ) : (
           <p className="text-center text-sm text-emerald-400 font-medium">
@@ -592,12 +645,51 @@ const ConstellationGame: React.FC = () => {
           </p>
         )}
 
-        {/* Leaderboard */}
+        {/* Personal top 10 (logged-in users only) */}
+        {!isAnon && myScores.length > 0 && (
+          <div className="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+              <Trophy className="h-4 w-4 text-violet-400" />
+              <span className="text-sm font-semibold text-slate-200">Your Personal Best</span>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 w-8">#</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-slate-500">Pts</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-slate-500">Rds</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-slate-500">Avg err</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-slate-500">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myScores.map((s, i) => (
+                  <tr
+                    key={s.id}
+                    className={`border-b border-white/5 last:border-0 transition-colors ${i === 0 ? "bg-violet-500/5" : "hover:bg-white/5"}`}
+                  >
+                    <td className="px-4 py-2.5">
+                      <span className={i === 0 ? "font-bold text-violet-400" : "text-slate-500"}>{i + 1}</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-semibold text-violet-300">{s.score}</td>
+                    <td className="px-4 py-2.5 text-right text-slate-400">{s.rounds}</td>
+                    <td className="px-4 py-2.5 text-right text-slate-500 text-xs">{Math.round(s.avgAccuracy)}°</td>
+                    <td className="px-4 py-2.5 text-right text-slate-600 text-xs">
+                      {new Date(s.playedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Global leaderboard — top 10 + user rank */}
         {leaderboard.length > 0 && (
           <div ref={leaderboardRef} className="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
               <Trophy className="h-4 w-4 text-amber-400" />
-              <span className="text-sm font-semibold text-slate-200">Leaderboard</span>
+              <span className="text-sm font-semibold text-slate-200">Global Top 10</span>
             </div>
             <table className="w-full text-sm">
               <thead>
@@ -610,24 +702,39 @@ const ConstellationGame: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {leaderboard.map((entry, i) => (
-                  <tr
-                    key={entry.id}
-                    className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
-                  >
-                    <td className="px-4 py-2.5">
-                      <span className={i === 0 ? "font-bold text-amber-400" : i === 1 ? "font-bold text-slate-300" : i === 2 ? "font-bold text-amber-600" : "text-slate-500"}>
-                        {i + 1}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-slate-300 truncate max-w-[120px]">{entry.displayName}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-cyan-300">{entry.score}</td>
-                    <td className="px-4 py-2.5 text-right text-slate-400">{entry.rounds}</td>
-                    <td className="px-4 py-2.5 text-right text-slate-500 text-xs">{Math.round(entry.avgAccuracy)}°</td>
-                  </tr>
-                ))}
+                {leaderboard.map((entry, i) => {
+                  const isMe = !isAnon && entry.userId === user?.id;
+                  return (
+                    <tr
+                      key={entry.id}
+                      className={`border-b border-white/5 last:border-0 transition-colors ${isMe ? "bg-cyan-500/5 ring-1 ring-inset ring-cyan-500/20" : "hover:bg-white/5"}`}
+                    >
+                      <td className="px-4 py-2.5">
+                        <span className={i === 0 ? "font-bold text-amber-400" : i === 1 ? "font-bold text-slate-300" : i === 2 ? "font-bold text-amber-600" : "text-slate-500"}>
+                          {i + 1}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 truncate max-w-[120px]">
+                        <span className={isMe ? "text-cyan-300 font-medium" : "text-slate-300"}>
+                          {entry.displayName}
+                        </span>
+                        {isMe && <span className="ml-1.5 text-[10px] text-cyan-500 font-semibold">YOU</span>}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-semibold text-cyan-300">{entry.score}</td>
+                      <td className="px-4 py-2.5 text-right text-slate-400">{entry.rounds}</td>
+                      <td className="px-4 py-2.5 text-right text-slate-500 text-xs">{Math.round(entry.avgAccuracy)}°</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            {/* User rank if outside top 10 */}
+            {userRank !== null && (
+              <div className="px-4 py-3 border-t border-white/5 flex items-center justify-between bg-cyan-500/5">
+                <span className="text-xs text-slate-400">Your best score ranks</span>
+                <span className="text-sm font-bold text-cyan-300">#{userRank} globally</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -641,8 +748,7 @@ const ConstellationGame: React.FC = () => {
           <div className="flex justify-center">
             <button
               onClick={handleStartGame}
-              className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white hover:brightness-110 active:scale-95 transition-all"
-              style={{ background: "linear-gradient(90deg, #0ea5e9, #a855f7)" }}
+              className="bg-accent-gradient rounded-xl px-6 py-2.5 text-sm font-semibold text-white hover:brightness-110 active:scale-95 transition-all"
             >
               Play Again
             </button>
@@ -806,8 +912,7 @@ const ConstellationGame: React.FC = () => {
         <div className="flex gap-3">
           <button
             onClick={() => submitRound(false)}
-            className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all"
-            style={{ background: "linear-gradient(90deg, #0ea5e9, #a855f7)" }}
+            className="bg-accent-gradient rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all"
           >
             Submit
           </button>
