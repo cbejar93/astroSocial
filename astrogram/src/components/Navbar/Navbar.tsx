@@ -872,8 +872,6 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Spacer so content isn't hidden under the fixed bar on mobile */}
-      <div className="block sm:hidden h-12" aria-hidden />
 
       <AuthModal
         open={authOpen}
