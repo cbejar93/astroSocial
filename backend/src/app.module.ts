@@ -17,6 +17,7 @@ import { LoungesModule } from './lounges/lounges.module';
 import { SearchModule } from './search/search.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ArticlesModule } from './articles/articles.module';
+import { GamesModule } from './games/games.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ArticlesModule } from './articles/articles.module';
     SearchModule,
     AnalyticsModule,
     ArticlesModule,
+    GamesModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestLoggingMiddleware],
