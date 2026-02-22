@@ -1,6 +1,6 @@
 // src/components/Navbar/Navbar.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { Bell, X, Search, Loader2 } from "lucide-react";
+import { Bell, X, Search, Loader2, User, Settings } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -852,6 +852,29 @@ const Navbar: React.FC = () => {
                     <div className="text-[11px] text-gray-400 mb-0.5">Email</div>
                     <div className="break-all">{email || "Not set"}</div>
                   </div>
+
+                  {/* Divider */}
+                  <div className="my-3 h-px bg-white/10" />
+
+                  {/* Navigation links */}
+                  <nav className="flex flex-col gap-1">
+                    <Link
+                      to="/profile"
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-150"
+                    >
+                      <User className="h-4 w-4 shrink-0 text-sky-300" />
+                      Profile
+                    </Link>
+                    <Link
+                      to="/settings"
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-150"
+                    >
+                      <Settings className="h-4 w-4 shrink-0 text-sky-300" />
+                      Settings
+                    </Link>
+                  </nav>
                 </div>
               )}
             </div>
