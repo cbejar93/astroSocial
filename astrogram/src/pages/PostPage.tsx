@@ -423,7 +423,8 @@ const PostPage: React.FC = () => {
     addSuffix: true,
   });
 
-  const plainCaption = post.caption.replace(/<[^>]*>/g, '').trim();
+  const plainCaption =
+    new DOMParser().parseFromString(post.caption, 'text/html').body.textContent?.trim() ?? '';
   const seoTitle = post.title
     ? `${post.title} by @${post.username}`
     : `@${post.username}'s post`;

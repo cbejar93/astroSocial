@@ -99,7 +99,8 @@ const LoungePostDetailPage: React.FC = () => {
     ? formatDistanceToNow(new Date(post.authorJoinedAt), { addSuffix: true })
     : null;
 
-  const plainCaption = post.caption.replace(/<[^>]*>/g, '').trim();
+  const plainCaption =
+    new DOMParser().parseFromString(post.caption, 'text/html').body.textContent?.trim() ?? '';
 
   /* ---------------------- Render ---------------------- */
   return (
