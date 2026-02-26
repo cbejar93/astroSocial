@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { SEOHead } from '../components/SEOHead';
 import { Star } from 'lucide-react';
 import PostCard, { type PostCardProps } from '../components/PostCard/PostCard';
 import PageContainer from '../components/Layout/PageContainer';
@@ -30,6 +31,7 @@ interface UserInfo {
   id: string;
   username: string;
   avatarUrl?: string;
+  bio?: string;
   followers?: string[];
   following?: string[];
 }
@@ -85,6 +87,14 @@ const UserPage: React.FC = () => {
 
   return (
     <PageContainer size="narrow" className="py-8 text-gray-200">
+        {info && (
+          <SEOHead
+            title={`@${info.username} on AstroLounge`}
+            description={info.bio ?? `${info.username}'s cosmic profile on AstroLounge`}
+            image={info.avatarUrl ?? undefined}
+            url={`https://astrosocial.fly.dev/users/${info.username}`}
+          />
+        )}
         {info && (
           <>
             <div className="flex items-center space-x-2 mb-2">

@@ -1,5 +1,6 @@
 // src/pages/LoungePage.tsx
 import { Link, useParams, useNavigate } from "react-router-dom";
+import { SEOHead } from "../components/SEOHead";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -352,6 +353,12 @@ const LoungePage: React.FC = () => {
 
   return (
     <>
+      <SEOHead
+        title={`${lounge.name} Lounge`}
+        description={lounge.description || `Explore the ${lounge.name} community on AstroLounge`}
+        image={lounge.profileUrl || undefined}
+        url={`https://astrosocial.fly.dev/lounge/${encodeURIComponent(lounge.name)}`}
+      />
       {/* Mobile-only lift up: pt-3 on mobile, pt-8 on >= sm */}
       <div className="w-full pt-3 pb-8 sm:pt-8">
         <PageContainer size="standard">

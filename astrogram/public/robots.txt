@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /profile
+Disallow: /notifications
+Disallow: /auth/
+
+Sitemap: https://astrosocial.fly.dev/sitemap.xml

@@ -112,8 +112,8 @@ async function bootstrap() {
 
   // everything *not* under /api should be served your React app
   server.use((req, res, next) => {
-    // if this is an API call, let Nest handle it (404, etc)
-    if (req.path.startsWith('/api')) {
+    // if this is an API call or sitemap, let Nest handle it
+    if (req.path.startsWith('/api') || req.path === '/sitemap.xml') {
       return next();
     }
     // otherwise send back index.html – React Router will take over in the browser
