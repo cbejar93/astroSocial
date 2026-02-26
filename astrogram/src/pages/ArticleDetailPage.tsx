@@ -4,6 +4,7 @@ import PageContainer from '../components/Layout/PageContainer';
 import { fetchArticleBySlug, type Article } from '../lib/api';
 import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
+import { SEOHead } from '../components/SEOHead';
 
 const ArticleDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -56,6 +57,14 @@ const ArticleDetailPage: React.FC = () => {
 
   return (
     <PageContainer size="narrow" className="py-8 text-gray-200">
+      <SEOHead
+        title={article.title}
+        description={article.excerpt ?? undefined}
+        image={article.coverImageUrl ?? undefined}
+        url={`https://astrosocial.fly.dev/articles/${article.slug}`}
+        type="article"
+        publishedAt={article.publishedAt ?? undefined}
+      />
       <Link
         to="/articles"
         className="inline-flex items-center gap-1 mb-6 text-sm text-gray-400 hover:text-white"

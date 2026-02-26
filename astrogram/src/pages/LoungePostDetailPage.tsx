@@ -7,6 +7,7 @@ import Comments, { type CommentsHandle } from "../components/Comments/Comments";
 import { useAuth } from "../hooks/useAuth";
 import { MoreVertical, ArrowLeft } from "lucide-react";
 import PageContainer from "../components/Layout/PageContainer";
+import { SEOHead } from "../components/SEOHead";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -98,9 +99,21 @@ const LoungePostDetailPage: React.FC = () => {
     ? formatDistanceToNow(new Date(post.authorJoinedAt), { addSuffix: true })
     : null;
 
+  const plainCaption =
+    new DOMParser().parseFromString(post.caption, 'text/html').body.textContent?.trim() ?? '';
+
   /* ---------------------- Render ---------------------- */
   return (
     <div className="relative w-full lg:fixed lg:inset-0 lg:h-full overflow-x-hidden">
+      <SEOHead
+        title={post.title}
+        description={plainCaption.slice(0, 160)}
+        url={
+          loungeName
+            ? `https://astrosocial.fly.dev/lounge/${encodeURIComponent(loungeName)}/posts/${post.id}`
+            : undefined
+        }
+      />
       <PageContainer size="standard" className="lg:h-full">
         <AuroraBorder>
           <div className="flex flex-col min-w-0 rounded-2xl backdrop-blur-xl backdrop-saturate-150 border border-white/10 shadow-[0_6px_30px_rgba(0,0,0,0.35)] bg-white/[0.04]">

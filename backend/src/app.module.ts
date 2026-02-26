@@ -18,6 +18,7 @@ import { SearchModule } from './search/search.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ArticlesModule } from './articles/articles.module';
 import { GamesModule } from './games/games.module';
+import { SitemapModule } from './sitemap/sitemap.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { GamesModule } from './games/games.module';
     AnalyticsModule,
     ArticlesModule,
     GamesModule,
+    SitemapModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestLoggingMiddleware],

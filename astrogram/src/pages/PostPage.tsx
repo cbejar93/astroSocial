@@ -1,6 +1,7 @@
 // src/pages/PostPage.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import { SEOHead } from "../components/SEOHead";
 import { formatDistanceToNow } from "date-fns";
 import {
   apiFetch,
@@ -422,9 +423,23 @@ const PostPage: React.FC = () => {
     addSuffix: true,
   });
 
+  const plainCaption =
+    new DOMParser().parseFromString(post.caption, 'text/html').body.textContent?.trim() ?? '';
+  const seoTitle = post.title
+    ? `${post.title} by @${post.username}`
+    : `@${post.username}'s post`;
+  const seoDesc = plainCaption.slice(0, 160);
+  const seoImage = post.images?.[0] ?? post.imageUrl ?? undefined;
+
   /* ---------------------- Render ---------------------- */
   return (
     <div className="relative w-full overflow-x-hidden pt-3 sm:pt-8">
+      <SEOHead
+        title={seoTitle}
+        description={seoDesc}
+        image={seoImage}
+        url={`https://astrosocial.fly.dev/post/${post.id}`}
+      />
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
       <PageContainer size="standard" className="lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
