@@ -10,6 +10,7 @@ import {
   type Article,
 } from '../lib/api';
 import AdminAnalyticsDashboard from '../components/AdminAnalyticsDashboard';
+import GameVerificationPanel from '../components/Games/GameVerificationPanel';
 import { useAuth } from '../hooks/useAuth';
 import PageContainer from '../components/Layout/PageContainer';
 
@@ -30,7 +31,7 @@ const tabClasses =
 const AdminPage: React.FC = () => {
   const { tab } = useParams<{ tab?: string }>();
   const { user } = useAuth();
-  const active: 'lounge' | 'users' | 'posts' | 'analytics' | 'articles' =
+  const active: 'lounge' | 'users' | 'posts' | 'analytics' | 'articles' | 'games' =
     tab === 'users'
       ? 'users'
       : tab === 'posts'
@@ -39,7 +40,9 @@ const AdminPage: React.FC = () => {
           ? 'analytics'
           : tab === 'articles'
             ? 'articles'
-            : 'lounge';
+            : tab === 'games'
+              ? 'games'
+              : 'lounge';
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -226,6 +229,16 @@ const AdminPage: React.FC = () => {
               }`}
             >
               Analytics
+            </Link>
+            <Link
+              to="/admin/games"
+              className={`${tabClasses} ${
+                active === 'games'
+                  ? 'border-brand text-white'
+                  : 'border-transparent text-white hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              Games
             </Link>
           </nav>
         </div>
@@ -518,6 +531,7 @@ const AdminPage: React.FC = () => {
         )}
         {active === 'posts' && <div>Post moderation coming soon.</div>}
         {active === 'analytics' && <AdminAnalyticsDashboard />}
+        {active === 'games' && <GameVerificationPanel />}
     </PageContainer>
   );
 };
