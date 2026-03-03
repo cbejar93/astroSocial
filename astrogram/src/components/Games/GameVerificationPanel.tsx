@@ -1,26 +1,100 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Navigation } from 'lucide-react';
+import { ChevronLeft, Navigation, Trash2, RotateCcw } from 'lucide-react';
 import { CONSTELLATIONS, type Constellation } from '../../data/constellations';
 import ConstellationPreview from './ConstellationPreview';
+
+const STORAGE_KEY = 'admin:deleted-constellations';
+
+function loadDeletedIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDeletedIds(ids: Set<string>) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+}
 
 const GameVerificationPanel: React.FC = () => {
   const [selected, setSelected] = useState<Constellation | null>(null);
   const [rotation, setRotation] = useState(0);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(loadDeletedIds);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const trueNorth = (360 - rotation) % 360;
+
+  function handleDelete(id: string) {
+    const next = new Set(deletedIds).add(id);
+    setDeletedIds(next);
+    saveDeletedIds(next);
+    setSelected(null);
+    setRotation(0);
+    setConfirmDelete(false);
+  }
+
+  function handleRestore(id: string) {
+    const next = new Set(deletedIds);
+    next.delete(id);
+    setDeletedIds(next);
+    saveDeletedIds(next);
+  }
+
+  function handleResetAll() {
+    const empty = new Set<string>();
+    setDeletedIds(empty);
+    saveDeletedIds(empty);
+  }
+
+  const activeConstellations = CONSTELLATIONS.filter((c) => !deletedIds.has(c.id));
+  const removedConstellations = CONSTELLATIONS.filter((c) => deletedIds.has(c.id));
 
   if (selected) {
     return (
       <div className="space-y-6">
         {/* Back button */}
-        <button
-          type="button"
-          onClick={() => { setSelected(null); setRotation(0); }}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          All Constellations
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => { setSelected(null); setRotation(0); setConfirmDelete(false); }}
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            All Constellations
+          </button>
+
+          {/* Delete / confirm */}
+          {confirmDelete ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-red-300">Remove this constellation?</span>
+              <button
+                type="button"
+                onClick={() => handleDelete(selected.id)}
+                className="px-3 py-1.5 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-colors"
+              >
+                Yes, remove
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="px-3 py-1.5 rounded border border-gray-600 text-gray-300 hover:text-white text-xs transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500/70 text-xs font-medium transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Remove
+            </button>
+          )}
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left: canvas + controls */}
@@ -190,39 +264,91 @@ const GameVerificationPanel: React.FC = () => {
 
   // Grid view
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-white">True North — Constellation Verification</h2>
-        <p className="text-sm text-gray-400 mt-1">
-          Click any constellation to inspect its star positions, lines, and navigation tip.
-          All diagrams shown at canonical orientation (North = up).
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-white">True North — Constellation Verification</h2>
+          <p className="text-sm text-gray-400 mt-1">
+            Click any constellation to inspect its star positions, lines, and navigation tip.
+            All diagrams shown at canonical orientation (North = up).
+          </p>
+        </div>
+        {removedConstellations.length > 0 && (
+          <button
+            type="button"
+            onClick={handleResetAll}
+            className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded border border-gray-600 text-gray-400 hover:text-white hover:border-gray-400 text-xs transition-colors"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Restore all ({removedConstellations.length})
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {CONSTELLATIONS.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => { setSelected(c); setRotation(0); }}
-            className="group flex flex-col items-center rounded-xl border border-gray-700 bg-gray-900/50 p-3 hover:border-violet-500/50 hover:bg-gray-800/60 transition-all text-left"
-          >
-            <ConstellationPreview
-              constellation={c}
-              size={160}
-              className="rounded-lg w-full h-auto"
-            />
-            <div className="mt-2 w-full">
-              <div className="text-sm font-medium text-gray-200 group-hover:text-white leading-tight truncate">
-                {c.name}
+      {activeConstellations.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">All constellations have been removed.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {activeConstellations.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => { setSelected(c); setRotation(0); }}
+              className="group flex flex-col items-center rounded-xl border border-gray-700 bg-gray-900/50 p-3 hover:border-violet-500/50 hover:bg-gray-800/60 transition-all text-left"
+            >
+              <ConstellationPreview
+                constellation={c}
+                size={160}
+                className="rounded-lg w-full h-auto"
+              />
+              <div className="mt-2 w-full">
+                <div className="text-sm font-medium text-gray-200 group-hover:text-white leading-tight truncate">
+                  {c.name}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  {c.stars.length} stars · {c.lines.length} lines
+                </div>
               </div>
-              <div className="text-xs text-gray-500 mt-0.5">
-                {c.stars.length} stars · {c.lines.length} lines
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Removed constellations */}
+      {removedConstellations.length > 0 && (
+        <div className="space-y-3 pt-2 border-t border-gray-800">
+          <h3 className="text-sm font-semibold text-gray-500">
+            Removed ({removedConstellations.length})
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {removedConstellations.map((c) => (
+              <div
+                key={c.id}
+                className="flex flex-col items-center rounded-xl border border-gray-800 bg-gray-900/30 p-3 opacity-50"
+              >
+                <ConstellationPreview
+                  constellation={c}
+                  size={160}
+                  className="rounded-lg w-full h-auto"
+                />
+                <div className="mt-2 w-full">
+                  <div className="text-sm font-medium text-gray-400 leading-tight truncate">
+                    {c.name}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(c.id)}
+                    className="flex items-center gap-1 mt-1 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Restore
+                  </button>
+                </div>
               </div>
-            </div>
-          </button>
-        ))}
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
