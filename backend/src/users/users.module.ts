@@ -5,9 +5,10 @@ import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { PostsModule } from '../posts/post.module';
 
 @Module({
-  imports: [PrismaModule, SupabaseModule.forRoot(), NotificationsModule],
+  imports: [PrismaModule, SupabaseModule.forRoot(), NotificationsModule, PostsModule],
   controllers: [UsersController],
   providers: [UsersService, StorageService],
   exports: [UsersService],

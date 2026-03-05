@@ -177,14 +177,22 @@ export class UsersController {
 
   @Get('me/posts')
   @UseGuards(JwtAuthGuard)
-  getMyPosts(@Req() req: Request & { user: { sub: string } }) {
-    return this.usersService.getPostsByUser(req.user.sub);
+  getMyPosts(
+    @Req() req: Request & { user: { sub: string } },
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getPostsByUser(req.user.sub, Number(page), Number(limit));
   }
 
   @Get('me/comments')
   @UseGuards(JwtAuthGuard)
-  getMyComments(@Req() req: Request & { user: { sub: string } }) {
-    return this.usersService.getCommentsByUser(req.user.sub);
+  getMyComments(
+    @Req() req: Request & { user: { sub: string } },
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getCommentsByUser(req.user.sub, Number(page), Number(limit));
   }
 
   @Delete('me')
@@ -208,13 +216,21 @@ export class UsersController {
   }
 
   @Get(':username/posts')
-  getUserPosts(@Param('username') username: string) {
-    return this.usersService.getPostsByUsername(username);
+  getUserPosts(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getPostsByUsername(username, Number(page), Number(limit));
   }
 
   @Get(':username/comments')
-  getUserComments(@Param('username') username: string) {
-    return this.usersService.getCommentsByUsername(username);
+  getUserComments(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getCommentsByUsername(username, Number(page), Number(limit));
   }
 
   @Get(':username/social-accounts')
@@ -250,15 +266,23 @@ export class UsersController {
   }
 
   @Get(':username/followers')
-  async getFollowers(@Param('username') username: string) {
+  async getFollowers(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '50',
+  ) {
     const user = await this.usersService.findByUsername(username);
-    return this.usersService.getFollowers(user.id);
+    return this.usersService.getFollowers(user.id, Number(page), Number(limit));
   }
 
   @Get(':username/following')
-  async getFollowing(@Param('username') username: string) {
+  async getFollowing(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '50',
+  ) {
     const user = await this.usersService.findByUsername(username);
-    return this.usersService.getFollowing(user.id);
+    return this.usersService.getFollowing(user.id, Number(page), Number(limit));
   }
 
   @Get(':username')
