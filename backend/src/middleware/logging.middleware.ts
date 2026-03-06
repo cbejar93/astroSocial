@@ -14,9 +14,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
     const isApiRequest = req.originalUrl?.startsWith('/api');
 
     res.on('finish', () => {
-      const userPart = req.user
-        ? `User ${req.user.sub} <${req.user.email}> `
-        : '';
+      const userPart = req.user ? `User ${req.user.sub} ` : '';
       const ms = Date.now() - start;
       this.logger.log(
         `${userPart}${req.method} ${req.originalUrl} ${res.statusCode} — ${ms}ms`

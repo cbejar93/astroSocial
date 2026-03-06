@@ -19,6 +19,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { UsersService } from './users.service';
 import type { Request } from 'express';
 import { UserDto } from './dto/user.dto';
@@ -39,12 +40,11 @@ export class UsersController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(
-    @Req() req: Request & { user: { sub: string; email: string } },
+    @Req() req: Request & { user: { sub: string } },
   ): Promise<UserDto> {
     const userId = req.user.sub;
-    const userEmail = req.user.email;
 
-    this.logger.log(`Received GET /api/users/me from ${userId} <${userEmail}>`);
+    this.logger.log(`Received GET /api/users/me from ${userId}`);
 
     try {
       const user = await this.usersService.findById(userId);
@@ -98,9 +98,6 @@ export class UsersController {
         avatarUrl = await this.usersService.uploadAvatar(userId, file);
         this.logger.log(`Uploaded avatar for ${userId}: ${avatarUrl}`);
       }
-
-      console.log(username);
-      console.log('=======');
 
       // You might also accept other body fields (e.g. username)
       // but for now we'll just update avatar + mark profileComplete
@@ -177,14 +174,22 @@ export class UsersController {
 
   @Get('me/posts')
   @UseGuards(JwtAuthGuard)
-  getMyPosts(@Req() req: Request & { user: { sub: string } }) {
-    return this.usersService.getPostsByUser(req.user.sub);
+  getMyPosts(
+    @Req() req: Request & { user: { sub: string } },
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getPostsByUser(req.user.sub, Number(page), Number(limit));
   }
 
   @Get('me/comments')
   @UseGuards(JwtAuthGuard)
-  getMyComments(@Req() req: Request & { user: { sub: string } }) {
-    return this.usersService.getCommentsByUser(req.user.sub);
+  getMyComments(
+    @Req() req: Request & { user: { sub: string } },
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getCommentsByUser(req.user.sub, Number(page), Number(limit));
   }
 
   @Delete('me')
@@ -195,26 +200,30 @@ export class UsersController {
   }
 
   @Get('admin')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async listUsers(
-    @Req() req: Request & { user: { role: string } },
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    if (req.user.role !== 'ADMIN') {
-      throw new ForbiddenException();
-    }
     return this.usersService.listUsers(Number(page), Number(limit));
   }
 
   @Get(':username/posts')
-  getUserPosts(@Param('username') username: string) {
-    return this.usersService.getPostsByUsername(username);
+  getUserPosts(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getPostsByUsername(username, Number(page), Number(limit));
   }
 
   @Get(':username/comments')
-  getUserComments(@Param('username') username: string) {
-    return this.usersService.getCommentsByUsername(username);
+  getUserComments(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.usersService.getCommentsByUsername(username, Number(page), Number(limit));
   }
 
   @Get(':username/social-accounts')
@@ -250,15 +259,23 @@ export class UsersController {
   }
 
   @Get(':username/followers')
-  async getFollowers(@Param('username') username: string) {
+  async getFollowers(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '50',
+  ) {
     const user = await this.usersService.findByUsername(username);
-    return this.usersService.getFollowers(user.id);
+    return this.usersService.getFollowers(user.id, Number(page), Number(limit));
   }
 
   @Get(':username/following')
-  async getFollowing(@Param('username') username: string) {
+  async getFollowing(
+    @Param('username') username: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '50',
+  ) {
     const user = await this.usersService.findByUsername(username);
-    return this.usersService.getFollowing(user.id);
+    return this.usersService.getFollowing(user.id, Number(page), Number(limit));
   }
 
   @Get(':username')
