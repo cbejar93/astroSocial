@@ -19,6 +19,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { UsersService } from './users.service';
 import type { Request } from 'express';
 import { UserDto } from './dto/user.dto';
@@ -39,12 +40,11 @@ export class UsersController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(
-    @Req() req: Request & { user: { sub: string; email: string } },
+    @Req() req: Request & { user: { sub: string } },
   ): Promise<UserDto> {
     const userId = req.user.sub;
-    const userEmail = req.user.email;
 
-    this.logger.log(`Received GET /api/users/me from ${userId} <${userEmail}>`);
+    this.logger.log(`Received GET /api/users/me from ${userId}`);
 
     try {
       const user = await this.usersService.findById(userId);
@@ -200,15 +200,11 @@ export class UsersController {
   }
 
   @Get('admin')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async listUsers(
-    @Req() req: Request & { user: { role: string } },
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    if (req.user.role !== 'ADMIN') {
-      throw new ForbiddenException();
-    }
     return this.usersService.listUsers(Number(page), Number(limit));
   }
 

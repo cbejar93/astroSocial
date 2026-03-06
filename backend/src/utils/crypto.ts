@@ -1,10 +1,18 @@
 import * as crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-ctr';
-const SECRET = crypto
-  .createHash('sha256')
-  .update(String(process.env.EMAIL_ENCRYPTION_KEY || 'default_secret'))
-  .digest();
+
+function deriveSecret(): Buffer {
+  const key = process.env.EMAIL_ENCRYPTION_KEY;
+  if (!key) {
+    throw new Error(
+      'EMAIL_ENCRYPTION_KEY must be set. Generate one with: openssl rand -hex 32',
+    );
+  }
+  return crypto.createHash('sha256').update(key).digest();
+}
+
+const SECRET = deriveSecret();
 
 export function encryptEmail(email: string): string {
   const iv = crypto.randomBytes(16);

@@ -2,17 +2,17 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
-const REQUIRED_KEY_LENGTH = 32;
+const REQUIRED_KEY_HEX_LENGTH = 64; // 32 bytes as hex
 
 const getEncryptionKey = (): Buffer => {
   const key = process.env.REFRESH_TOKEN_ENCRYPTION_KEY;
-  if (!key || key.length < REQUIRED_KEY_LENGTH) {
+  if (!key || key.length !== REQUIRED_KEY_HEX_LENGTH || !/^[0-9a-fA-F]+$/.test(key)) {
     throw new Error(
-      `REFRESH_TOKEN_ENCRYPTION_KEY must be set and at least ${REQUIRED_KEY_LENGTH} characters long. ` +
-        'Generate one with: openssl rand -hex 16',
+      `REFRESH_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes). ` +
+        'Generate one with: openssl rand -hex 32',
     );
   }
-  return Buffer.from(key.slice(0, REQUIRED_KEY_LENGTH), 'utf8');
+  return Buffer.from(key, 'hex');
 };
 
 export const encryptRefreshToken = (token: string): string => {

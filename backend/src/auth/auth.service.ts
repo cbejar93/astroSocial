@@ -1,12 +1,15 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { encryptEmail, hashEmail } from '../utils/crypto';
 
 @Injectable()
 export class AuthService {
-  private prisma = new PrismaClient();
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   private clean(s: string) {
     return s.replace(/\u0000/g, '');
@@ -99,12 +102,12 @@ export class AuthService {
       throw error;
     }
 
-    const payload = { sub: user.id, email: cleanEmail };
+    const payload = { sub: user.id };
 
-    // 1) short‑lived access token (e.g. 15 minutes)
+    // 1) short‑lived access token
     const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_SECRET,           // your access‑token secret
-      expiresIn: '15m',
+      secret: process.env.JWT_SECRET,
+      expiresIn: '5m',
     });
 
     // 2) long‑lived refresh token (e.g. 7 days)

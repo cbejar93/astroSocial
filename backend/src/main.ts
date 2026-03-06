@@ -101,21 +101,20 @@ async function bootstrap() {
   });
 
   // CORS
+  if (isProduction && !process.env.FRONTEND_URL) {
+    throw new Error('FRONTEND_URL must be set in production');
+  }
   const envOrigins = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
     : [];
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProduction) {
     envOrigins.push('http://localhost:5173');
   }
   app.enableCors({
-    origin: envOrigins.length ? envOrigins : true,
+    origin: envOrigins,
     credentials: true,
   });
-  logger.log(
-    `🌐 CORS enabled for ${
-      envOrigins.length ? envOrigins.join(', ') : 'all origins'
-    }`,
-  );
+  logger.log(`🌐 CORS enabled for: ${envOrigins.join(', ')}`);
 
   // Catch-all to serve index.html
 

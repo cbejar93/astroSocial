@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Logger,
   Post,
@@ -13,6 +12,7 @@ import { Request } from 'express';
 import { AnalyticsService, AnalyticsSummary } from './analytics.service';
 import { IngestAnalyticsEventsDto } from './dto/ingest-events.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('api/analytics')
 export class AnalyticsController {
@@ -35,13 +35,11 @@ export class AnalyticsController {
     return result;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('summary')
   async summary(
-    @Req() req: Request & { user: { role: string } },
     @Query('rangeDays') rangeDays = '7',
   ): Promise<AnalyticsSummary> {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     const parsed = Number.parseInt(rangeDays, 10);
     return this.analytics.getSummary(Number.isNaN(parsed) ? 7 : parsed);
   }
