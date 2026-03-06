@@ -99,9 +99,6 @@ export class UsersController {
         this.logger.log(`Uploaded avatar for ${userId}: ${avatarUrl}`);
       }
 
-      console.log(username);
-      console.log('=======');
-
       // You might also accept other body fields (e.g. username)
       // but for now we'll just update avatar + mark profileComplete
       return this.usersService.updateProfile(userId, username, avatarUrl);

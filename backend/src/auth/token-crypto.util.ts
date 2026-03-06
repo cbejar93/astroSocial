@@ -1,15 +1,18 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
-const DEFAULT_KEY = 'astroSocialDemoEncryptionKey!!'; // 32 characters
 const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
+const REQUIRED_KEY_LENGTH = 32;
 
 const getEncryptionKey = (): Buffer => {
   const key = process.env.REFRESH_TOKEN_ENCRYPTION_KEY;
-  const normalized = (key && key.length >= 32)
-    ? key.slice(0, 32)
-    : (key ?? DEFAULT_KEY).padEnd(32, '0').slice(0, 32);
-  return Buffer.from(normalized, 'utf8');
+  if (!key || key.length < REQUIRED_KEY_LENGTH) {
+    throw new Error(
+      `REFRESH_TOKEN_ENCRYPTION_KEY must be set and at least ${REQUIRED_KEY_LENGTH} characters long. ` +
+        'Generate one with: openssl rand -hex 16',
+    );
+  }
+  return Buffer.from(key.slice(0, REQUIRED_KEY_LENGTH), 'utf8');
 };
 
 export const encryptRefreshToken = (token: string): string => {

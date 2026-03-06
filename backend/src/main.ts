@@ -79,8 +79,17 @@ async function bootstrap() {
     message: 'Too many feed requests, please try again later.',
   });
 
+  const apiSearchLimiter = rateLimit({
+    windowMs: apiRateLimitWindowMs,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many search requests, please try again later.',
+  });
+
   server.use('/api/auth', apiAuthLimiter);
   server.use('/api/posts/feed', apiFeedLimiter);
+  server.use('/api/search', apiSearchLimiter);
   server.use('/api', apiLimiter);
 
   const serveIndexLimiter = rateLimit({

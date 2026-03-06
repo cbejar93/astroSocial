@@ -40,6 +40,7 @@ export class LoungesController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -62,6 +63,7 @@ export class LoungesController {
     ),
   )
   async createLounge(
+    @Req() req: Request & { user: { role: string } },
     @Body() dto: CreateLoungeDto,
     @UploadedFiles()
     files: {
@@ -69,6 +71,7 @@ export class LoungesController {
       banner?: Express.Multer.File[];
     },
   ) {
+    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     const profile = files.profile?.[0];
     const banner = files.banner?.[0];
     this.logger.log(`Creating lounge ${dto.name}`);

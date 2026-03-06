@@ -3,18 +3,13 @@ import {
   Get,
   Query,
   BadRequestException,
-  Req,
-  HttpException,
-  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { LoungesService } from '../lounges/lounges.service';
 import { ArticlesService } from '../articles/articles.service';
-import { Request } from 'express';
 
-const WINDOW_MS = 60_000; // 1 minute
-const MAX_REQUESTS = 30;
-const rateMap = new Map<string, { count: number; start: number }>();
+// Rate limiting for /api/search is handled by the express-rate-limit middleware
+// registered in main.ts (30 req / 60 s per IP).
 
 @Controller('api/search')
 export class SearchController {
@@ -26,27 +21,11 @@ export class SearchController {
 
   @Get()
   async search(
-    @Req() req: Request,
     @Query('type') type?: string,
     @Query('q') q?: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    const now = Date.now();
-    const ip = req.ip ?? 'unknown';
-    const record = rateMap.get(ip);
-    if (!record || now - record.start > WINDOW_MS) {
-      rateMap.set(ip, { count: 1, start: now });
-    } else {
-      if (record.count >= MAX_REQUESTS) {
-        throw new HttpException(
-          'Too many search requests',
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
-      record.count++;
-    }
-
     const query = q?.trim();
     if (!query) {
       throw new BadRequestException('Query parameter q is required');
