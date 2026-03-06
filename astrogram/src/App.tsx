@@ -32,8 +32,8 @@ import AdminArticleEditorPage from "./pages/AdminArticleEditorPage";
 import ArticlesPage from "./pages/ArticlesPage";
 import ArticleDetailPage from "./pages/ArticleDetailPage";
 import SavedPage from "./pages/SavedPage";
-import GamesPage from "./pages/GamesPage";
-import TrueNorthPage from "./pages/TrueNorthPage";
+// import GamesPage from "./pages/GamesPage";
+// import TrueNorthPage from "./pages/TrueNorthPage";
 
 import NotFoundPage from "./pages/NotFoundPage";
 import SearchPage from "./pages/SearchPage";
@@ -90,8 +90,8 @@ const App: React.FC = () => {
           <Route path="/articles/:slug" element={<ArticleDetailPage />} />
 
           {/* Games — public so anonymous users can play */}
-          <Route path="/games" element={<GamesPage />} />
-          <Route path="/games/true-north" element={<TrueNorthPage />} />
+          {/* <Route path="/games" element={<GamesPage />} /> */}
+          {/* <Route path="/games/true-north" element={<TrueNorthPage />} /> */}
 
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<SignupPage />} />
