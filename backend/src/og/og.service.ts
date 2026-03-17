@@ -16,7 +16,7 @@ export interface LoungeOgData {
   url: string;
 }
 
-const PROD_URL = 'https://astrosocial.fly.dev';
+const PROD_URL = 'https://astrolounge.net';
 
 @Injectable()
 export class OgService {
