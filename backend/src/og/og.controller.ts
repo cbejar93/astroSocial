@@ -3,9 +3,9 @@ import { Request, Response } from 'express';
 import { resolve } from 'path';
 import { OgService, PostOgData, LoungeOgData } from './og.service';
 
-const PROD_URL = 'https://astrosocial.fly.dev';
+const PROD_URL = 'https://astrolounge.net';
 const SITE_NAME = 'AstroLounge';
-const DEFAULT_IMAGE = `${PROD_URL}/logo.png`;
+const DEFAULT_IMAGE = `${PROD_URL}/og-banner.svg`;
 const DEFAULT_DESC = 'Share and discover cosmic photography and musings on AstroLounge.';
 
 const CRAWLER_PATTERNS = [
