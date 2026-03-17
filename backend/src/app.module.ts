@@ -19,6 +19,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { ArticlesModule } from './articles/articles.module';
 import { GamesModule } from './games/games.module';
 import { SitemapModule } from './sitemap/sitemap.module';
+import { OgModule } from './og/og.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { SitemapModule } from './sitemap/sitemap.module';
     ArticlesModule,
     GamesModule,
     SitemapModule,
+    OgModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestLoggingMiddleware],
