@@ -349,7 +349,7 @@ const HomeFeedComments = React.forwardRef<HomeFeedCommentsHandle, HomeFeedCommen
           </div>
         )}
 
-        <div className="max-h-[70vh] overflow-y-auto space-y-3 pretty-scroll scrollbar-cute">
+        <div className="space-y-3">
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, idx) => (

@@ -441,7 +441,7 @@ const PostPage: React.FC = () => {
         url={`https://astrosocial.fly.dev/post/${post.id}`}
       />
       {/* On mobile it's a single column; on desktop it's a 2-col grid */}
-      <PageContainer size="standard" className="lg:h-full lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6">
+      <PageContainer size="wide" className="lg:h-full lg:grid lg:grid-cols-[11fr_9fr] lg:gap-6">
         {/* LEFT COLUMN (Post) */}
         <div className="lg:h-full lg:flex lg:flex-col lg:min-w-0">
           <AuroraBorder>
@@ -578,12 +578,16 @@ const PostPage: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN (desktop thread) */}
-        <aside className="hidden lg:flex lg:h-full lg:flex-col lg:min-w-0">
+        <aside className="hidden lg:block lg:sticky lg:top-[72px] lg:self-start">
           <div
             id="post-comments-desktop"
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150 shadow-[0_6px_30px_rgba(0,0,0,0.35)] p-4"
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150 shadow-[0_6px_30px_rgba(0,0,0,0.35)] p-4 max-h-[calc(100vh-88px)] overflow-y-auto pretty-scroll scrollbar-cute"
             style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
           >
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
+              <h2 className="text-sm font-semibold text-white">Comments</h2>
+              <span className="text-xs text-slate-400">({commentCount})</span>
+            </div>
             <HomeFeedComments ref={commentsRef} postId={String(post.id)} pageSize={10} />
           </div>
         </aside>
