@@ -578,10 +578,10 @@ const PostPage: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN (desktop thread) */}
-        <aside className="hidden lg:block lg:sticky lg:top-[72px] lg:self-start">
+        <aside className="hidden lg:block">
           <div
             id="post-comments-desktop"
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150 shadow-[0_6px_30px_rgba(0,0,0,0.35)] p-4 max-h-[calc(100vh-88px)] overflow-y-auto pretty-scroll scrollbar-cute"
+            className="sticky top-[72px] w-full rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl backdrop-saturate-150 shadow-[0_6px_30px_rgba(0,0,0,0.35)] p-4 max-h-[calc(100vh-88px)] overflow-y-auto pretty-scroll scrollbar-cute"
             style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
           >
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
