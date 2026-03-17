@@ -23,6 +23,10 @@ beforeAll(() => {
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
+  afterEach(async () => {
+    await app.close();
+  });
+
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
