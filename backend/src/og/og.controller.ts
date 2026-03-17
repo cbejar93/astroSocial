@@ -1,4 +1,5 @@
 import { Controller, Get, Param, Req, Res, Logger } from '@nestjs/common';
+import { readFileSync } from 'fs';
 import { Request, Response } from 'express';
 import { resolve } from 'path';
 import { OgService, PostOgData, LoungeOgData } from './og.service';
@@ -8,31 +9,6 @@ const SITE_NAME = 'AstroLounge';
 const DEFAULT_IMAGE = `${PROD_URL}/og-banner.svg`;
 const DEFAULT_DESC = 'Share and discover cosmic photography and musings on AstroLounge.';
 
-const CRAWLER_PATTERNS = [
-  'facebookexternalhit',
-  'facebot',
-  'twitterbot',
-  'slackbot',
-  'discordbot',
-  'telegrambot',
-  'linkedinbot',
-  'whatsapp',
-  'googlebot',
-  'bingbot',
-  'applebot',
-  'iframely',
-  'embedly',
-  'pinterest',
-  'vkshare',
-  'w3c_validator',
-];
-
-function isCrawler(userAgent: string | undefined): boolean {
-  if (!userAgent) return false;
-  const ua = userAgent.toLowerCase();
-  return CRAWLER_PATTERNS.some((p) => ua.includes(p));
-}
-
 function esc(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -41,45 +17,47 @@ function esc(str: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function buildOgHtml(opts: {
-  title: string;
-  description: string;
-  image: string;
-  url: string;
-  type?: string;
-}): string {
+function injectOgTags(
+  html: string,
+  opts: {
+    title: string;
+    description: string;
+    image: string;
+    url: string;
+    type?: string;
+  },
+): string {
   const title = esc(`${opts.title} | ${SITE_NAME}`);
   const desc = esc(opts.description.slice(0, 160));
   const img = esc(opts.image);
   const url = esc(opts.url);
   const type = opts.type ?? 'website';
 
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${title}</title>
-  <meta name="description" content="${desc}" />
-  <link rel="canonical" href="${url}" />
-  <meta property="og:site_name" content="${esc(SITE_NAME)}" />
-  <meta property="og:title" content="${title}" />
-  <meta property="og:description" content="${desc}" />
-  <meta property="og:image" content="${img}" />
-  <meta property="og:url" content="${url}" />
-  <meta property="og:type" content="${type}" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${title}" />
-  <meta name="twitter:description" content="${desc}" />
-  <meta name="twitter:image" content="${img}" />
-</head>
-<body></body>
-</html>`;
+  const ogBlock = `  <meta property="og:site_name" content="${esc(SITE_NAME)}" />
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${desc}" />
+    <meta property="og:image" content="${img}" />
+    <meta property="og:url" content="${url}" />
+    <meta property="og:type" content="${type}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${desc}" />
+    <meta name="twitter:image" content="${img}" />`;
+
+  return html
+    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+    .replace(/<meta name="description"[^>]*\/>/, `<meta name="description" content="${desc}" />`)
+    .replace(
+      /<meta property="og:site_name"[\s\S]*?<meta name="twitter:image"[^>]*\/>/,
+      ogBlock,
+    );
 }
 
 @Controller()
 export class OgController {
   private readonly logger = new Logger(OgController.name);
   private readonly clientDistPath: string;
+  private cachedIndexHtml: string | null = null;
 
   constructor(private readonly ogService: OgService) {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -88,22 +66,30 @@ export class OgController {
       : resolve(__dirname, '../../../astrogram/dist');
   }
 
+  private getIndexHtml(): string {
+    if (!this.cachedIndexHtml) {
+      const indexPath = resolve(this.clientDistPath, 'index.html');
+      try {
+        this.cachedIndexHtml = readFileSync(indexPath, 'utf-8');
+      } catch {
+        this.cachedIndexHtml = null;
+      }
+    }
+    return this.cachedIndexHtml ?? '';
+  }
+
   @Get('post/:id')
   async servePost(
     @Param('id') id: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    if (!isCrawler(req.headers['user-agent'])) {
-      return this.serveApp(res);
-    }
-
     const post = await this.ogService.getPostData(id);
     if (!post) {
       return this.serveApp(res);
     }
 
-    this.logger.log(`Serving OG tags for post ${id} to crawler`);
+    this.logger.log(`Serving OG tags for post ${id} (ua: ${req.headers['user-agent']?.slice(0, 60)})`);
     return res.send(this.buildPostHtml(post));
   }
 
@@ -113,16 +99,12 @@ export class OgController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    if (!isCrawler(req.headers['user-agent'])) {
-      return this.serveApp(res);
-    }
-
     const lounge = await this.ogService.getLoungeData(name);
     if (!lounge) {
       return this.serveApp(res);
     }
 
-    this.logger.log(`Serving OG tags for lounge "${name}" to crawler`);
+    this.logger.log(`Serving OG tags for lounge "${name}" (ua: ${req.headers['user-agent']?.slice(0, 60)})`);
     return res.send(this.buildLoungeHtml(lounge));
   }
 
@@ -132,21 +114,17 @@ export class OgController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    if (!isCrawler(req.headers['user-agent'])) {
-      return this.serveApp(res);
-    }
-
     const post = await this.ogService.getPostData(postId);
     if (!post) {
       return this.serveApp(res);
     }
 
-    this.logger.log(`Serving OG tags for lounge post ${postId} to crawler`);
+    this.logger.log(`Serving OG tags for lounge post ${postId} (ua: ${req.headers['user-agent']?.slice(0, 60)})`);
     return res.send(this.buildPostHtml(post));
   }
 
   private buildPostHtml(post: PostOgData): string {
-    return buildOgHtml({
+    return injectOgTags(this.getIndexHtml(), {
       title: post.title,
       description: post.description || `Posted by @${post.authorUsername}`,
       image: post.imageUrl ?? DEFAULT_IMAGE,
@@ -156,7 +134,7 @@ export class OgController {
   }
 
   private buildLoungeHtml(lounge: LoungeOgData): string {
-    return buildOgHtml({
+    return injectOgTags(this.getIndexHtml(), {
       title: `${lounge.name} Lounge`,
       description: lounge.description || DEFAULT_DESC,
       image: lounge.imageUrl ?? DEFAULT_IMAGE,
