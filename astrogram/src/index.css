@@ -13,7 +13,7 @@
 :root {
   height: 100%;
   /* background-color: #111827; */
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
