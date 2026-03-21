@@ -8,6 +8,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
 const logger = new Logger('Main');
 
@@ -19,6 +20,53 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.use(cookieParser());
   const isProduction = process.env.NODE_ENV === 'production';
+
+  app.use(
+    helmet({
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+      },
+      frameguard: { action: 'sameorigin' },
+      noSniff: true,
+      hidePoweredBy: true,
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            'https://www.youtube.com',
+            'https://s.ytimg.com',
+            'https://accounts.google.com',
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: [
+            "'self'",
+            'data:',
+            'blob:',
+            process.env.SUPA_URL ?? '',
+            'https://i.ytimg.com',
+            'https://img.youtube.com',
+            'https:',
+          ],
+          mediaSrc: ["'self'", 'blob:'],
+          frameSrc: [
+            'https://www.youtube.com',
+            'https://www.youtube-nocookie.com',
+            'https://accounts.google.com',
+          ],
+          connectSrc: ["'self'", process.env.SUPA_URL ?? '', 'wss:'],
+          fontSrc: ["'self'", 'data:'],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          ...(isProduction ? { upgradeInsecureRequests: [] } : {}),
+        },
+      },
+    }),
+  );
 
   logger.log(`🔧 NODE_ENV = ${process.env.NODE_ENV || 'undefined'}`);
   logger.log(`🚀 Production mode? ${isProduction}`);

@@ -44,6 +44,7 @@
     "cron": "^3.1.6",
     "express-rate-limit": "^7.4.0",
     "geoip-lite": "^1.4.7",
+    "helmet": "^8.1.0",
     "lodash": "^4.17.21",
     "openai": "^6.1.0",
     "passport": "^0.7.0",
@@ -101,12 +102,18 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "coverageReporters": ["text"],
+    "coverageReporters": [
+      "text"
+    ],
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1"
     },
-    "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"],
-    "reporters": ["<rootDir>/test-utils/green-reporter.js"]
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "reporters": [
+      "<rootDir>/test-utils/green-reporter.js"
+    ]
   }
 }
