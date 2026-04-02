@@ -5,6 +5,9 @@ export default {
   theme: {
     extend: {
       // Define a small "brand" palette for purple buttons
+      fontFamily: {
+        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+      },
       colors: {
         transparent: 'transparent',
         brand: {
