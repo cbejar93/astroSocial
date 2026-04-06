@@ -19,7 +19,7 @@ const BASE_TABS: Tab[] = [
   { name: "Weather",  path: "/weather",   icon: CloudSun },
   { name: "Articles", path: "/articles",  icon: Newspaper },
   { name: "Lounges",  path: "/lounge",    icon: LavaLampIcon },
-  // { name: "Games",    path: "/games",     icon: Gamepad2 },
+  { name: "Games",    path: "/games",     icon: Gamepad2 },
   { name: "Profile",  path: "/profile",   icon: User },
   { name: "Settings", path: "/settings",  icon: Settings },
 ];
