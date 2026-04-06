@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
   { label: "Articles", to: "/articles", icon: Newspaper, matchStartsWith: "/articles" },
   { label: "Lounges", to: "/lounge", icon: LavaLampIcon, matchStartsWith: "/lounge" },
   { label: "Profile", to: "/profile", icon: User },
-  // { label: "Games", to: "/games", icon: Gamepad2, matchStartsWith: "/games" },
+  { label: "Games", to: "/games", icon: Gamepad2, matchStartsWith: "/games" },
   { label: "Settings", to: "/settings", icon: Settings },
   { label: "Admin", to: "/admin/lounge", icon: ChartArea },
 

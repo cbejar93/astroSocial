@@ -69,8 +69,9 @@ function drawPreview(
   for (const star of constellation.stars) {
     const { px, py } = project(star.x, star.y);
     const r = Math.max(1.5, 5.5 - star.magnitude * 0.7);
+    const coreColor = star.color ?? '#ffffff';
     const grd = ctx.createRadialGradient(px, py, 0, px, py, r * 2.5);
-    grd.addColorStop(0, 'rgba(255,255,255,0.95)');
+    grd.addColorStop(0, coreColor + 'f2');
     grd.addColorStop(0.4, 'rgba(200,235,255,0.6)');
     grd.addColorStop(1, 'rgba(120,180,255,0)');
     ctx.beginPath();
@@ -79,7 +80,7 @@ function drawPreview(
     ctx.fill();
     ctx.beginPath();
     ctx.arc(px, py, r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillStyle = coreColor + 'e6';
     ctx.fill();
 
     const showName = showAllNames ? !!star.name : star.name && star.magnitude <= 2.5;
