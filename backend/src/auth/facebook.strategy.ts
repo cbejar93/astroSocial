@@ -32,7 +32,6 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     this.logger.log(`Facebook profile received: ${profile.id}`);
 
     const email = profile.emails?.[0]?.value;
-    console.log(profile);
     if (!email) {
       this.logger.error('No email found in Facebook profile');
       return done(new UnauthorizedException('No email in Facebook profile'), false);

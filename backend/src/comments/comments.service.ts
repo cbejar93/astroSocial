@@ -144,6 +144,7 @@ export class CommentsService {
               { createdAt: 'asc' },
               { id: 'asc' },
             ],
+            take: 10,
             include: {
               author: { select: { username: true, avatarUrl: true } },
               likedBy: currentUserId

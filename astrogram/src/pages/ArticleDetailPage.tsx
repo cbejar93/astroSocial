@@ -5,6 +5,7 @@ import { fetchArticleBySlug, type Article } from '../lib/api';
 import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
+import { sanitizeHtml } from '../lib/sanitize';
 
 const ArticleDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -104,7 +105,7 @@ const ArticleDetailPage: React.FC = () => {
 
       <div
         className="prose-article"
-        dangerouslySetInnerHTML={{ __html: article.body }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.body) }}
       />
     </PageContainer>
   );

@@ -6,10 +6,13 @@ import {
   Post,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AnalyticsService, AnalyticsSummary } from './analytics.service';
 import { IngestAnalyticsEventsDto } from './dto/ingest-events.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('api/analytics')
 export class AnalyticsController {
@@ -32,6 +35,7 @@ export class AnalyticsController {
     return result;
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('summary')
   async summary(
     @Query('rangeDays') rangeDays = '7',
