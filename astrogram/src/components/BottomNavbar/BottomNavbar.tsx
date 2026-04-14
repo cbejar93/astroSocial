@@ -1,7 +1,7 @@
 // src/components/BottomNavbar.tsx
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, CloudSun, User, Settings, ChartArea, Newspaper/*, Gamepad2*/ } from "lucide-react";
+import { Home, CloudSun, User, Settings, ChartArea, Newspaper, Gamepad2 } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
 import { useAuth } from "../../hooks/useAuth";
 
