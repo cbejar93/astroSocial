@@ -16,9 +16,18 @@ import { StorageService } from '../storage/storage.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 
+/** 5-minute in-memory cache for a user's social graph (following + followed lounges). */
+interface SocialGraphEntry {
+  followingIds: string[];
+  followedLoungeIds: string[];
+  expiresAt: number;
+}
+
 @Injectable()
 export class PostsService {
   private readonly logger = new Logger(PostsService.name);
+  private readonly socialGraphCache = new Map<string, SocialGraphEntry>();
+  private static readonly SOCIAL_GRAPH_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   private computeScore(post: {
     createdAt: Date;
@@ -90,6 +99,11 @@ export class PostsService {
     private readonly notifications: NotificationsService,
     private readonly analytics: AnalyticsService,
   ) {}
+
+  /** Invalidate the social-graph cache for a user (call on follow/unfollow). */
+  invalidateSocialGraphCache(userId: string): void {
+    this.socialGraphCache.delete(userId);
+  }
 
   private isValidYoutubeUrl(url: string): boolean {
     try {
@@ -465,15 +479,26 @@ export class PostsService {
     let followedLoungeIds: string[] = [];
 
     if (userId) {
-      const viewer = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          following: { select: { id: true } },
-          followedLounges: { select: { id: true } },
-        },
-      });
-      followingIds = viewer?.following.map((u) => u.id) ?? [];
-      followedLoungeIds = viewer?.followedLounges.map((l) => l.id) ?? [];
+      const cached = this.socialGraphCache.get(userId);
+      if (cached && cached.expiresAt > Date.now()) {
+        followingIds = cached.followingIds;
+        followedLoungeIds = cached.followedLoungeIds;
+      } else {
+        const viewer = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            following: { select: { id: true } },
+            followedLounges: { select: { id: true } },
+          },
+        });
+        followingIds = viewer?.following.map((u) => u.id) ?? [];
+        followedLoungeIds = viewer?.followedLounges.map((l) => l.id) ?? [];
+        this.socialGraphCache.set(userId, {
+          followingIds,
+          followedLoungeIds,
+          expiresAt: Date.now() + PostsService.SOCIAL_GRAPH_TTL_MS,
+        });
+      }
     }
 
     // Fetch the candidate pool: most recent non-lounge posts
@@ -994,9 +1019,11 @@ export class PostsService {
         // else: gap in posting — streak resets to 1
       }
 
-      const totalPosts = await this.prisma.post.count({
-        where: { authorId: userId },
+      const authorStats = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { _count: { select: { posts: true } } },
       });
+      const totalPosts = authorStats?._count.posts ?? 0;
       const milestones = [1, 10, 25, 50, 100, 250, 500];
       const newMilestone =
         milestones.filter((m) => totalPosts >= m).pop() ?? 0;
