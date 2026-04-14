@@ -12,7 +12,7 @@ import {
   ChevronUp,
   ChartArea,
   Newspaper,
-  // Gamepad2,
+  Gamepad2,
 } from "lucide-react";
 import LavaLampIcon from "../Icons/LavaLampIcons";
 import { fetchLounges } from "../../lib/api";
