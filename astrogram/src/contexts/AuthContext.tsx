@@ -130,9 +130,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  useEffect(() => {
-    console.log('AuthContext user', user);
-  }, [user]);
 
   const login = async (accessToken: string) => {
     // 1) store new access token

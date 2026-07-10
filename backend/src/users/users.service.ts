@@ -21,6 +21,7 @@ import {
 import { CreateUserSocialAccountDto } from './dto/create-user-social-account.dto';
 import { UserSocialAccountDto } from './dto/user-social-account.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PostsService } from '../posts/post.service';
 
 @Injectable()
 export class UsersService {
@@ -34,6 +35,7 @@ export class UsersService {
     private readonly storage: StorageService,
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly postsService: PostsService,
   ) {}
   private readonly logger = new Logger(UsersService.name);
   /**
@@ -375,72 +377,96 @@ export class UsersService {
     return publicUrl;
   }
 
-  async getPostsByUser(userId: string) {
-    const posts = await this.prisma.post.findMany({
-      where: { authorId: userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: { select: { comments: true } },
-        lounge: { select: { name: true } },
-        originalAuthor: { select: { username: true, avatarUrl: true } },
-      },
-    });
+  async getPostsByUser(userId: string, page = 1, limit = 20) {
+    const safeLimit = Math.min(Math.max(1, limit), 50);
+    const skip = (page - 1) * safeLimit;
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { username: true, avatarUrl: true },
-    });
+    const [total, posts, user] = await Promise.all([
+      this.prisma.post.count({ where: { authorId: userId } }),
+      this.prisma.post.findMany({
+        where: { authorId: userId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: safeLimit,
+        include: {
+          _count: { select: { comments: true } },
+          lounge: { select: { name: true } },
+          originalAuthor: { select: { username: true, avatarUrl: true } },
+        },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true, avatarUrl: true },
+      }),
+    ]);
 
-    return posts.map((p) => ({
-      id: p.id,
-      authorId: userId,
-      username: p.originalAuthor?.username || user?.username || '',
-      avatarUrl:
-        p.originalAuthor?.avatarUrl || user?.avatarUrl || '/defaultPfp.png',
-      ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
-      ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
-      ...(p.linkUrl ? { linkUrl: p.linkUrl } : {}),
-      ...(p.linkTitle ? { linkTitle: p.linkTitle } : {}),
-      ...(p.linkDescription ? { linkDescription: p.linkDescription } : {}),
-      ...(p.linkImageUrl ? { linkImageUrl: p.linkImageUrl } : {}),
-      ...(p.linkSiteName ? { linkSiteName: p.linkSiteName } : {}),
-      caption: p.body,
-      title: p.title,
-      loungeId: p.loungeId || undefined,
-      loungeName: p.lounge?.name,
-      timestamp: p.createdAt.toISOString(),
-      stars: p.likes,
-      comments: p._count.comments,
-      shares: p.shares,
-      likedByMe: false,
-      ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
-        ? { repostedBy: user?.username || '' }
-        : {}),
-    }));
+    return {
+      posts: posts.map((p) => ({
+        id: p.id,
+        authorId: userId,
+        username: p.originalAuthor?.username || user?.username || '',
+        avatarUrl:
+          p.originalAuthor?.avatarUrl || user?.avatarUrl || '/defaultPfp.png',
+        ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+        ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
+        ...(p.linkUrl ? { linkUrl: p.linkUrl } : {}),
+        ...(p.linkTitle ? { linkTitle: p.linkTitle } : {}),
+        ...(p.linkDescription ? { linkDescription: p.linkDescription } : {}),
+        ...(p.linkImageUrl ? { linkImageUrl: p.linkImageUrl } : {}),
+        ...(p.linkSiteName ? { linkSiteName: p.linkSiteName } : {}),
+        caption: p.body,
+        title: p.title,
+        loungeId: p.loungeId || undefined,
+        loungeName: p.lounge?.name,
+        timestamp: p.createdAt.toISOString(),
+        stars: p.likes,
+        comments: p._count.comments,
+        shares: p.shares,
+        likedByMe: false,
+        ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
+          ? { repostedBy: user?.username || '' }
+          : {}),
+      })),
+      total,
+      page,
+      limit: safeLimit,
+    };
   }
 
-  async getCommentsByUser(userId: string) {
-    const comments = await this.prisma.comment.findMany({
-      where: { authorId: userId },
-      orderBy: { createdAt: 'desc' },
-      include: { likedBy: { where: { userId }, select: { id: true } } },
-    });
+  async getCommentsByUser(userId: string, page = 1, limit = 20) {
+    const safeLimit = Math.min(Math.max(1, limit), 50);
+    const skip = (page - 1) * safeLimit;
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { username: true, avatarUrl: true },
-    });
+    const [total, comments, user] = await Promise.all([
+      this.prisma.comment.count({ where: { authorId: userId } }),
+      this.prisma.comment.findMany({
+        where: { authorId: userId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: safeLimit,
+        include: { likedBy: { where: { userId }, select: { id: true } } },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true, avatarUrl: true },
+      }),
+    ]);
 
-    return comments.map((c) => ({
-      id: c.id,
-      text: c.text,
-      authorId: userId,
-      username: user?.username || '',
-      avatarUrl: user?.avatarUrl || '/defaultPfp.png',
-      timestamp: c.createdAt.toISOString(),
-      likes: c.likes,
-      likedByMe: c.likedBy.length > 0,
-    }));
+    return {
+      comments: comments.map((c) => ({
+        id: c.id,
+        text: c.text,
+        authorId: userId,
+        username: user?.username || '',
+        avatarUrl: user?.avatarUrl || '/defaultPfp.png',
+        timestamp: c.createdAt.toISOString(),
+        likes: c.likes,
+        likedByMe: c.likedBy.length > 0,
+      })),
+      total,
+      page,
+      limit: safeLimit,
+    };
   }
 
   async findByUsername(username: string): Promise<UserDto> {
@@ -505,73 +531,22 @@ export class UsersService {
     };
   }
 
-  async getPostsByUsername(username: string) {
+  async getPostsByUsername(username: string, page = 1, limit = 20) {
     const user = await this.prisma.user.findUnique({
       where: { username },
       select: { id: true, username: true, avatarUrl: true },
     });
     if (!user) throw new NotFoundException('User not found');
-
-    const posts = await this.prisma.post.findMany({
-      where: { authorId: user.id },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: { select: { comments: true } },
-        lounge: { select: { name: true } },
-        originalAuthor: { select: { username: true, avatarUrl: true } },
-      },
-    });
-
-    return posts.map((p) => ({
-      id: p.id,
-      authorId: user.id,
-      username: p.originalAuthor?.username || user.username || '',
-      avatarUrl:
-        p.originalAuthor?.avatarUrl || user.avatarUrl || '/defaultPfp.png',
-      ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
-      ...(p.youtubeUrl ? { youtubeUrl: p.youtubeUrl } : {}),
-      ...(p.linkUrl ? { linkUrl: p.linkUrl } : {}),
-      ...(p.linkTitle ? { linkTitle: p.linkTitle } : {}),
-      ...(p.linkDescription ? { linkDescription: p.linkDescription } : {}),
-      ...(p.linkImageUrl ? { linkImageUrl: p.linkImageUrl } : {}),
-      ...(p.linkSiteName ? { linkSiteName: p.linkSiteName } : {}),
-      caption: p.body,
-      title: p.title,
-      loungeId: p.loungeId || undefined,
-      loungeName: p.lounge?.name,
-      timestamp: p.createdAt.toISOString(),
-      stars: p.likes,
-      comments: p._count.comments,
-      shares: p.shares,
-      likedByMe: false,
-      ...(p.originalAuthorId && p.originalAuthorId !== p.authorId
-        ? { repostedBy: user.username || '' }
-        : {}),
-    }));
+    return this.getPostsByUser(user.id, page, limit);
   }
 
-  async getCommentsByUsername(username: string) {
+  async getCommentsByUsername(username: string, page = 1, limit = 20) {
     const user = await this.prisma.user.findUnique({
       where: { username },
-      select: { id: true, username: true, avatarUrl: true },
+      select: { id: true },
     });
     if (!user) throw new NotFoundException('User not found');
-
-    const comments = await this.prisma.comment.findMany({
-      where: { authorId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return comments.map((c) => ({
-      id: c.id,
-      text: c.text,
-      authorId: user.id,
-      username: user.username || '',
-      avatarUrl: user.avatarUrl || '/defaultPfp.png',
-      timestamp: c.createdAt.toISOString(),
-      likes: c.likes,
-      likedByMe: false,
-    }));
+    return this.getCommentsByUser(user.id, page, limit);
   }
 
   async followUser(targetUserId: string, followerId: string) {
@@ -584,6 +559,7 @@ export class UsersService {
         },
       },
     });
+    this.postsService.invalidateSocialGraphCache(followerId);
     // Notify the target user that someone followed them
     await this.notifications.create(
       targetUserId,
@@ -595,6 +571,7 @@ export class UsersService {
 
   async unfollowUser(targetUserId: string, followerId: string) {
     this.logger.log(`User ${followerId} unfollowing user ${targetUserId}`);
+    this.postsService.invalidateSocialGraphCache(followerId);
     return this.prisma.user.update({
       where: { id: followerId },
       data: {
@@ -699,48 +676,64 @@ export class UsersService {
     };
   }
 
-  async getFollowers(userId: string): Promise<UserDto[]> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        followers: {
-          select: {
-            id: true,
-            username: true,
-            avatarUrl: true,
-            profileComplete: true,
-            role: true,
-            temperature: true,
-            accent: true,
-            followedLounges: { select: { id: true } },
-          },
+  async getFollowers(
+    userId: string,
+    page = 1,
+    limit = 50,
+  ): Promise<{ users: UserDto[]; total: number; page: number; limit: number }> {
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * safeLimit;
+
+    const [total, followers] = await this.prisma.$transaction([
+      this.prisma.user.count({ where: { following: { some: { id: userId } } } }),
+      this.prisma.user.findMany({
+        where: { following: { some: { id: userId } } },
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          profileComplete: true,
+          role: true,
+          temperature: true,
+          accent: true,
+          followedLounges: { select: { id: true } },
         },
-      },
-    });
-    if (!user) throw new NotFoundException('User not found');
-    return user.followers.map((u) => this.toDto(u));
+        skip,
+        take: safeLimit,
+      }),
+    ]);
+
+    return { users: followers.map((u) => this.toDto(u)), total, page, limit: safeLimit };
   }
 
-  async getFollowing(userId: string): Promise<UserDto[]> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        following: {
-          select: {
-            id: true,
-            username: true,
-            avatarUrl: true,
-            profileComplete: true,
-            role: true,
-            temperature: true,
-            accent: true,
-            followedLounges: { select: { id: true } },
-          },
+  async getFollowing(
+    userId: string,
+    page = 1,
+    limit = 50,
+  ): Promise<{ users: UserDto[]; total: number; page: number; limit: number }> {
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * safeLimit;
+
+    const [total, following] = await this.prisma.$transaction([
+      this.prisma.user.count({ where: { followers: { some: { id: userId } } } }),
+      this.prisma.user.findMany({
+        where: { followers: { some: { id: userId } } },
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          profileComplete: true,
+          role: true,
+          temperature: true,
+          accent: true,
+          followedLounges: { select: { id: true } },
         },
-      },
-    });
-    if (!user) throw new NotFoundException('User not found');
-    return user.following.map((u) => this.toDto(u));
+        skip,
+        take: safeLimit,
+      }),
+    ]);
+
+    return { users: following.map((u) => this.toDto(u)), total, page, limit: safeLimit };
   }
 
   async deleteUser(userId: string) {

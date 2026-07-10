@@ -10,6 +10,7 @@ import { UsersModule } from '../users/users.module';
 import { FacebookStrategy } from './facebook.strategy';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import { JwtRefreshGuard } from './jwt-refresh-guard';
+import { AdminGuard } from './admin.guard';
 import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
@@ -41,8 +42,9 @@ import { SupabaseModule } from '../supabase/supabase.module';
     JwtStrategy,
     JwtRefreshStrategy,
     JwtRefreshGuard,
+    AdminGuard,
   ],
   controllers: [AuthController],
-  exports: [JwtModule, PassportModule, JwtRefreshGuard],
+  exports: [JwtModule, PassportModule, JwtRefreshGuard, AdminGuard],
 })
 export class AuthModule {}

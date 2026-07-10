@@ -39,7 +39,6 @@ interface AuthRequest extends ExpressRequest {
 interface RefreshRequest extends ExpressRequest {
   user: {
     sub: string;
-    email: string;
   };
 }
 
@@ -100,7 +99,7 @@ export class AuthController {
     res.cookie('jid', encryptRefreshToken(refreshToken), {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? 'lax' : 'none',
+      sameSite: 'lax',
       domain: this.getRefreshCookieDomain(isProd),
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -142,7 +141,7 @@ export class AuthController {
     res.cookie('jid', encryptRefreshToken(refreshToken), {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? 'lax' : 'none',
+      sameSite: 'lax',
       domain: this.getRefreshCookieDomain(isProd),
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -160,10 +159,10 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(JwtRefreshGuard)
   refresh(@Req() req: RefreshRequest) {
-    const payload = { sub: req.user.sub, email: req.user.email };
+    const payload = { sub: req.user.sub };
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
-      expiresIn: '15m',
+      expiresIn: '5m',
     });
     return { accessToken };
   }
@@ -176,7 +175,7 @@ export class AuthController {
     res.cookie('jid', '', {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? 'lax' : 'none',
+      sameSite: 'lax',
       domain: this.getRefreshCookieDomain(isProd),
       path: '/',
       expires: new Date(0),
@@ -225,7 +224,7 @@ export class AuthController {
     res.cookie('jid', encryptRefreshToken(refreshToken), {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? 'lax' : 'none',
+      sameSite: 'lax',
       domain: this.getRefreshCookieDomain(isProd),
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,

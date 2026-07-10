@@ -12,7 +12,6 @@ import {
   UseInterceptors,
   UploadedFile,
   UseFilters,
-  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -21,6 +20,7 @@ import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { MulterExceptionFilter } from '../common/filters/multer-exception.filter';
 
 const imageFileFilter = (_req: any, file: Express.Multer.File, cb: any) => {
@@ -42,77 +42,66 @@ export class ArticlesController {
 
   // ── Admin endpoints (must be defined before /:slug) ──
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post()
   @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(FileInterceptor('coverImage', multerOptions))
   async create(
-    @Req() req: Request & { user: { sub: string; role: string } },
+    @Req() req: Request & { user: { sub: string } },
     @Body() dto: CreateArticleDto,
     @UploadedFile() coverImage?: Express.Multer.File,
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     return this.articles.create(req.user.sub, dto, coverImage);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('upload-image')
   @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(FileInterceptor('image', multerOptions))
   async uploadImage(
-    @Req() req: Request & { user: { role: string } },
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     const url = await this.articles.uploadInlineImage(file);
     return { url };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('admin')
   async findAllAdmin(
-    @Req() req: Request & { user: { role: string } },
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     return this.articles.findAllAdmin(
       parseInt(page, 10) || 1,
       parseInt(limit, 10) || 20,
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('admin/:id')
   async findByIdAdmin(
-    @Req() req: Request & { user: { role: string } },
     @Param('id') id: string,
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     return this.articles.findById(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Patch(':id')
   @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(FileInterceptor('coverImage', multerOptions))
   async update(
-    @Req() req: Request & { user: { role: string } },
     @Param('id') id: string,
     @Body() dto: UpdateArticleDto,
     @UploadedFile() coverImage?: Express.Multer.File,
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     return this.articles.update(id, dto, coverImage);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')
   async remove(
-    @Req() req: Request & { user: { role: string } },
     @Param('id') id: string,
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     return this.articles.delete(id);
   }
 

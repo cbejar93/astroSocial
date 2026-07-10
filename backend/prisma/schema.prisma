@@ -114,6 +114,10 @@ model Post {
   interactions     PostInteraction[]
   notifications    Notification[]
   savedBy          SavedPost[]
+
+  @@index([authorId, createdAt])
+  @@index([loungeId, createdAt])
+  @@index([createdAt])
 }
 
 model Comment {
@@ -130,6 +134,10 @@ model Comment {
   replies       Comment[]      @relation("CommentReplies")
   likedBy       CommentLike[]
   notifications Notification[]
+
+  @@index([postId, createdAt])
+  @@index([parentId])
+  @@index([authorId, createdAt])
 }
 
 model CommentLike {
@@ -164,6 +172,7 @@ model SavedPost {
   createdAt DateTime @default(now())
 
   @@unique([userId, postId], name: "one_save_per_user_per_post")
+  @@index([userId, createdAt])
 }
 
 model Notification {
@@ -179,6 +188,9 @@ model Notification {
   type      NotificationType
   read      Boolean          @default(false)
   createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, read])
 }
 
 model Lounge {

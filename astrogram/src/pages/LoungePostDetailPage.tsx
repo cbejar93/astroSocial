@@ -8,6 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 import { MoreVertical, ArrowLeft } from "lucide-react";
 import PageContainer from "../components/Layout/PageContainer";
 import { SEOHead } from "../components/SEOHead";
+import { sanitizeHtml } from "../lib/sanitize";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -185,7 +186,7 @@ const LoungePostDetailPage: React.FC = () => {
                     {post.title}
                   </h1>
                   <p className="text-sm text-gray-300 leading-relaxed break-words [overflow-wrap:anywhere]">
-                    <span dangerouslySetInnerHTML={{ __html: post.caption }} />
+                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.caption) }} />
                   </p>
                 </div>
 

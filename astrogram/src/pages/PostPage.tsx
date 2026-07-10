@@ -17,6 +17,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { MessageCircle, MoreVertical, Repeat2, Star } from "lucide-react";
 import PageContainer from "../components/Layout/PageContainer";
+import { sanitizeHtml } from "../lib/sanitize";
 
 /* ---------------------------- Types ---------------------------- */
 interface Post {
@@ -516,7 +517,7 @@ const PostPage: React.FC = () => {
                     <h1 className="text-lg font-bold text-gray-100 mb-2 break-words">{post.title}</h1>
                   )}
                   <p className="text-sm text-gray-300 leading-relaxed break-words [overflow-wrap:anywhere]">
-                    <span dangerouslySetInnerHTML={{ __html: post.caption }} />
+                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.caption) }} />
                   </p>
                 </div>
 

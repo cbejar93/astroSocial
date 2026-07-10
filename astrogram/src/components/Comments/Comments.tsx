@@ -19,6 +19,7 @@ import {
   type CommentResponse,
   type PaginatedCommentsResponse,
 } from "../../lib/api";
+import { sanitizeHtml } from "../../lib/sanitize";
 
 export interface CommentItem extends CommentResponse {
   likedByMe?: boolean;
@@ -84,13 +85,6 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       return map;
     }, [pageData]);
 
-    const sanitize = (v: string) => {
-      const el = document.createElement("div");
-      el.innerHTML = v;
-      el.querySelectorAll("script,style").forEach((e) => e.remove());
-      return el.innerHTML;
-    };
-
     const extractQuoteSource = (html: string) => {
       const el = document.createElement("div");
       el.innerHTML = html;
@@ -120,7 +114,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
       focusEditor();
       if (!editorRef.current) return;
       const quoteSource = extractQuoteSource(s.text);
-      const html = `<blockquote><p><strong>@${s.username}</strong>:</p>${sanitize(
+      const html = `<blockquote><p><strong>@${s.username}</strong>:</p>${sanitizeHtml(
         quoteSource
       )}</blockquote><p><br/></p>`;
       editorRef.current.innerHTML += html;
@@ -205,7 +199,7 @@ const Comments = React.forwardRef<CommentsHandle, CommentsProps>(
             {/* ✅ Left-aligned text (normal flow) */}
             <div
               className="text-sm leading-relaxed text-gray-200 prose prose-invert"
-              dangerouslySetInnerHTML={{ __html: sanitize(c.text) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(c.text) }}
             />
 
             <div className="flex gap-4 text-xs text-slate-300">

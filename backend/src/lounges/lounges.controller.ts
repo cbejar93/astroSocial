@@ -28,6 +28,7 @@ import { PostsService } from '../posts/post.service';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalAuthGuard } from '../auth/jwt-optional.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { MulterExceptionFilter } from '../common/filters/multer-exception.filter';
 
 @Controller('api/lounges')
@@ -40,6 +41,7 @@ export class LoungesController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -153,7 +155,7 @@ export class LoungesController {
     return { success: true };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Patch(':id')
   @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
@@ -178,7 +180,6 @@ export class LoungesController {
   )
   async updateLounge(
     @Param('id') id: string,
-    @Req() req: Request & { user: { role: string } },
     @Body() dto: UpdateLoungeDto,
     @UploadedFiles()
     files: {
@@ -186,19 +187,16 @@ export class LoungesController {
       banner?: Express.Multer.File[];
     },
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     const profile = files.profile?.[0];
     const banner = files.banner?.[0];
     return this.lounges.update(id, dto, profile, banner);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')
   async deleteLounge(
     @Param('id') id: string,
-    @Req() req: Request & { user: { role: string } },
   ) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException();
     await this.lounges.remove(id);
     return { success: true };
   }

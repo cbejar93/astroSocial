@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class CreatePostDto {
   /** Short headline for the post */
@@ -6,8 +6,9 @@ export class CreatePostDto {
   @IsOptional()
   title?: string;
 
-  /** Body / caption text */
+  /** Body / caption text — capped at 314 characters (the AstroLounge limit) */
   @IsString()
+  @MaxLength(314)
   body: string;
 
   /** Optional link to an image */
